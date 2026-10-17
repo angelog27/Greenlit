@@ -1,0 +1,734 @@
+<title>GREENLIGHT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: mode controls and market on top, sticky budget bar, pitch then four pickers, results and per-mode boards. Easy mode adds a scoring panel on the right. */
+:root{
+  --bg:#E7ECE9; --surface:#FFFFFF; --surface2:#F0F4F2; --ink:#10261E; --muted:#556860; --line:#CBD6D0;
+  --accent:#0B7A47; --on-accent:#FFFFFF; --bad:#B4362A; --hot:#A85A08; --cold:#2F6AA8;
+  --display:"Bricolage Grotesque","Arial Narrow",Impact,sans-serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1613; --surface:#162019; --surface2:#1D2923; --ink:#E6F0EB; --muted:#8FA59B; --line:#2A3A32;
+  --accent:#4CCB8B; --on-accent:#06150E; --bad:#FF8478; --hot:#F0A24B; --cold:#7FB0E8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1613; --surface:#162019; --surface2:#1D2923; --ink:#E6F0EB; --muted:#8FA59B; --line:#2A3A32;
+  --accent:#4CCB8B; --on-accent:#06150E; --bad:#FF8478; --hot:#F0A24B; --cold:#7FB0E8; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:20px 56px}
+.app{max-width:1080px;margin:0 auto}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-variant-numeric:tabular-nums;font-family:var(--mono)}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,7vw,52px);line-height:1;letter-spacing:-.01em;margin:0}
+h1 span{color:var(--accent)}
+.signal{display:flex;flex-direction:column;gap:3px;background:var(--ink);padding:5px;border-radius:12px}
+.signal i{display:block;width:11px;height:11px;border-radius:50%;background:#000;opacity:.35}
+.signal.red i:nth-child(1){background:#F0584A;opacity:1}
+.signal.amber i:nth-child(2){background:#F2B63D;opacity:1}
+.signal.green i:nth-child(3){background:#35D07F;opacity:1}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{background:var(--surface);border:0;padding:7px 12px;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.date{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:2px 0 0}
+.minfo{margin:14px 0 0;font-size:14px;color:var(--muted);max-width:75ch}
+.minfo b{color:var(--ink)}
+.market{display:grid;gap:16px;grid-template-columns:auto 1fr;align-items:center;margin:14px 0 8px;padding:16px 20px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+@media (max-width:640px){.market{grid-template-columns:1fr}}
+.lbl{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.budget b{display:block;font-family:var(--display);font-size:56px;line-height:1;font-weight:800}
+.tape{display:grid;gap:4px;font-size:14px;min-width:0}
+.tape div{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.rule{margin:0 0 20px;font-size:13px;color:var(--muted)}
+.tag{font-family:var(--mono);font-size:12px;padding:1px 7px;border-radius:3px;border:1px solid var(--line)}
+.tag.hot{color:var(--hot);border-color:var(--hot)} .tag.cold{color:var(--cold);border-color:var(--cold)}
+.tag.no{color:var(--bad);border-color:var(--bad)} .tag.ok{color:var(--accent);border-color:var(--accent)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:20px;box-shadow:0 6px 16px -10px rgba(0,0,0,.35)}
+.bar .info{flex:1 1 220px;min-width:0}
+.bar .nums{display:flex;justify-content:space-between;gap:8px;font-size:13px;flex-wrap:wrap}
+.meter{height:6px;border-radius:3px;background:var(--surface2);margin-top:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.meter.over i{background:var(--bad)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:10px 18px;font-weight:700}
+.btn.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.layout{display:grid;gap:24px;grid-template-columns:1fr}
+@media (min-width:980px){.layout.two{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start}}
+.layout>*{min-width:0}
+@media (min-width:980px){.aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 96px)}}
+h2{font-family:var(--display);font-weight:700;font-size:22px;margin:0 0 4px;letter-spacing:-.005em}
+.sec{margin-bottom:28px}
+.sec p.hint{margin:0 0 10px;color:var(--muted);font-size:13px}
+.mh{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.cards{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.card{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:3px;align-content:start;min-width:0}
+.card:hover{border-color:var(--muted)}
+.card[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.c-top{display:flex;justify-content:space-between;gap:8px;font-weight:700}
+.c-top .mono{font-weight:500;color:var(--muted);font-size:13px;white-space:nowrap}
+.c-sub{font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.banner{margin-bottom:16px;padding:12px 16px;border:1px dashed var(--accent);border-radius:6px;color:var(--ink)}
+.banner b{display:block;font-family:var(--display);font-size:20px}
+.pitch{margin-bottom:28px;padding:20px 22px;background:var(--surface);border:1px solid var(--line);border-top:3px double var(--ink);border-radius:4px}
+.pitch h2{font-size:34px;margin:2px 0 6px}
+.pitch .log{font-size:17px;line-height:1.45;max-width:62ch;margin:0 0 10px;text-wrap:pretty}
+.pitch .note{margin:4px 0 0}
+.pitch .roles{margin:0 0 6px;font-size:15px}
+.slots{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-bottom:12px}
+.slot{position:relative}
+.slot>button.main{width:100%;text-align:left;background:var(--surface);border:1px dashed var(--line);border-radius:8px;padding:10px 40px 10px 12px;display:grid;gap:2px;min-width:0}
+.slot.active>button.main{border-style:solid;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.slot .x{position:absolute;top:8px;right:8px;width:28px;height:28px;border:1px solid var(--line);background:var(--surface2);border-radius:4px;line-height:1}
+.slot .who{font-weight:700}
+.slot .who.empty{font-weight:400;color:var(--muted)}
+.crumbs{display:flex;gap:6px;overflow-x:auto;margin:-8px 0 18px;padding-bottom:2px}
+.crumb{flex:none;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+.crumb.done{color:var(--accent);border-color:var(--accent)}
+.crumb.cur{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.page.enter{animation:pagein .28s ease-out both}
+@keyframes pagein{from{opacity:0;transform:translateX(18px)}}
+@media (prefers-reduced-motion:reduce){.page.enter{animation:none}}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:20px;position:sticky;bottom:0;padding:12px 0;background:linear-gradient(to bottom,transparent,var(--bg) 35%)}
+.nav .btn.go{margin-left:auto;min-width:150px}
+.btn.sm{padding:4px 10px;font-size:13px;font-weight:600}
+.cards.cast{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+ul.roles{margin:0 0 8px;padding-left:20px;font-size:15px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:400}
+th,td{padding:6px 8px 6px 0;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{text-align:right;white-space:nowrap;font-family:var(--mono);font-variant-numeric:tabular-nums}
+td small{display:block;color:var(--muted);font-size:12px}
+.scroll{overflow-x:auto}
+.proj{margin-top:12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.proj b{font-family:var(--display);font-size:28px}
+.pos{color:var(--accent)} .neg{color:var(--bad)}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.result{margin-bottom:24px;border:2px solid var(--accent);border-radius:10px;background:var(--surface);padding:20px}
+.r-head{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between}
+.r-head h2{font-size:36px;margin:0}
+.verdict{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.big{font-family:var(--display);font-weight:800;font-size:clamp(40px,8vw,64px);line-height:1}
+.r-grid{display:grid;gap:20px;grid-template-columns:1fr;margin-top:16px}
+@media (min-width:820px){.r-grid{grid-template-columns:3fr 2fr}}
+.r-grid>*{min-width:0}
+.wf{display:grid;gap:6px}
+.wf div{display:grid;grid-template-columns:130px 1fr 78px;gap:8px;align-items:center;font-size:13px}
+@media (max-width:480px){.wf div{grid-template-columns:100px 1fr 64px}}
+.wf .bk{height:10px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.wf .bk i{display:block;height:100%;background:var(--accent);transform-origin:left}
+@media (prefers-reduced-motion:no-preference){.wf .bk i{animation:grow .7s ease-out both}@keyframes grow{from{transform:scaleX(0)}}}
+.bon{margin:6px 0 0;padding-left:18px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+pre{margin:0 0 10px;white-space:pre-wrap;word-break:break-word;font-family:var(--mono);font-size:12.5px;background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:10px}
+.boards{display:grid;gap:20px;grid-template-columns:1fr;margin-top:8px}
+@media (min-width:820px){.boards{grid-template-columns:3fr 2fr}}
+.boards>*{min-width:0}
+.lb td.r{width:32px;font-family:var(--mono);color:var(--muted)}
+.lb tr.me td{background:var(--surface2);font-weight:600}
+.lb .t{color:var(--muted);font-size:13px;font-weight:400}
+.hist{display:grid;gap:6px}
+.hist div{display:grid;grid-template-columns:52px 1fr 64px;gap:8px;align-items:center;font-size:13px}
+.hist .bk{height:10px;background:var(--surface2);border-radius:2px;position:relative;overflow:hidden}
+.hist .bk i{position:absolute;left:0;top:0;bottom:0;background:var(--accent)}
+.hist .bk i.neg{background:var(--bad)}
+.stats{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px}
+.stats b{display:block;font-family:var(--display);font-size:28px;line-height:1.1}
+footer{margin-top:28px;font-size:12px;color:var(--muted);max-width:75ch}
+footer p{margin:0 0 8px}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div>
+      <div class="brand"><div class="signal amber" aria-hidden="true"><i></i><i></i><i></i></div><h1>GREEN<span>LIGHT</span></h1></div>
+      <p class="date" id="date"></p>
+    </div>
+    <div class="ctrl"><div class="seg" id="type" role="group" aria-label="Mode"></div><div class="seg" id="diff" role="group" aria-label="Difficulty"></div></div>
+  </header>
+  <p class="minfo" id="minfo"></p>
+  <section class="market" id="market"></section>
+  <p class="rule" id="rule"></p>
+  <div class="bar" id="bar"></div>
+  <nav class="crumbs" id="crumbs" aria-label="Progress"></nav>
+  <div id="result"></div>
+  <div class="layout" id="layout"><div id="pickers"></div><aside class="aside" id="aside" hidden><div class="panel" id="model"></div></aside></div>
+  <section class="boards" id="boards"></section>
+  <footer>
+    <p>Real directors and actors appear as game pieces. Fees, tone tags, genre tags, competitor strength ratings and all dollar amounts are the game's own invented numbers, not real pay or box-office data. Reunion and chemistry bonuses are based on films the people actually made together.</p>
+    <p>Hard mode uses a snapshot of publicly reported US release dates as of October 2026. Studios move dates often, so treat the calendar as approximate. The market is seeded from the date, so everyone playing the same day sees the same conditions, pitches and hidden luck for the same slate.</p>
+  </footer>
+</div>
+
+<script>
+// ===== MODEL START =====
+var GENRES=[
+ {id:"action",name:"Action",base:230,cost:45,blurb:"Stunts, chases, spectacle"},
+ {id:"scifi",name:"Sci-Fi",base:220,cost:50,blurb:"Big ideas, big effects"},
+ {id:"animation",name:"Animation",base:250,cost:60,blurb:"Family event, long production"},
+ {id:"comedy",name:"Comedy",base:130,cost:22,blurb:"Laughs on a modest budget"},
+ {id:"horror",name:"Horror",base:150,cost:14,blurb:"Cheap to make, loud to open"},
+ {id:"thriller",name:"Thriller",base:125,cost:24,blurb:"Tension and twists"},
+ {id:"drama",name:"Drama",base:95,cost:18,blurb:"Prestige, slower burn"},
+ {id:"romance",name:"Romance",base:105,cost:16,blurb:"The date-night crowd"}];
+// tone tags: gritty, heartfelt, funny, epic, eerie, stylish
+var DIRS=[
+ {id:"nolan",name:"Christopher Nolan",fee:35,skill:1.25,spec:["action","scifi"],tone:["epic","gritty"],note:"Event cinema",known:"Inception, The Dark Knight, Oppenheimer"},
+ {id:"villeneuve",name:"Denis Villeneuve",fee:32,skill:1.25,spec:["scifi","thriller"],tone:["epic","stylish"],note:"Epic-scale sci-fi",known:"Dune, Arrival, Sicario"},
+ {id:"gerwig",name:"Greta Gerwig",fee:25,skill:1.2,spec:["comedy","drama"],tone:["stylish","funny"],note:"Critic and crowd favorite",known:"Barbie, Lady Bird, Little Women"},
+ {id:"peele",name:"Jordan Peele",fee:24,skill:1.2,spec:["horror","comedy"],tone:["eerie","funny"],note:"Horror with a hook",known:"Get Out, Us, Nope"},
+ {id:"docter",name:"Pete Docter",fee:26,skill:1.15,spec:["animation","comedy"],tone:["heartfelt","funny"],note:"Pixar storyteller",known:"Up, Inside Out, Monsters, Inc."},
+ {id:"gluck",name:"Will Gluck",fee:12,skill:1.05,spec:["comedy","romance"],tone:["funny","heartfelt"],note:"Easy-breezy rom-coms",known:"Easy A, Anyone But You"},
+ {id:"stahelski",name:"Chad Stahelski",fee:12,skill:1.0,spec:["action","thriller"],tone:["gritty","stylish"],note:"Stunt-driven action",known:"John Wick"},
+ {id:"wan",name:"James Wan",fee:18,skill:1.1,spec:["horror","thriller"],tone:["eerie","gritty"],note:"Franchise scare-maker",known:"Saw, The Conjuring, Furious 7"}];
+var ACTORS=[
+ {id:"pascal",s:"m",name:"Pedro Pascal",fee:26,star:9,g:["action","scifi","drama"],tone:["gritty","heartfelt"],known:"The Last of Us, The Mandalorian, Gladiator II"},
+ {id:"pattinson",s:"m",name:"Robert Pattinson",fee:24,star:8,g:["thriller","scifi","drama"],tone:["gritty","stylish"],known:"The Batman, Tenet, The Lighthouse"},
+ {id:"hathaway",s:"f",name:"Anne Hathaway",fee:24,star:8,g:["romance","comedy","drama","animation"],tone:["heartfelt","stylish"],known:"The Devil Wears Prada, Interstellar, Rio"},
+ {id:"momoa",s:"m",name:"Jason Momoa",fee:22,star:8,g:["action","scifi","comedy"],tone:["epic","funny"],known:"Aquaman, Dune, A Minecraft Movie"},
+ {id:"gyllenhaal",s:"m",name:"Jake Gyllenhaal",fee:22,star:8,g:["thriller","drama","action"],tone:["gritty","eerie"],known:"Prisoners, Nightcrawler, Road House"},
+ {id:"dearmas",s:"f",name:"Ana de Armas",fee:20,star:8,g:["action","thriller","romance"],tone:["stylish","gritty"],known:"Knives Out, Blade Runner 2049, No Time to Die"},
+ {id:"foxx",s:"m",name:"Jamie Foxx",fee:20,star:8,g:["comedy","animation","action"],tone:["funny","stylish"],known:"Django Unchained, Soul, Rio"},
+ {id:"sweeney",s:"f",name:"Sydney Sweeney",fee:18,star:7,g:["romance","comedy","horror"],tone:["funny","eerie"],known:"Euphoria, Anyone But You, Immaculate"},
+ {id:"isaac",s:"m",name:"Oscar Isaac",fee:18,star:7,g:["scifi","drama","thriller"],tone:["stylish","epic"],known:"Dune, Ex Machina, Inside Llewyn Davis"},
+ {id:"lupita",s:"f",name:"Lupita Nyong'o",fee:16,star:7,g:["horror","scifi","animation","drama"],tone:["eerie","heartfelt"],known:"Us, 12 Years a Slave, The Wild Robot"},
+ {id:"ronan",s:"f",name:"Saoirse Ronan",fee:16,star:7,g:["drama","romance"],tone:["heartfelt","stylish"],known:"Lady Bird, Little Women, Brooklyn"},
+ {id:"poehler",s:"f",name:"Amy Poehler",fee:12,star:6,g:["comedy","animation","romance"],tone:["funny","heartfelt"],known:"Inside Out, Parks and Recreation, Baby Mama"},
+ {id:"kunis",s:"f",name:"Mila Kunis",fee:12,star:6,g:["comedy","romance"],tone:["funny","stylish"],known:"Friends with Benefits, Black Swan, Bad Moms"},
+ {id:"skarsgard",s:"m",name:"Bill Skarsg\u00e5rd",fee:12,star:6,g:["horror","thriller","action"],tone:["eerie","gritty"],known:"It, John Wick: Chapter 4, Nosferatu"},
+ {id:"wilson",s:"m",name:"Patrick Wilson",fee:10,star:6,g:["horror","thriller","drama"],tone:["eerie","heartfelt"],known:"The Conjuring, Insidious, Aquaman"},
+ {id:"duke",s:"m",name:"Winston Duke",fee:8,star:5,g:["action","horror","comedy"],tone:["epic","eerie"],known:"Us, Black Panther, Nine Perfect Strangers"},
+ {id:"cruise",s:"m",name:"Tom Cruise",fee:30,star:9,g:["action","thriller","scifi"],tone:["epic","gritty"],known:"Mission: Impossible, Top Gun: Maverick"},
+ {id:"johnson",s:"m",name:"Dwayne Johnson",fee:28,star:9,g:["action","comedy","animation"],tone:["funny","epic"],known:"Moana, Jumanji, Fast & Furious"},
+ {id:"gosling",s:"m",name:"Ryan Gosling",fee:28,star:9,g:["drama","comedy","scifi","action"],tone:["stylish","heartfelt"],known:"La La Land, Drive, Barbie"},
+ {id:"chalamet",s:"m",name:"Timoth\u00e9e Chalamet",fee:22,star:8,g:["drama","scifi","romance"],tone:["heartfelt","epic"],known:"Dune, Call Me by Your Name, Wonka"},
+ {id:"reeves",s:"m",name:"Keanu Reeves",fee:20,star:8,g:["action","scifi","thriller"],tone:["gritty","stylish"],known:"John Wick, The Matrix"},
+ {id:"hardy",s:"m",name:"Tom Hardy",fee:18,star:8,g:["action","thriller","drama"],tone:["gritty","epic"],known:"Inception, Mad Max: Fury Road, Venom"},
+ {id:"murphy",s:"m",name:"Cillian Murphy",fee:18,star:8,g:["thriller","drama","horror"],tone:["eerie","gritty"],known:"Oppenheimer, 28 Days Later, Inception"},
+ {id:"powell",s:"m",name:"Glen Powell",fee:14,star:7,g:["action","comedy","romance"],tone:["funny","heartfelt"],known:"Top Gun: Maverick, Anyone But You, Twisters"},
+ {id:"black",s:"m",name:"Jack Black",fee:14,star:7,g:["comedy","animation","horror"],tone:["funny","heartfelt"],known:"School of Rock, Kung Fu Panda, Jumanji"},
+ {id:"robbie",s:"f",name:"Margot Robbie",fee:22,star:8,g:["comedy","drama","action"],tone:["funny","stylish"],known:"Barbie, I, Tonya, The Wolf of Wall Street"},
+ {id:"stone",s:"f",name:"Emma Stone",fee:20,star:8,g:["comedy","drama","romance"],tone:["funny","heartfelt"],known:"La La Land, Easy A, Poor Things"},
+ {id:"zendaya",s:"f",name:"Zendaya",fee:22,star:8,g:["drama","scifi","romance"],tone:["stylish","epic"],known:"Dune, Euphoria, Challengers"},
+ {id:"pugh",s:"f",name:"Florence Pugh",fee:14,star:7,g:["horror","drama","thriller"],tone:["eerie","heartfelt"],known:"Midsommar, Little Women, Oppenheimer"},
+ {id:"ortega",s:"f",name:"Jenna Ortega",fee:6,star:5,g:["horror","comedy"],tone:["eerie","funny"],known:"Scream, Wednesday, Beetlejuice Beetlejuice"},
+ {id:"awkwafina",s:"f",name:"Awkwafina",fee:9,star:6,g:["comedy","animation"],tone:["funny","heartfelt"],known:"Crazy Rich Asians, The Farewell, Shang-Chi"},
+ {id:"blunt",s:"f",name:"Emily Blunt",fee:20,star:8,g:["action","scifi","thriller","drama"],tone:["gritty","heartfelt"],known:"A Quiet Place, Sicario, Oppenheimer"},
+ {id:"theron",s:"f",name:"Charlize Theron",fee:22,star:8,g:["action","scifi","thriller","drama"],tone:["gritty","stylish"],known:"Mad Max: Fury Road, Atomic Blonde, Monster"},
+ {id:"saldana",s:"f",name:"Zoe Salda\u00f1a",fee:22,star:8,g:["action","scifi"],tone:["epic","stylish"],known:"Avatar, Guardians of the Galaxy, Star Trek"}];
+var WINDOWS=[
+ {id:"val",name:"Valentine's Week",when:"Feb",vibe:"Date-night crowds, cheap to market",cost:6,base:.95,g:{romance:1.5,comedy:1.1,horror:.9,action:.9}},
+ {id:"spring",name:"Spring Break",when:"Apr",vibe:"Families and students on holiday",cost:10,base:.95,g:{comedy:1.1,animation:1.15,drama:.95}},
+ {id:"summer",name:"Summer Tentpole",when:"Jun",vibe:"Blockbuster season, pricey to market",cost:35,base:1,g:{action:1.3,scifi:1.25,animation:1.3,comedy:1.05,drama:.85,romance:.9,horror:.9,thriller:.95}},
+ {id:"hallow",name:"Halloween Weekend",when:"Oct",vibe:"Spooky season",cost:8,base:.95,g:{horror:1.5,thriller:1.2,comedy:.95}},
+ {id:"awards",name:"Awards Season",when:"Nov",vibe:"Prestige audiences, cold weather",cost:14,base:1,g:{drama:1.35,thriller:1.1,romance:1.1,animation:1.1,action:.9,comedy:.9}},
+ {id:"holiday",name:"Holiday Weekend",when:"Dec",vibe:"Biggest crowds of the year, costly",cost:28,base:1.15,g:{animation:1.2,action:1.1,scifi:1.1,comedy:1.05,horror:.85,drama:1}},
+ {id:"winter",name:"Winter Dump Month",when:"Jan",vibe:"Quiet January, cheap to market",cost:6,base:.9,hardOnly:true,g:{horror:1.05,thriller:1.05,drama:1.05,romance:.95,action:.9,animation:.9,comedy:.9,scifi:.9}}];
+var SEASON={1:"winter",2:"val",3:"spring",4:"spring",5:"summer",6:"summer",7:"summer",8:"summer",9:"hallow",10:"hallow",11:"awards",12:"holiday"};
+function seasonOf(ds){return SEASON[+ds.slice(5,7)]}
+// Pitches: three per genre. tones are what the story needs; win lists release seasons that suit it; lead/side say who the story needs.
+var PLOTS={
+ action:[
+  {title:"Ironclad",text:"A bomb-disposal veteran must escort a stolen armored prototype train across a mountain range before its buyer's private army catches up.",tones:["epic","gritty"],win:["summer"],lead:{r:"the bomb-disposal veteran",t:"gritty"},side:{r:"the train's reluctant engineer",t:"funny"},anta:{r:"the arms dealer who wants it back",t:"stylish"}},
+  {title:"Dead Reckoning at Sea",text:"A getaway driver on her last job learns the vault she's robbing sits under a cruise ship that someone else is already hijacking.",tones:["stylish","funny"],win:["summer","holiday"],lead:{r:"the getaway driver",t:"stylish"},side:{r:"the safecracker who never stops talking",t:"funny"},anta:{r:"the pirate captain running the hijack",t:"epic"}},
+  {title:"Canyon Fire",text:"A former smuggler turned park ranger races a wildfire and a rogue militia to evacuate a canyon town through the only road left.",tones:["gritty","heartfelt"],win:["summer","awards"],lead:{r:"the park ranger",t:"gritty"},side:{r:"the town's teenage mechanic",t:"heartfelt"},anta:{r:"the militia leader who wants the road closed",t:"gritty"}}],
+ scifi:[
+  {title:"Tidal Lock",text:"When the Earth stops spinning, a climatologist leads a convoy along the one thin strip of twilight that's still livable.",tones:["epic","heartfelt"],win:["summer","holiday"],lead:{r:"the climatologist",t:"heartfelt"},side:{r:"the convoy's pilot",t:"gritty"},anta:{r:"the billionaire hoarding the last greenhouse",t:"stylish"}},
+  {title:"The Understudy",text:"A cloned stage actor learns the original has been missing for years, and that he was grown to take his place.",tones:["stylish","eerie"],win:["awards","hallow"],lead:{r:"the clone",t:"stylish"},side:{r:"the theater director who knows",t:"gritty"},anta:{r:"the original, who comes back",t:"eerie"}},
+  {title:"Signal Fire",text:"A forest lookout starts hearing a transmission in her radio static that predicts disasters one day before they happen.",tones:["eerie","heartfelt"],win:["hallow","awards"],lead:{r:"the lookout",t:"heartfelt"},side:{r:"the voice on the radio",t:"eerie"},anta:{r:"the agency that buried similar reports",t:"gritty"}}],
+ animation:[
+  {title:"Pepper and the Tide",text:"A timid lighthouse apprentice crab must keep a very sleepy sea monster from wrecking the village's summer fair.",tones:["funny","heartfelt"],win:["summer","spring"],lead:{r:"the apprentice crab",t:"heartfelt"},side:{r:"the sleepy sea monster",t:"funny"},anta:{r:"the fair's snobbish mayor",t:"stylish"}},
+  {title:"Cloud Nine Express",text:"A dreamy mail pigeon and a cranky station-master tortoise race to deliver one last letter before storm season shuts down the sky-train.",tones:["epic","funny"],win:["holiday","summer"],lead:{r:"the dreamy mail pigeon",t:"funny"},side:{r:"the cranky station-master tortoise",t:"heartfelt"},anta:{r:"the thundercloud that hates deliveries",t:"epic"}},
+  {title:"Grandma's Robot",text:"A retired robot vacuum teaches a lonely kid how to save his grandmother's bakery from a gleaming robot franchise.",tones:["heartfelt","stylish"],win:["holiday"],lead:{r:"the lonely kid",t:"heartfelt"},side:{r:"the retired robot vacuum",t:"funny"},anta:{r:"the franchise's slick CEO",t:"stylish"}}],
+ comedy:[
+  {title:"Family Style",text:"Three siblings must run their late father's disastrous restaurant for one weekend to win a food critic's blessing and their inheritance.",tones:["funny","heartfelt"],win:["spring","holiday"],lead:{r:"the eldest sibling",t:"funny"},side:{r:"the sous-chef who knows the secret recipe",t:"heartfelt"},anta:{r:"the food critic who never smiles",t:"stylish"}},
+  {title:"Escape Room Reunion",text:"Old college friends get locked in an escape room for their reunion, and every puzzle is built from their secrets.",tones:["funny","eerie"],win:["hallow"],lead:{r:"the friend who organized it",t:"funny"},side:{r:"the friend with the biggest secret",t:"stylish"},anta:{r:"the unseen game master",t:"eerie"}},
+  {title:"Wrong Wedding",text:"A wedding crasher is mistaken for the officiant and can't find a way to back out before the vows.",tones:["funny","stylish"],win:["summer","spring"],lead:{r:"the crasher",t:"funny"},side:{r:"the bride's skeptical sister",t:"heartfelt"},anta:{r:"the wedding planner who runs everything",t:"stylish"}}],
+ horror:[
+  {title:"Static Hours",text:"A late-night radio host starts taking calls from listeners who describe the inside of her own house.",tones:["eerie","stylish"],win:["hallow"],lead:{r:"the radio host",t:"stylish"},side:{r:"the caller who keeps ringing back",t:"eerie"},anta:{r:"the voice that answers from inside the house",t:"eerie"}},
+  {title:"Salt House",text:"A family buys a flooded village's old hotel where the guests never actually checked out.",tones:["eerie","gritty"],win:["hallow"],lead:{r:"the mother holding the family together",t:"gritty"},side:{r:"the longest-staying guest",t:"eerie"},anta:{r:"the proprietor who never leaves the lobby",t:"stylish"}},
+  {title:"Floor 13",text:"New hires in an office tower notice one floor is never lit, and nobody remembers hiring its tenant.",tones:["eerie","funny"],win:["hallow"],lead:{r:"the new hire who asks too many questions",t:"funny"},side:{r:"the night security guard",t:"gritty"},anta:{r:"the tenant on thirteen",t:"eerie"}}],
+ thriller:[
+  {title:"Blind Spot",text:"A security-camera analyst realizes the same stranger has stood in the background of every incident for five years.",tones:["gritty","stylish"],win:["awards"],lead:{r:"the camera analyst",t:"stylish"},side:{r:"the detective who doubts her",t:"gritty"},anta:{r:"the stranger in the background",t:"eerie"}},
+  {title:"Last Ferry",text:"Passengers on the final night ferry learn that one of them holds a ticket for a crime that hasn't happened yet.",tones:["stylish","eerie"],win:["hallow","awards"],lead:{r:"the deckhand who spots the ticket",t:"gritty"},side:{r:"the passenger holding it",t:"eerie"},anta:{r:"the detective aboard who wants it unsolved",t:"stylish"}},
+  {title:"Deposition",text:"A junior lawyer gets the case of the decade and finds her own signature on evidence dated before she was hired.",tones:["stylish","gritty"],win:["awards","holiday"],lead:{r:"the junior lawyer",t:"stylish"},side:{r:"the retired judge who helps her",t:"heartfelt"},anta:{r:"the senior partner running the firm",t:"gritty"}}],
+ drama:[
+  {title:"Harbor Light",text:"A fishing family fights to keep their boat, and each other, after the industry collapses around them.",tones:["heartfelt","gritty"],win:["awards"],lead:{r:"the family matriarch",t:"heartfelt"},side:{r:"the son tempted to leave",t:"gritty"},anta:{r:"the cannery owner buying up the harbor",t:"stylish"}},
+  {title:"Second Violin",text:"An aging orchestra's second violinist gets one chance to lead the final concert, and must face the prodigy who is replacing her.",tones:["stylish","heartfelt"],win:["awards","holiday"],lead:{r:"the second violinist",t:"heartfelt"},side:{r:"the prodigy",t:"stylish"},anta:{r:"the donor threatening to pull the funding",t:"gritty"}},
+  {title:"The Ferryman's Letters",text:"A son returns to his late father's island to deliver the last letters, and learns the secret his father kept.",tones:["heartfelt","epic"],win:["awards","holiday"],lead:{r:"the grieving son",t:"heartfelt"},side:{r:"the island postmistress",t:"funny"},anta:{r:"the landowner who wants the island's history buried",t:"gritty"}}],
+ romance:[
+  {title:"Layover",text:"Two strangers stuck in a Reykjavik airport for 24 hours keep missing their flights on purpose.",tones:["heartfelt","funny"],win:["val"],lead:{r:"the stranded architect",t:"heartfelt"},side:{r:"the stranger carrying a tuba",t:"funny"},anta:{r:"the ex waiting at the destination",t:"stylish"}},
+  {title:"Tuesday Night Club",text:"A widowed baker and her new neighbor start a weekly dinner club that matchmakes everyone except themselves.",tones:["heartfelt","stylish"],win:["val","spring"],lead:{r:"the widowed baker",t:"heartfelt"},side:{r:"the new neighbor",t:"funny"},anta:{r:"the rival matchmaker",t:"funny"}},
+  {title:"Letters to August",text:"Two pen pals fall for each other across two cities, then discover they work for rival companies.",tones:["funny","stylish"],win:["val","summer"],lead:{r:"the pen pal in the city",t:"stylish"},side:{r:"the pen pal across the bay",t:"funny"},anta:{r:"the CEO who wants both fired",t:"gritty"}}]};
+var LOYAL=[["nolan","pattinson",.10,"Tenet"],["nolan","hathaway",.10,"Interstellar, The Dark Knight Rises"],["villeneuve","isaac",.10,"Dune, Dune: Part Two"],["villeneuve","momoa",.10,"Dune, Dune: Part Two"],["villeneuve","gyllenhaal",.10,"Prisoners, Enemy"],["villeneuve","dearmas",.08,"Blade Runner 2049"],["gerwig","ronan",.10,"Lady Bird, Little Women"],["peele","lupita",.10,"Us"],["peele","duke",.08,"Us"],["gluck","sweeney",.10,"Anyone But You"],["gluck","kunis",.08,"Friends with Benefits"],["docter","foxx",.08,"Soul"],["docter","poehler",.10,"Inside Out"],["stahelski","skarsgard",.10,"John Wick: Chapter 4"],["wan","wilson",.10,"Insidious, The Conjuring"],["wan","momoa",.08,"Aquaman"],["nolan","murphy",.10,"Inception, Dunkirk, Oppenheimer"],["nolan","hardy",.10,"Inception, Dunkirk, The Dark Knight Rises"],["nolan","blunt",.10,"Oppenheimer"],["villeneuve","zendaya",.10,"Dune, Dune: Part Two"],["villeneuve","chalamet",.10,"Dune, Dune: Part Two"],["villeneuve","gosling",.10,"Blade Runner 2049"],["villeneuve","blunt",.08,"Sicario"],["gerwig","robbie",.10,"Barbie"],["gerwig","gosling",.10,"Barbie"],["gerwig","chalamet",.08,"Little Women"],["gerwig","pugh",.08,"Little Women"],["gluck","stone",.08,"Easy A"],["gluck","powell",.10,"Anyone But You"],["stahelski","reeves",.10,"the John Wick films"],["wan","johnson",.08,"Furious 7"]];
+var CHEM=[["isaac","momoa",.10,"Dune"],["lupita","duke",.12,"Us"],["momoa","wilson",.10,"Aquaman"],["hathaway","gyllenhaal",.12,"Love & Other Drugs"],["foxx","hathaway",.10,"Rio"],["isaac","lupita",.10,"Star Wars: The Force Awakens"],["zendaya","chalamet",.12,"Dune"],["gosling","stone",.12,"La La Land"],["gosling","robbie",.10,"Barbie"],["cruise","powell",.12,"Top Gun: Maverick"],["murphy","hardy",.12,"Inception, Dunkirk"],["murphy","blunt",.10,"Oppenheimer"],["pugh","chalamet",.10,"Little Women, Dune: Part Two"],["black","awkwafina",.10,"Jumanji: The Next Level"],["johnson","black",.10,"Jumanji films"],["johnson","awkwafina",.10,"Jumanji: The Next Level"]];
+// Real upcoming releases (date as publicly reported in Oct 2026, title, our genre tag, our strength rating 1-10)
+var SLATE_RAW=[
+ ["2026-10-16","Street Fighter","action",5],["2026-10-16","Sense and Sensibility","romance",3],
+ ["2026-10-23","Clayface","horror",6],["2026-10-23","Klara and the Sun","scifi",3],
+ ["2026-11-06","Wild Horse Nine","comedy",4],["2026-11-06","The Cat in the Hat","animation",5],["2026-11-06","Godzilla Minus Zero","scifi",3],
+ ["2026-11-20","The Hunger Games: Sunrise on the Reaping","action",9],
+ ["2026-11-25","Focker In-Law","comedy",7],["2026-11-25","The Further Mis-Adventures of Cliff Booth","drama",3],
+ ["2026-12-04","Violent Night 2","action",5],["2026-12-04","Behemoth!","drama",3],
+ ["2026-12-11","Jumanji 3","comedy",8],["2026-12-11","Ink","drama",3],
+ ["2026-12-18","Avengers: Doomsday","action",10],["2026-12-18","Dune: Part Three","scifi",8],
+ ["2026-12-23","The Angry Birds Movie 3","animation",5],["2026-12-25","Werwulf","horror",4],["2026-12-25","Artificial","drama",3],
+ ["2027-01-08","The Liberation","thriller",2],["2027-01-15","The Beekeeper 2","action",5],["2027-01-15","Children of Blood and Bone","action",4],
+ ["2027-01-22","Animal Friends","comedy",4],["2027-01-22","Air Bud Returns","comedy",2],["2027-01-29","The Rescue","action",3],["2027-01-29","Drag","horror",2],
+ ["2027-02-05","Ice Age: Boiling Point","animation",6],["2027-02-05","Untitled Glen Powell and Judd Apatow Project","comedy",5],["2027-02-05","Remain","romance",3],
+ ["2027-02-12","Wishful Thinking","romance",3],["2027-02-19","CoComelon: The Movie","animation",3],
+ ["2027-02-24","Cliffhanger","action",4],["2027-02-26","The Revenge of La Llorona","horror",3],
+ ["2027-03-05","Gatto","animation",4],["2027-03-05","The Thomas Crown Affair","action",5],["2027-03-12","The Exorcist: Martyrs","horror",5],
+ ["2027-03-19","Sonic the Hedgehog 4","action",7],["2027-03-19","Wolf Creek: Legacy","horror",2],
+ ["2027-03-26","Godzilla x Kong: Supernova","scifi",8],["2027-03-26","The Saviors","thriller",3],
+ ["2027-04-09","Panic Carefully","thriller",3],["2027-04-16","Monitor","horror",3],["2027-04-16","Not Alone","animation",4],
+ ["2027-04-23","Spaceballs: The New One","comedy",5],["2027-04-30","The Legend of Zelda","action",8],
+ ["2027-05-06","The Resurrection of the Christ: Part One","drama",7],["2027-05-07","Beach Read","romance",3],["2027-05-14","F.A.S.T.","action",3],
+ ["2027-05-21","Bad Fairies","animation",4],["2027-05-21","The Catch","romance",3],["2027-05-21","Paranormal Activity 8","horror",4],
+ ["2027-05-28","Star Wars: Starfighter","scifi",9],["2027-06-04","John Rambo","action",5],["2027-06-04","Skeletons","horror",2],
+ ["2027-06-11","How to Train Your Dragon 2","action",7],["2027-06-11","Possession","horror",3],["2027-06-20","Spider-Man: Beyond the Spider-Verse","animation",9],
+ ["2027-06-25","Untitled Ocean's Eleven Prequel","thriller",5],["2027-06-30","Shrek 5","animation",8],["2027-07-09","Man of Tomorrow","action",9]];
+var LAST_DATE="2027-06-25";
+function byId(a){var m={};a.forEach(function(x){m[x.id]=x});return m}
+var G=byId(GENRES),D=byId(DIRS),A=byId(ACTORS),W=byId(WINDOWS);
+var SHARE=0.4;
+
+function dnum(s){return Math.round(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/86400000)}
+function addDays(s,n){var d=new Date(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))+n*86400000);return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0")}
+function dow(s){return new Date(dnum(s)*86400000).getUTCDay()}
+function wkFri(s){var w=dow(s);return w===5?s:(w>=1&&w<=4)?addDays(s,5-w):w===6?addDays(s,-1):addDays(s,-2)}
+var SLATE=SLATE_RAW.map(function(r){return {d:r[0],t:r[1],g:r[2],s:r[3],f:wkFri(r[0])}});
+function buildDates(today){
+  var s=addDays(today,14);while(dow(s)!==5)s=addDays(s,1);
+  var out=[];while(s<=LAST_DATE){out.push(s);s=addDays(s,7)}return out;
+}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296}}
+var DIFFS={
+ easy:{id:"easy",name:"Easy",show:true,roles:false,real:false},
+ medium:{id:"medium",name:"Medium",show:false,roles:true,real:false},
+ hard:{id:"hard",name:"Hard",show:false,roles:true,real:true}};
+function makeEnv(day){
+  var r=rng(hash("greenlight|"+day)),heat={},plots={};
+  GENRES.forEach(function(g){heat[g.id]=Math.round((0.85+r()*0.4)*100)/100});
+  var rival=WINDOWS.filter(function(w){return !w.hardOnly})[Math.floor(r()*6)].id,budget=110+5*Math.floor(r()*7);
+  GENRES.forEach(function(g){plots[g.id]=hash(day+"|plot|"+g.id)%PLOTS[g.id].length});
+  return {day:day,heat:heat,rival:rival,budget:budget,plots:plots,dates:buildDates(day),daily:GENRES[hash("daily|"+day)%GENRES.length].id};
+}
+function plotFor(env,gid){return PLOTS[gid][env.plots[gid]]}
+function winId(p,cfg){return cfg.real?(p.w?seasonOf(p.w):null):p.w}
+function luckOf(env,p,cfg){var ids=cfg.roles?p.a1+"|"+p.a2+"|"+p.a3:[p.a1,p.a2].sort().join("|")+"|"+p.a3;return 0.92+0.16*rng(hash(env.day+"|"+p.g+"|"+p.d+"|"+ids+"|"+p.w))()}
+function pairKey(a,b){return a<b?a+"|"+b:b+"|"+a}
+function costOf(p,cfg){var c=0,wid=winId(p,cfg);if(G[p.g])c+=G[p.g].cost;if(D[p.d])c+=D[p.d].fee;if(W[wid])c+=W[wid].cost;if(A[p.a1])c+=A[p.a1].fee;if(A[p.a2])c+=A[p.a2].fee;if(A[p.a3])c+=A[p.a3].fee;return c}
+// Competing real releases near a date: weight 1 same weekend, .4 a week away, .15 two weeks away.
+function rivalsFor(date,gid){
+  var out=[],pen=0;
+  SLATE.forEach(function(x){var df=Math.abs(dnum(x.f)-dnum(date)),wt=df===0?1:df===7?.4:df===14?.15:0;
+    if(!wt)return;var same=x.g===gid,p=wt*x.s*(same?0.02:0.010);pen+=p;out.push({t:x.t,g:x.g,f:x.f,wt:wt,pen:p,same:same,dir:dnum(x.f)-dnum(date)})});
+  return {x:Math.max(0.55,1-pen),list:out};
+}
+function synergies(env,p,cfg){
+  var g=G[p.g],d=D[p.d],cast=[A[p.a1],A[p.a2],A[p.a3]],wid=winId(p,cfg),out=[],plot=g?plotFor(env,g.id):null;
+  var gf=cfg.roles?[.10,.05,.06]:[.08,.08,.08],rl=["lead","supporting role","antagonist"];
+  if(g&&d&&d.spec.indexOf(g.id)>-1)out.push(["Director specialty",.15]);
+  cast.forEach(function(a,i){if(!a)return;
+    if(g&&a.g.indexOf(g.id)>-1)out.push([a.name+" fits the genre",gf[i]]);
+    if(d)LOYAL.forEach(function(l){if(l[0]===d.id&&l[1]===a.id)out.push([d.name+" + "+a.name+" ("+l[3]+")",l[2]])})});
+  for(var i=0;i<3;i++)for(var j=i+1;j<3;j++)if(cast[i]&&cast[j])CHEM.forEach(function(c){if(pairKey(c[0],c[1])===pairKey(cast[i].id,cast[j].id))out.push(["Cast chemistry: "+c[3],c[2]])});
+  if(plot){
+    var rt=[plot.lead.t,plot.side.t,plot.anta.t],rw=[.07,.05,.06];
+    if(d)d.tone.forEach(function(t){if(plot.tones.indexOf(t)>-1)out.push([d.name+" gets the story's tone ("+t+")",.05])});
+    cast.forEach(function(a,i){if(!a)return;
+      if(cfg.roles||i===2){if(a.tone.indexOf(rt[i])>-1)out.push([a.name+" is right for the "+rl[i]+" ("+rt[i]+")",i===2&&!cfg.roles?.05:rw[i]])}
+      else a.tone.forEach(function(t){if(plot.tones.indexOf(t)>-1)out.push([a.name+" suits the story ("+t+")",.03])})});
+    if(wid&&plot.win.indexOf(wid)>-1)out.push(["Release timing suits the story ("+W[wid].name+")",.06]);
+  }
+  return out;
+}
+function evalFilm(env,p,cfg,luck){
+  var g=G[p.g],d=D[p.d],cast=[A[p.a1],A[p.a2],A[p.a3]],wid=winId(p,cfg),w=W[wid],steps=[],m;
+  var out={steps:steps,cost:costOf(p,cfg),syn:[],rivals:[]};
+  function push(k,x,note){steps.push({k:k,x:x,note:note||"",run:null})}
+  m=g.base;steps.push({k:"Genre potential",abs:g.base,note:g.name+" at full strength",run:m});
+  m*=env.heat[g.id];push("Today's heat",env.heat[g.id],"Audience mood for "+g.name);steps[steps.length-1].run=m;
+  var wm=Math.round(w.base*(w.g[g.id]||1)*100)/100;push("Release window",wm,w.name);m*=wm;steps[steps.length-1].run=m;
+  if(cfg.real){var rv=rivalsFor(p.w,g.id),cx=Math.round(rv.x*100)/100;out.rivals=rv.list;
+    push("Competing releases",cx,rv.list.length?rv.list.length+" real films open nearby":"A clear calendar");m*=cx}
+  else{var cr=env.rival===wid?0.8:1;push("Rival crowding",cr,cr<1?"A rival opens the same week":"Clear runway");m*=cr}
+  steps[steps.length-1].run=m;
+  push("Director skill",d.skill,d.name);m*=d.skill;steps[steps.length-1].run=m;
+  var sw=cfg.roles?[.04,.02,.025]:[.03,.03,.03],sp=0;cast.forEach(function(a,i){sp+=sw[i]*a.star});
+  var cm=Math.round((1+sp)*100)/100;
+  push("Star power",cm,cast.map(function(a){return a.name+" ★"+a.star}).join(", "));m*=cm;steps[steps.length-1].run=m;
+  var syn=synergies(env,p,cfg),sum=0;syn.forEach(function(s){sum+=s[1]});
+  var sm=Math.round((1+sum)*100)/100;push("Synergies",sm,syn.length?"":"No synergies this time");m*=sm;steps[steps.length-1].run=m;
+  out.syn=syn.map(function(s){return s[0]+" +"+Math.round(s[1]*100)+"%"});
+  var lk=luck===undefined?luckOf(env,p,cfg):luck;push("Hidden luck",Math.round(lk*100)/100,"Seeded by today's date and your slate");m*=lk;steps[steps.length-1].run=m;
+  out.luck=lk;out.gross=m;out.share=m*SHARE;out.profit=out.share-out.cost;
+  return out;
+}
+// Each role gets its own pool of six: three men and three women, no one repeated across roles. Seeded by day and genre, nudged toward actors who suit the genre.
+function poolsFor(env,gid){
+  var r=rng(hash("pool|"+env.day+"|"+gid)),m=[],f=[];
+  ACTORS.forEach(function(a){(a.s==="f"?f:m).push({a:a,k:r()-(a.g.indexOf(gid)>-1?0.5:0)})});
+  function ord(x){x.sort(function(p,q){return p.k-q.k});return x.map(function(o){return o.a})}
+  m=ord(m);f=ord(f);
+  return [0,1,2].map(function(k){return m.slice(3*k,3*k+3).concat(f.slice(3*k,3*k+3)).sort(function(a,b){return b.fee-a.fee||(a.id<b.id?-1:1)}).map(function(a){return a.id})});
+}
+// Lean numeric twin of evalFilm (same rounding) used only by the ceiling search.
+function evalFast(env,p,cfg,pre){
+  var g=G[p.g],d=D[p.d],cast=[A[p.a1],A[p.a2],A[p.a3]],wid=winId(p,cfg),w=W[wid],m;
+  var wk=p.w+"|"+g.id,cx=1;
+  m=g.base*env.heat[g.id];
+  m*=Math.round(w.base*(w.g[g.id]||1)*100)/100;
+  if(cfg.real){cx=pre[wk];if(cx===undefined)cx=pre[wk]=Math.round(rivalsFor(p.w,g.id).x*100)/100}
+  else cx=env.rival===wid?0.8:1;
+  m*=cx*d.skill;
+  var sw=cfg.roles?[.04,.02,.025]:[.03,.03,.03],sp=0;for(var i=0;i<3;i++)sp+=sw[i]*cast[i].star;
+  m*=Math.round((1+sp)*100)/100;
+  var syn=synergies(env,p,cfg),sum=0;for(var q=0;q<syn.length;q++)sum+=syn[q][1];
+  m*=Math.round((1+sum)*100)/100;
+  m*=luckOf(env,p,cfg);
+  var cost=costOf(p,cfg);
+  return {gross:m,cost:cost,profit:m*SHARE-cost};
+}
+// Best possible film for one genre. Pass a subset of directors and the running best to work in chunks.
+function bestPossible(env,gid,cfg,dirs,best){
+  var g=G[gid],wins=cfg.real?env.dates:WINDOWS.filter(function(w){return !w.hardOnly}).map(function(w){return w.id});
+  var pl=poolsFor(env,gid).map(function(ids){return ids.map(function(id){return A[id]})});
+  best=best||null;var pre={};
+  (dirs||DIRS).forEach(function(d){wins.forEach(function(w){
+    var wid=cfg.real?seasonOf(w):w,base=g.cost+d.fee+W[wid].cost;if(base>env.budget)return;
+    pl[0].forEach(function(x){var b1=base+x.fee;if(b1>env.budget)return;
+      pl[1].forEach(function(y){var b2=b1+y.fee;if(b2>env.budget)return;
+        pl[2].forEach(function(z){if(b2+z.fee>env.budget)return;
+          var p={g:gid,d:d.id,a1:x.id,a2:y.id,a3:z.id,w:w},r=evalFast(env,p,cfg,pre);
+          if(!best||r.profit>best.profit)best={p:p,profit:r.profit,gross:r.gross,cost:r.cost};
+        })})})})});
+  return best;
+}
+function bestPossibleAsync(env,gid,cfg,done){
+  var best=null,i=0;
+  (function step(){best=bestPossible(env,gid,cfg,[DIRS[i]],best);i++;if(i<DIRS.length)setTimeout(step,0);else done(best)})();
+}
+// ===== MODEL END =====
+
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function fmtDay(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function money(n){var v=Math.round(n);return (v<0?"-":"")+"$"+Math.abs(v)+"M"}
+function x2(n){return "×"+n.toFixed(2)}
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"],MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],DN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function prettyDate(s){return DN[dow(s)]+", "+MS[+s.slice(5,7)-1]+" "+(+s.slice(8,10))+(s.slice(0,4)!==TODAY.slice(0,4)?", "+s.slice(0,4):"")}
+
+var TODAY=fmtDay(new Date());
+var state={type:"basic",diff:"medium",day:TODAY,env:makeEnv(TODAY),pick:{g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"},result:null,stage:"play",step:"genre",enter:false,
+  myId:null,db:null,user:null,boards:{},days:{},canWrite:true,ceil:null,attempt:0,names:{},saveNote:""};
+var LKEY="greenlight.days.v2";
+function CFG(){return DIFFS[state.diff]}
+function modeKey(){return "r3-"+state.type+"-"+state.diff}
+function modeLabel(){return (state.type==="daily"?"Daily Challenge":"Basic")+" · "+CFG().name}
+function dkey(day){return modeKey()+"|"+(day||state.day)}
+function loadLocal(){try{state.days=JSON.parse(localStorage.getItem(LKEY)||"{}")||{}}catch(e){state.days={}}}
+function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(state.days))}catch(e){}}
+function mergeDays(a,b){var o={};[a,b].forEach(function(src){Object.keys(src||{}).forEach(function(k){if(k.indexOf("|")<0)return;var e=src[k],c=o[k];if(!c)o[k]=Object.assign({},e);else{var att=Math.max(e.attempts||1,c.attempts||1);if(e.profit>c.profit)o[k]=Object.assign({},e);o[k].attempts=att}})});return o}
+
+function curPick(){var P=state.pick;return {g:P.g,d:P.d,a1:P.a1,a2:P.a2,a3:P.a3,w:P.w}}
+function complete(){var p=curPick();return !!(p.g&&p.d&&p.a1&&p.a2&&p.a3&&p.w)}
+function curCost(){return costOf(curPick(),CFG())}
+function chosen(){var P=state.pick;return (P.g?1:0)+(P.d?1:0)+(P.a1?1:0)+(P.a2?1:0)+(P.a3?1:0)+(P.w?1:0)}
+
+function drawHead(){
+  var cfg=CFG(),env=state.env;
+  $("#date").textContent=modeLabel()+" · "+state.day;
+  $("#type").innerHTML='<button data-act="type" data-m="basic" aria-pressed="'+(state.type==="basic")+'">Basic</button><button data-act="type" data-m="daily" aria-pressed="'+(state.type==="daily")+'">Daily Challenge</button>';
+  $("#diff").innerHTML=["easy","medium","hard"].map(function(k){return '<button data-act="diff" data-m="'+k+'" aria-pressed="'+(state.diff===k)+'">'+DIFFS[k].name+'</button>'}).join("");
+  var info={easy:"<b>Easy.</b> Every number is on screen: boosts, multipliers and a projected profit. Good for learning the scoring.",
+   medium:"<b>Medium.</b> Numbers stay hidden. You also decide who plays the lead and who plays the supporting role.",
+   hard:"<b>Hard.</b> Everything hidden, and you release on a real calendar date against real upcoming films."}[state.diff];
+  $("#minfo").innerHTML=(state.type==="daily"?"<b>Daily Challenge.</b> Everyone gets the same story today. Highest profit wins. Hard by default. ":"")+info;
+  var gs=GENRES.slice().sort(function(a,b){return env.heat[b.id]-env.heat[a.id]});
+  function tg(g,c){return '<span class="tag '+c+'">'+g.name+(cfg.show?" "+x2(env.heat[g.id]):"")+'</span>'}
+  $("#market").innerHTML='<div class="budget"><span class="lbl">Studio budget</span><b class="mono">$'+env.budget+'M</b></div>'+
+   '<div class="tape"><div><span class="lbl">Audiences want</span>'+gs.slice(0,2).map(function(g){return tg(g,"hot")}).join("")+'</div>'+
+   '<div><span class="lbl">Cooling off</span>'+gs.slice(-2).reverse().map(function(g){return tg(g,"cold")}).join("")+'</div>'+
+   (cfg.real?'<div><span class="lbl">Rivals</span><span>Real upcoming films, shown with each date</span></div>':'<div><span class="lbl">Rival studio opens</span><span class="tag no">'+esc(W[env.rival].name)+(cfg.show?" ×0.80":"")+'</span></div>')+'</div>';
+  $("#rule").textContent=cfg.show?"Your score is profit: your studio's "+Math.round(SHARE*100)+"% cut of the box office minus what you spend.":"Your score is profit: your studio's "+Math.round(SHARE*100)+"% cut of the box office minus what you spend. How your choices combine stays secret until you greenlight.";
+}
+
+function stepList(){return state.type==="daily"?["story","dir","a1","a2","a3","win","review"]:["genre","story","dir","a1","a2","a3","win","review"]}
+function stepName(id){var cfg=CFG(),n={genre:"Genre",story:"Pitch",dir:"Director",a1:cfg.roles?"Lead":"Actor 1",a2:cfg.roles?"Supporting":"Actor 2",a3:"Villain",win:cfg.real?"Date":"Window",review:"Greenlight"};return n[id]}
+function nextStep(){var l=stepList();return l[Math.min(l.length-1,l.indexOf(state.step)+1)]}
+function prevStep(){var l=stepList();return l[Math.max(0,l.indexOf(state.step)-1)]}
+function go(id){
+  var l=stepList();if(l.indexOf(id)<0)return;
+  if(id!=="genre"&&!state.pick.g&&state.type!=="daily")id="genre";
+  state.step=id;state.enter=true;drawStage();window.scrollTo(0,0);
+}
+function autoAdvance(){
+  var at=state.step;
+  setTimeout(function(){if(state.step===at&&state.stage==="play")go(nextStep())},240);
+}
+
+function drawBar(){
+  var env=state.env,cfg=CFG(),cost=curCost(),over=cost>env.budget,full=complete(),l=stepList(),i=l.indexOf(state.step);
+  var proj="";if(cfg.show&&full){var p=curPick();proj=" · projected "+money(evalFilm(env,p,cfg,0.92).profit)+" to "+money(evalFilm(env,p,cfg,1.08).profit)}
+  var light=over?"red":full?"green":"amber";
+  $("#bar").innerHTML='<div class="signal '+light+'" aria-hidden="true"><i></i><i></i><i></i></div>'+
+   '<div class="info"><div class="nums"><span class="mono '+(over?"neg":"")+'">'+money(cost)+' of $'+env.budget+'M'+(over?" · over budget":"")+'</span><span class="mono">Step '+(i+1)+' of '+l.length+' · '+esc(stepName(state.step))+esc(proj)+'</span></div>'+
+   '<div class="meter'+(over?" over":"")+'"><i style="width:'+Math.min(100,cost/env.budget*100)+'%"></i></div></div>';
+  $("#crumbs").innerHTML=l.map(function(id,k){
+    var cls=k===i?"cur":k<i?"done":"";
+    return k<i?'<button class="crumb done" data-act="goto" data-id="'+id+'">'+esc(stepName(id))+'</button>':'<span class="crumb '+cls+'"'+(k===i?' aria-current="step"':'')+'>'+esc(stepName(id))+'</span>'}).join("");
+}
+
+function card(act,id,sel,title,cost,sub,chips){
+  return '<button class="card" data-act="'+act+'" data-id="'+id+'" aria-pressed="'+sel+'"><div class="c-top"><span>'+esc(title)+'</span><span class="mono">'+(cost!==null?"$"+cost+"M":"")+'</span></div><div class="c-sub">'+sub+'</div><div class="chips">'+chips+'</div></button>';
+}
+function tag(t,c){return '<span class="tag '+(c||"")+'">'+esc(t)+'</span>'}
+function nav(label,ok,act){
+  var l=stepList(),i=l.indexOf(state.step);
+  return '<div class="nav">'+(i>0?'<button class="btn" data-act="back">Back</button>':'<span></span>')+
+    (label?'<button class="btn go" data-act="'+(act||"next")+'"'+(ok?"":" disabled")+'>'+label+'</button>':'')+'</div>';
+}
+
+function stepHtml(){
+  var env=state.env,cfg=CFG(),P=state.pick,g=G[P.g],d=D[P.d],cur=curCost(),h="",show=cfg.show,id=state.step;
+  var plot=g?plotFor(env,g.id):null,L=A[P.a1],S=A[P.a2],T=A[P.a3],wid=winId(curPick(),cfg);
+  function over(add,sub){return cur-(sub||0)+add>env.budget?tag("Over budget","no"):""}
+  if(id==="genre"){
+    h+='<div class="sec"><h2>Pick a genre</h2><p class="hint">The studio hands you a pitch in that genre. Then you build the film around it.</p><div class="cards">'+GENRES.map(function(x){
+      var ht=env.heat[x.id],ch=show?tag("Today "+x2(ht),ht>=1.1?"hot":ht<=0.92?"cold":""):(ht>=1.1?tag("Buzzing","hot"):ht<=0.92?tag("Cold","cold"):"");
+      return card("g",x.id,P.g===x.id,x.name,x.cost,(show?"Potential $"+x.base+"M · ":"")+esc(x.blurb),ch+(P.g!==x.id?over(x.cost,g?g.cost:0):""));}).join("")+'</div></div>'+nav("Next",!!P.g);
+  }else if(id==="story"){
+    if(state.type==="daily")h+='<div class="banner"><span class="lbl">Today\'s challenge</span><b>Same story for every studio. Cast it, schedule it, and out-earn everyone.</b></div>';
+    h+='<div class="pitch"><p class="lbl">'+(state.type==="daily"?"Daily pitch":"Your pitch")+' · '+esc(g.name)+'</p><h2>'+esc(plot.title)+'</h2><p class="log">'+esc(plot.text)+'</p>';
+    h+='<ul class="roles"><li>'+(cfg.roles?'Lead: <b>':'Hero: <b>')+esc(plot.lead.r)+'</b></li><li>'+(cfg.roles?'Supporting: <b>':'Partner: <b>')+esc(plot.side.r)+'</b></li><li>Villain: <b>'+esc(plot.anta.r)+'</b></li></ul>';
+    if(show)h+='<p class="note">Easy hints: the story wants '+plot.tones.map(esc).join(" and ")+' tones and suits '+plot.win.map(function(x){return esc(W[x].name)}).join(" or ")+'. The villain needs a '+esc(plot.anta.t)+' presence.</p>';
+    h+='<p class="note">Next you choose a director, then cast three parts from a shortlist of six each, then pick when to release.</p></div>'+nav("Start casting",true);
+  }else if(id==="dir"){
+    h+='<div class="sec"><h2>Choose your director</h2><p class="hint">Who sees "'+esc(plot.title)+'" best?</p><div class="cards">'+DIRS.map(function(x){
+      var sub,ch="";
+      if(show){sub='Skill '+x2(x.skill)+' · <em>'+esc(x.note)+'</em><br>'+esc(x.known);
+        ch=x.spec.map(function(s){return tag(G[s].name,P.g===s?"ok":"")}).join("")+x.tone.map(function(t){return tag(t,plot.tones.indexOf(t)>-1?"ok":"")}).join("");
+        [L,S,T].forEach(function(a){if(a)LOYAL.forEach(function(l){if(l[0]===x.id&&l[1]===a.id)ch+=tag("Reunion with "+a.name.split(" ").pop(),"ok")})});}
+      else sub='<em>'+esc(x.note)+'</em><br>'+esc(x.known);
+      return card("d",x.id,P.d===x.id,x.name,x.fee,sub,ch+(P.d!==x.id?over(x.fee,d?d.fee:0):""));}).join("")+'</div></div>'+nav("Next",!!P.d);
+  }else if(id==="a1"||id==="a2"||id==="a3"){
+    var k=id==="a1"?0:id==="a2"?1:2,pool=poolsFor(env,g.id)[k].map(function(i){return A[i]});
+    var rol=k===0?plot.lead:k===1?plot.side:plot.anta;
+    var title=k===2?"Cast the villain":cfg.roles?(k===0?"Cast the lead":"Cast the supporting role"):(k===0?"Choose your first actor":"Choose your second actor");
+    var desc=(cfg.roles||k===2)?'Playing <b>'+esc(rol.r)+'</b>':'Either of your two actors can carry the story';
+    h+='<div class="sec"><h2>'+title+'</h2><p class="hint">'+desc+'. Today\'s shortlist: three men and three women, found only for this part.'+(show&&(cfg.roles||k===2)?' This role needs a <b>'+esc(rol.t)+'</b> presence.':'')+'</p><div class="cards cast">'+pool.map(function(x){
+      var sel=P[id]===x.id,sub,ch=tag(x.s==="f"?"Woman":"Man","");
+      if(show){sub='★ '+x.star+' · '+esc(x.known);
+        ch+=x.g.map(function(s){return tag(G[s].name,P.g===s?"ok":"")}).join("")+x.tone.map(function(t){var m=(cfg.roles||k===2)?rol.t===t:plot.tones.indexOf(t)>-1;return tag(t,m?"ok":"")}).join("");
+        if(d)LOYAL.forEach(function(l){if(l[0]===d.id&&l[1]===x.id)ch+=tag("Reunion with "+d.name.split(" ").pop(),"ok")});
+        [L,S,T].forEach(function(o){if(o&&o.id!==x.id&&o.id!==P[id])CHEM.forEach(function(c){if(pairKey(c[0],c[1])===pairKey(o.id,x.id))ch+=tag("Chemistry +"+Math.round(c[2]*100)+"%","ok")})});}
+      else sub=esc(x.known);
+      var filled=P[id];
+      return card("c",x.id,sel,x.name,x.fee,sub,ch+(!sel?over(x.fee,filled?A[filled].fee:0):""));}).join("")+'</div></div>'+nav("Next",!!P[id]);
+  }else if(id==="win"){
+    h+='<div class="sec"><h2>'+(cfg.real?"Pick your release date":"Pick your release window")+'</h2><p class="hint">'+(cfg.real?"Real films are opening on these weekends. Marketing cost depends on the season.":"When should audiences see it?")+'</p>';
+    if(cfg.real){
+      var cur_m="";
+      env.dates.forEach(function(ds){
+        var m=ds.slice(0,7);if(m!==cur_m){if(cur_m)h+='</div>';h+='<div class="mh">'+MONTHS[+ds.slice(5,7)-1]+' '+ds.slice(0,4)+'</div><div class="cards">';cur_m=m}
+        var sid=seasonOf(ds),same=SLATE.filter(function(x){return x.f===ds}),near=SLATE.filter(function(x){return Math.abs(dnum(x.f)-dnum(ds))===7});
+        var sub=same.length?'<b>Opens against:</b> '+same.map(function(x){return esc(x.t)+' ('+G[x.g].name+')'}).join(", "):'No major openers listed';
+        if(near.length)sub+='<br><span>Nearby: '+near.map(function(x){return esc(x.t)+(dnum(x.f)<dnum(ds)?" (week before)":" (week after)")}).join(", ")+'</span>';
+        var wsel=P.w?W[seasonOf(P.w)]:null;
+        h+=card("w",ds,P.w===ds,prettyDate(ds),W[sid].cost,sub,P.w!==ds?over(W[sid].cost,wsel?wsel.cost:0):"");
+      });
+      if(cur_m)h+='</div>';
+    }else{
+      h+='<div class="cards">'+WINDOWS.filter(function(x){return !x.hardOnly}).map(function(x){
+        var ch="",w0=W[wid];
+        if(show){ch+=tag(x2(x.base*(x.g[g.id]||1))+" for "+g.name,(x.base*(x.g[g.id]||1))>=1.1?"ok":(x.base*(x.g[g.id]||1))<.95?"no":"");if(env.rival===x.id)ch+=tag("Rival ×0.80","no");if(plot.win.indexOf(x.id)>-1)ch+=tag("Suits the story","ok")}
+        return card("w",x.id,P.w===x.id,x.name,x.cost,esc(x.when)+' · '+esc(x.vibe),ch+(P.w!==x.id?over(x.cost,w0?w0.cost:0):""));}).join("")+'</div>';
+    }
+    h+='</div>'+nav("Review",!!P.w);
+  }else{
+    var cost=curCost(),ov=cost-env.budget,full=complete();
+    function row(step,lbl,val,c){return '<tr><td><span class="lbl">'+lbl+'</span><div class="who">'+val+'</div></td><td class="n">'+(c!==null?"$"+c+"M":"")+'</td><td class="n"><button class="btn sm" data-act="goto" data-id="'+step+'">Change</button></td></tr>'}
+    var wlab=P.w?(cfg.real?prettyDate(P.w):W[P.w].name):"Not chosen",wc=W[wid]?W[wid].cost:null;
+    h+='<div class="sec"><h2>Ready to greenlight?</h2><p class="hint">"'+esc(plot.title)+'" · '+esc(g.name)+'. Check the slate, then release it. You can come back and tweak it afterwards.</p><div class="panel scroll"><table><tbody>'+
+      row("dir","Director",d?esc(d.name):"Not chosen",d?d.fee:null)+
+      row("a1",cfg.roles?"Lead · "+esc(plot.lead.r):"Actor 1",L?esc(L.name):"Not chosen",L?L.fee:null)+
+      row("a2",cfg.roles?"Supporting · "+esc(plot.side.r):"Actor 2",S?esc(S.name):"Not chosen",S?S.fee:null)+
+      row("a3","Villain · "+esc(plot.anta.r),T?esc(T.name):"Not chosen",T?T.fee:null)+
+      row("win",cfg.real?"Release date":"Release window",esc(wlab),wc)+
+      '<tr><td><span class="lbl">Genre</span><div class="who">'+esc(g.name)+'</div></td><td class="n">$'+g.cost+'M</td><td></td></tr></tbody></table></div>';
+    if(show&&full){var p=curPick();h+='<div class="proj"><span class="lbl">Projected profit</span><b class="mono">'+money(evalFilm(env,p,cfg,0.92).profit)+' to '+money(evalFilm(env,p,cfg,1.08).profit)+'</b></div>'}
+    h+='<p class="note">Total cost <b class="mono">'+money(cost)+'</b> of $'+env.budget+'M.'+(ov>0?' <span class="neg">You are $'+ov+'M over budget. Change someone to a cheaper option.</span>':'')+'</p></div>'+nav(ov>0?"Over budget":"Greenlight it",full&&ov<=0,"go");
+  }
+  return h;
+}
+
+function drawStage(){
+  var play=state.stage==="play",id=state.step,first=stepList()[0];
+  $("#bar").hidden=!play;$("#crumbs").hidden=!play;$("#pickers").hidden=!play;
+  var showMkt=play&&(id==="genre"||(state.type==="daily"&&id==="story"));
+  $("#market").hidden=!showMkt;$("#rule").hidden=!showMkt;
+  $("#boards").hidden=!(state.stage==="result"||(play&&id===first));
+  $("#result").hidden=play;
+  if(play){
+    drawBar();
+    var el=$("#pickers");el.innerHTML='<div class="page'+(state.enter?" enter":"")+'">'+stepHtml()+'</div>';state.enter=false;
+  }
+  drawModel();
+}
+
+function drawModel(){
+  var cfg=CFG(),aside=$("#aside");
+  var vis=cfg.show&&state.stage==="play"&&state.step!=="genre"&&state.step!=="story"&&state.step!=="review";
+  $("#layout").className="layout"+(vis?" two":"");
+  aside.hidden=!vis;if(!vis)return;
+  var env=state.env,p=curPick(),h='<h2>Scoring so far</h2><p class="note" style="margin:0 0 8px">Gross = potential × every factor. You keep '+Math.round(SHARE*100)+'% and pay all the costs. Profit is your score.</p>';
+  if(!p.g)h+='<p class="note">Pick a genre to start the math.</p>';
+  else if(!complete()){
+    var syn=synergies(env,p,cfg);
+    h+='<p class="lbl" style="margin-top:10px">Boosts locked in</p>'+(syn.length?'<ul class="bon">'+syn.map(function(s){return '<li>'+esc(s[0])+' +'+Math.round(s[1]*100)+'%</li>'}).join("")+'</ul>':'<p class="note">None yet.</p>')+
+      '<p class="note">Make all six picks to see the full table and projected profit.</p>';
+  }else{
+    var r=evalFilm(env,p,cfg),lo=evalFilm(env,p,cfg,0.92),hi=evalFilm(env,p,cfg,1.08);
+    h+='<div class="scroll"><table><thead><tr><th>Factor</th><th class="n">Value</th></tr></thead><tbody>'+r.steps.filter(function(s){return s.k!=="Hidden luck"}).map(function(s){
+      var items=s.k==="Synergies"&&r.syn.length?'<small>'+r.syn.map(esc).join("<br>")+'</small>':(s.note?'<small>'+esc(s.note)+'</small>':"");
+      return '<tr><td>'+esc(s.k)+items+'</td><td class="n">'+(s.abs!==undefined?"$"+s.abs+"M":x2(s.x))+'</td></tr>'}).join("")+'</tbody></table></div>'+
+      '<div class="proj"><span class="lbl">Projected profit</span><b class="mono '+(lo.profit>=0?"pos":"neg")+'">'+money(lo.profit)+' to '+money(hi.profit)+'</b></div><p class="note">Costs '+money(r.cost)+'. The range is the hidden luck, ±8%.</p>';
+  }
+  $("#model").innerHTML=h;
+}
+
+function verdictOf(p){return p>=200?"Blockbuster":p>=120?"Smash hit":p>=60?"Solid hit":p>=0?"Break-even":p>=-30?"Flop":"Write-off"}
+function rowsToday(){
+  var k=dkey(),rows=[];
+  Object.keys(state.boards).forEach(function(id){var e=(state.boards[id].days||{})[k];if(e&&id!==state.myId)rows.push({id:id,e:e})});
+  var mine=state.days[k];if(mine)rows.push({id:state.myId||"me",e:mine,me:true});
+  rows.sort(function(a,b){return b.e.profit-a.e.profit});
+  return rows;
+}
+function drawResult(){
+  var res=state.result;if(!res){$("#result").innerHTML="";return}
+  var r=res.r,p=res.p,env=state.env,cfg=res.cfg,plot=plotFor(env,p.g),wid=winId(p,cfg),max=Math.max.apply(null,r.steps.map(function(s){return s.run||s.abs||0}));
+  var rows=rowsToday(),rank=rows.map(function(x){return x.me}).indexOf(true)+1;
+  var cl=state.ceil&&state.ceil.k===res.ck?state.ceil.best:null,effic=cl&&cl.profit>0?Math.round(r.profit/cl.profit*100):null;
+  var when=cfg.real?prettyDate(p.w):W[wid].name,share="GREENLIGHT "+state.day+" · "+modeLabel()+"\n"+plot.title+" · "+G[p.g].name+" · "+when+"\nProfit "+money(r.profit)+" · Gross "+money(r.gross)+" · Cost "+money(r.cost)+" of $"+env.budget+"M\n"+(rank?"Rank #"+rank+" of "+rows.length+" today · ":"")+"Attempt "+state.attempt+"\nCan you beat it?";
+  var wf=r.steps.map(function(s){var run=s.run||s.abs;return '<div><span>'+esc(s.k)+'</span><span class="bk"><i style="width:'+Math.max(2,run/max*100)+'%"></i></span><span class="mono" style="text-align:right">'+(s.abs!==undefined?"$"+s.abs+"M":x2(s.x))+'</span></div>'}).join("");
+  var best=state.days[dkey()],isBest=best&&Math.round(best.profit*10)===Math.round(r.profit*10);
+  var wanted=plot.tones.join(" and ")+" in tone, released in "+plot.win.map(function(id){return W[id].name}).join(" or ");
+  var rv="";
+  if(cfg.real){var ls=r.rivals.slice().sort(function(a,b){return b.pen-a.pen});
+    rv='<p class="lbl" style="margin-top:14px">Films you opened against</p>'+(ls.length?'<ul class="bon">'+ls.map(function(x){return '<li>'+esc(x.t)+' ('+G[x.g].name+'): '+(x.dir===0?"same weekend":Math.abs(x.dir)===7?(x.dir<0?"a week before":"a week after"):(x.dir<0?"two weeks before":"two weeks after"))+', cost you about '+(x.pen*100).toFixed(1)+'%'+(x.same?" (same genre)":"")+'</li>'}).join("")+'</ul>':'<p class="note">Nothing major was nearby.</p>')}
+  var cdiv=state.ceil&&state.ceil.k===res.ck?'<p class="lbl">Best possible '+G[p.g].name+' film today</p><p style="margin:0 0 8px"><b class="mono">'+money(cl.profit)+'</b> '+(effic!==null?'<span class="c-sub">You reached '+effic+'% of it.</span>':'')+'</p><p class="note" style="margin:0 0 12px">'+esc(D[cl.p.d].name)+', '+esc(A[cl.p.a1].name)+(cfg.roles?' as lead':'')+', '+esc(A[cl.p.a2].name)+(cfg.roles?' in support':'')+' &amp; '+esc(A[cl.p.a3].name)+' as the antagonist'+', '+esc(cfg.real?prettyDate(cl.p.w):W[cl.p.w].name)+'.</p>':'<p class="note">Working out the best possible film for today…</p>';
+  $("#result").innerHTML='<section class="result" id="rcard"><div class="r-head"><div><div class="verdict">'+verdictOf(r.profit)+(isBest?" · your best today":"")+' · '+esc(modeLabel())+'</div><h2>'+esc(plot.title)+'</h2><div class="c-sub">'+G[p.g].name+' · '+esc(D[p.d].name)+' · '+esc(A[p.a1].name)+(cfg.roles?' (lead)':'')+', '+esc(A[p.a2].name)+(cfg.roles?' (supporting)':'')+' &amp; '+esc(A[p.a3].name)+' (antagonist)'+' · '+esc(when)+'</div></div>'+
+   '<div><div class="lbl">Net profit</div><div class="big mono '+(r.profit>=0?"pos":"neg")+'">'+money(r.profit)+'</div></div></div>'+
+   '<div class="r-grid"><div><p class="lbl">Box office build</p><div class="wf">'+wf+'</div><p class="note">Worldwide gross '+money(r.gross)+'. Studio share '+Math.round(SHARE*100)+'%: '+money(r.share)+'. Costs: '+money(r.cost)+'. Luck this run: '+x2(r.luck)+'.</p>'+
+   '<p class="lbl" style="margin-top:14px">Bonuses you earned</p>'+(r.syn.length?'<ul class="bon">'+r.syn.map(function(s){return '<li>'+esc(s)+'</li>'}).join("")+'</ul>':'<p class="note">None this time.</p>')+
+   '<p class="note">This pitch wanted: '+esc(wanted)+'. '+(cfg.roles?'The lead called for a '+esc(plot.lead.t)+' presence, the supporting role for a '+esc(plot.side.t)+' one and the antagonist for a '+esc(plot.anta.t)+' one':'The antagonist called for a '+esc(plot.anta.t)+' presence')+'.</p>'+rv+'</div>'+
+   '<div>'+cdiv+'<p class="lbl">Share it</p><pre id="share">'+esc(share)+'</pre><div class="row"><button class="btn go" data-act="copy" id="copy">Copy result</button><button class="btn" data-act="again">Tweak and rerelease</button><button class="btn" data-act="new">New film</button></div>'+
+   (state.saveNote?'<p class="note">'+esc(state.saveNote)+'</p>':'')+'</div></div></section>';
+}
+
+function playedDays(){var s={};Object.keys(state.days).forEach(function(k){s[k.split("|")[1]]=1});return s}
+function streak(){var d=playedDays(),n=0,k=d[TODAY]?TODAY:addDays(TODAY,-1);while(d[k]){n++;k=addDays(k,-1)}return n}
+async function drawBoard(){
+  var rows=rowsToday(),ids=rows.map(function(r){return r.id}).filter(function(i){return i!=="me"});
+  if(state.user&&ids.length){try{state.names=await state.user.profiles(ids)}catch(e){}}
+  var top=rows.slice(0,10),meIdx=rows.map(function(x){return x.me}).indexOf(true);
+  if(meIdx>=10)top.push(rows[meIdx]);
+  function nm(r){if(r.me)return "You";var p=state.names[r.id];return (p&&p.name)||"Anonymous studio"}
+  var lb;
+  if(!rows.length)lb='<p class="note">No releases yet in this mode today. Be the first on the board.</p>';
+  else lb='<div class="scroll"><table class="lb"><tbody>'+top.map(function(r){var rank=rows.indexOf(r)+1;
+    return '<tr class="'+(r.me?"me":"")+'"><td class="r">'+rank+'</td><td>'+esc(nm(r))+'<div class="t">'+esc(r.e.title||"")+(r.e.genre&&G[r.e.genre]?" · "+G[r.e.genre].name:"")+'</div></td><td class="n '+(r.e.profit>=0?"pos":"neg")+'">'+money(r.e.profit)+'</td></tr>'}).join("")+'</tbody></table></div>';
+  var days=[];for(var i=6;i>=0;i--)days.push(addDays(TODAY,-i));
+  var mx=Math.max(50,Math.max.apply(null,days.map(function(k){var e=state.days[dkey(k)];return e?Math.abs(e.profit):0})));
+  var hist=days.map(function(k){var e=state.days[dkey(k)];return '<div><span class="mono">'+k.slice(5)+'</span><span class="bk">'+(e?'<i class="'+(e.profit<0?"neg":"")+'" style="width:'+Math.max(2,Math.abs(e.profit)/mx*100)+'%"></i>':"")+'</span><span class="mono" style="text-align:right">'+(e?money(e.profit):"—")+'</span></div>'}).join("");
+  var mine=Object.keys(state.days).filter(function(k){return k.indexOf(modeKey()+"|")===0}).map(function(k){return state.days[k].profit}),bestEver=mine.length?Math.max.apply(null,mine):null;
+  var td=state.days[dkey(TODAY)];
+  $("#boards").innerHTML='<div class="panel"><h2>Today\'s board · '+esc(modeLabel())+'</h2><p class="note" style="margin:0 0 10px">Each mode has its own board. Ranked by net profit. Your best release of the day counts.</p>'+lb+
+   (state.db?'':'<p class="note">The shared board is not available in this view. Scores are saved on this device only.</p>')+(state.canWrite?'':'<p class="note">You can view the board here, but this view cannot post scores to it.</p>')+'</div>'+
+   '<div class="panel"><h2>Your studio</h2><div class="stats"><div><span class="lbl">Streak</span><b class="mono">'+streak()+'</b></div><div><span class="lbl">Best in mode</span><b class="mono">'+(bestEver===null?"—":money(bestEver))+'</b></div><div><span class="lbl">Tries today</span><b class="mono">'+(td?td.attempts||1:0)+'</b></div></div><div class="hist">'+hist+'</div></div>';
+}
+
+var writeChain=Promise.resolve();
+function persist(){
+  saveLocal();
+  if(!state.db||!state.myId||!state.canWrite)return;
+  var keep={},cut=addDays(TODAY,-13);Object.keys(state.days).forEach(function(k){if(k.split("|")[1]>=cut)keep[k]=state.days[k]});
+  writeChain=writeChain.then(function(){return state.db.doc("board/"+state.myId).set({days:keep,updated:Date.now()})}).catch(function(e){
+    if(e&&(e.code==="invalid_argument"||e.code==="revoked")){state.canWrite=false;state.saveNote="Your score is saved on this device, but this view cannot post to the shared board."}
+    else state.saveNote="The shared board could not be updated. Your score is saved on this device.";
+    drawResult();drawBoard();
+  });
+}
+
+function release(){
+  var cfg=CFG(),p=curPick(),r=evalFilm(state.env,p,cfg),title=plotFor(state.env,p.g).title,k=dkey();
+  var ck=modeKey()+"|"+state.day+"|"+p.g;
+  state.result={p:p,r:r,title:title,cfg:cfg,ck:ck};
+  var prev=state.days[k],att=(prev?prev.attempts||1:0)+1;state.attempt=att;
+  var entry={profit:Math.round(r.profit*10)/10,gross:Math.round(r.gross),cost:r.cost,title:title,genre:p.g,attempts:att};
+  if(prev&&prev.profit>=entry.profit)entry=Object.assign({},prev,{attempts:att});
+  state.days[k]=entry;state.saveNote="";persist();
+  state.stage="result";drawAll();window.scrollTo(0,0);
+  if(!state.ceil||state.ceil.k!==ck){bestPossibleAsync(state.env,p.g,cfg,function(b){if(!state.result||state.result.ck!==ck)return;state.ceil={k:ck,best:b};drawResult()})}
+}
+
+function drawAll(){drawHead();drawStage();drawResult();drawBoard()}
+function newGame(){
+  state.result=null;state.saveNote="";state.stage="play";state.step=stepList()[0];state.enter=true;state.pick={g:state.type==="daily"?state.env.daily:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"};
+  var e=state.days[dkey()];state.attempt=e?e.attempts||0:0;drawAll();
+}
+function copyShare(){
+  var btn=$("#copy"),txt=$("#share").textContent;
+  function sel(){var r=document.createRange();r.selectNodeContents($("#share"));var s=getSelection();s.removeAllRanges();s.addRange(r);btn.textContent="Text selected, copy it"}
+  try{navigator.clipboard.writeText(txt).then(function(){btn.textContent="Copied"},sel)}catch(e){sel()}
+}
+
+document.addEventListener("click",function(e){
+  var t=e.target.closest("[data-act]");if(!t||t.disabled)return;
+  var a=t.dataset.act,id=t.dataset.id,P=state.pick;
+  if(a==="type"){if(state.type!==t.dataset.m){state.type=t.dataset.m;if(state.type==="daily")state.diff="hard";newGame()}}
+  else if(a==="diff"){if(state.diff!==t.dataset.m){state.diff=t.dataset.m;newGame()}}
+  else if(a==="g"||a==="d"||a==="w"||a==="c"){
+    var key=a==="c"?state.step:a;
+    if(key==="g"&&P.g!==id){P.a1=P.a2=P.a3=null}
+    P[key]=id;drawStage();autoAdvance();
+  }
+  else if(a==="next")go(nextStep());
+  else if(a==="back")go(prevStep());
+  else if(a==="goto")go(id);
+  else if(a==="go")release();
+  else if(a==="again"){state.stage="play";state.step="review";state.enter=true;drawAll();window.scrollTo(0,0)}
+  else if(a==="new")newGame();
+  else if(a==="copy")copyShare();
+});
+
+(function boot(){
+  loadLocal();newGame();
+  (async function(){
+    try{
+      var c=window.claude;if(!c||!c.use)return;
+      var user=await c.use("user"),db=await c.use("db");
+      state.user=user;
+      if(user){try{state.myId=await user.id()}catch(x){}}
+      if(!db||!state.myId){drawBoard();return}
+      state.db=db;
+      db.collection("board").onSnapshot(function(snap){
+        var b={};snap.docs.forEach(function(d){b[d.id]=d.data()});state.boards=b;
+        if(b[state.myId]&&b[state.myId].days){state.days=mergeDays(state.days,b[state.myId].days);saveLocal()}
+        drawBoard();
+      },function(){state.db=null;drawBoard()});
+    }catch(x){drawBoard()}
+  })();
+})();
+</script>
