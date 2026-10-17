@@ -13,7 +13,7 @@ The page loads its data with `fetch`, so it must be served over HTTP. Opening th
 python -m http.server 8000
 ```
 
-Then open http://localhost:8000/Frontend/greenlight.html
+Then open http://localhost:8000/ (it redirects to `Frontend/greenlight.html`). Use `localhost`, not the `0.0.0.0` address Python prints.
 
 Without the Claude artifact runtime the leaderboard falls back to this browser's localStorage.
 

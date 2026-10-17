@@ -51,5 +51,5 @@ Deterministic: seeded by the date via FNV-1a `hash` and mulberry32 `rng` (uses `
 8. TMDB gender 0/3 are left out of the roster and reported; `seed_people.json` can set gender by hand.
 
 ## Commands
-- Play locally: `python -m http.server 8000` from the repo root, open http://localhost:8000/Frontend/greenlight.html (opening the file directly cannot load the JSON).
+- Play locally: `python -m http.server 8000` from the repo root, open http://localhost:8000/ (redirects to the game; opening the file directly cannot load the JSON).
 - JS tests: `node --test tests/js/*.test.mjs`
