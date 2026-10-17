@@ -1,0 +1,580 @@
+[
+  {
+    "id": "pascal",
+    "s": "m",
+    "name": "Pedro Pascal",
+    "fee": 26,
+    "star": 9,
+    "g": [
+      "action",
+      "scifi",
+      "drama"
+    ],
+    "tone": [
+      "gritty",
+      "heartfelt"
+    ],
+    "known": "The Last of Us, The Mandalorian, Gladiator II"
+  },
+  {
+    "id": "pattinson",
+    "s": "m",
+    "name": "Robert Pattinson",
+    "fee": 24,
+    "star": 8,
+    "g": [
+      "thriller",
+      "scifi",
+      "drama"
+    ],
+    "tone": [
+      "gritty",
+      "stylish"
+    ],
+    "known": "The Batman, Tenet, The Lighthouse"
+  },
+  {
+    "id": "hathaway",
+    "s": "f",
+    "name": "Anne Hathaway",
+    "fee": 24,
+    "star": 8,
+    "g": [
+      "romance",
+      "comedy",
+      "drama",
+      "animation"
+    ],
+    "tone": [
+      "heartfelt",
+      "stylish"
+    ],
+    "known": "The Devil Wears Prada, Interstellar, Rio"
+  },
+  {
+    "id": "momoa",
+    "s": "m",
+    "name": "Jason Momoa",
+    "fee": 22,
+    "star": 8,
+    "g": [
+      "action",
+      "scifi",
+      "comedy"
+    ],
+    "tone": [
+      "epic",
+      "funny"
+    ],
+    "known": "Aquaman, Dune, A Minecraft Movie"
+  },
+  {
+    "id": "gyllenhaal",
+    "s": "m",
+    "name": "Jake Gyllenhaal",
+    "fee": 22,
+    "star": 8,
+    "g": [
+      "thriller",
+      "drama",
+      "action"
+    ],
+    "tone": [
+      "gritty",
+      "eerie"
+    ],
+    "known": "Prisoners, Nightcrawler, Road House"
+  },
+  {
+    "id": "dearmas",
+    "s": "f",
+    "name": "Ana de Armas",
+    "fee": 20,
+    "star": 8,
+    "g": [
+      "action",
+      "thriller",
+      "romance"
+    ],
+    "tone": [
+      "stylish",
+      "gritty"
+    ],
+    "known": "Knives Out, Blade Runner 2049, No Time to Die"
+  },
+  {
+    "id": "foxx",
+    "s": "m",
+    "name": "Jamie Foxx",
+    "fee": 20,
+    "star": 8,
+    "g": [
+      "comedy",
+      "animation",
+      "action"
+    ],
+    "tone": [
+      "funny",
+      "stylish"
+    ],
+    "known": "Django Unchained, Soul, Rio"
+  },
+  {
+    "id": "sweeney",
+    "s": "f",
+    "name": "Sydney Sweeney",
+    "fee": 18,
+    "star": 7,
+    "g": [
+      "romance",
+      "comedy",
+      "horror"
+    ],
+    "tone": [
+      "funny",
+      "eerie"
+    ],
+    "known": "Euphoria, Anyone But You, Immaculate"
+  },
+  {
+    "id": "isaac",
+    "s": "m",
+    "name": "Oscar Isaac",
+    "fee": 18,
+    "star": 7,
+    "g": [
+      "scifi",
+      "drama",
+      "thriller"
+    ],
+    "tone": [
+      "stylish",
+      "epic"
+    ],
+    "known": "Dune, Ex Machina, Inside Llewyn Davis"
+  },
+  {
+    "id": "lupita",
+    "s": "f",
+    "name": "Lupita Nyong'o",
+    "fee": 16,
+    "star": 7,
+    "g": [
+      "horror",
+      "scifi",
+      "animation",
+      "drama"
+    ],
+    "tone": [
+      "eerie",
+      "heartfelt"
+    ],
+    "known": "Us, 12 Years a Slave, The Wild Robot"
+  },
+  {
+    "id": "ronan",
+    "s": "f",
+    "name": "Saoirse Ronan",
+    "fee": 16,
+    "star": 7,
+    "g": [
+      "drama",
+      "romance"
+    ],
+    "tone": [
+      "heartfelt",
+      "stylish"
+    ],
+    "known": "Lady Bird, Little Women, Brooklyn"
+  },
+  {
+    "id": "poehler",
+    "s": "f",
+    "name": "Amy Poehler",
+    "fee": 12,
+    "star": 6,
+    "g": [
+      "comedy",
+      "animation",
+      "romance"
+    ],
+    "tone": [
+      "funny",
+      "heartfelt"
+    ],
+    "known": "Inside Out, Parks and Recreation, Baby Mama"
+  },
+  {
+    "id": "kunis",
+    "s": "f",
+    "name": "Mila Kunis",
+    "fee": 12,
+    "star": 6,
+    "g": [
+      "comedy",
+      "romance"
+    ],
+    "tone": [
+      "funny",
+      "stylish"
+    ],
+    "known": "Friends with Benefits, Black Swan, Bad Moms"
+  },
+  {
+    "id": "skarsgard",
+    "s": "m",
+    "name": "Bill Skarsgård",
+    "fee": 12,
+    "star": 6,
+    "g": [
+      "horror",
+      "thriller",
+      "action"
+    ],
+    "tone": [
+      "eerie",
+      "gritty"
+    ],
+    "known": "It, John Wick: Chapter 4, Nosferatu"
+  },
+  {
+    "id": "wilson",
+    "s": "m",
+    "name": "Patrick Wilson",
+    "fee": 10,
+    "star": 6,
+    "g": [
+      "horror",
+      "thriller",
+      "drama"
+    ],
+    "tone": [
+      "eerie",
+      "heartfelt"
+    ],
+    "known": "The Conjuring, Insidious, Aquaman"
+  },
+  {
+    "id": "duke",
+    "s": "m",
+    "name": "Winston Duke",
+    "fee": 8,
+    "star": 5,
+    "g": [
+      "action",
+      "horror",
+      "comedy"
+    ],
+    "tone": [
+      "epic",
+      "eerie"
+    ],
+    "known": "Us, Black Panther, Nine Perfect Strangers"
+  },
+  {
+    "id": "cruise",
+    "s": "m",
+    "name": "Tom Cruise",
+    "fee": 30,
+    "star": 9,
+    "g": [
+      "action",
+      "thriller",
+      "scifi"
+    ],
+    "tone": [
+      "epic",
+      "gritty"
+    ],
+    "known": "Mission: Impossible, Top Gun: Maverick"
+  },
+  {
+    "id": "johnson",
+    "s": "m",
+    "name": "Dwayne Johnson",
+    "fee": 28,
+    "star": 9,
+    "g": [
+      "action",
+      "comedy",
+      "animation"
+    ],
+    "tone": [
+      "funny",
+      "epic"
+    ],
+    "known": "Moana, Jumanji, Fast & Furious"
+  },
+  {
+    "id": "gosling",
+    "s": "m",
+    "name": "Ryan Gosling",
+    "fee": 28,
+    "star": 9,
+    "g": [
+      "drama",
+      "comedy",
+      "scifi",
+      "action"
+    ],
+    "tone": [
+      "stylish",
+      "heartfelt"
+    ],
+    "known": "La La Land, Drive, Barbie"
+  },
+  {
+    "id": "chalamet",
+    "s": "m",
+    "name": "Timothée Chalamet",
+    "fee": 22,
+    "star": 8,
+    "g": [
+      "drama",
+      "scifi",
+      "romance"
+    ],
+    "tone": [
+      "heartfelt",
+      "epic"
+    ],
+    "known": "Dune, Call Me by Your Name, Wonka"
+  },
+  {
+    "id": "reeves",
+    "s": "m",
+    "name": "Keanu Reeves",
+    "fee": 20,
+    "star": 8,
+    "g": [
+      "action",
+      "scifi",
+      "thriller"
+    ],
+    "tone": [
+      "gritty",
+      "stylish"
+    ],
+    "known": "John Wick, The Matrix"
+  },
+  {
+    "id": "hardy",
+    "s": "m",
+    "name": "Tom Hardy",
+    "fee": 18,
+    "star": 8,
+    "g": [
+      "action",
+      "thriller",
+      "drama"
+    ],
+    "tone": [
+      "gritty",
+      "epic"
+    ],
+    "known": "Inception, Mad Max: Fury Road, Venom"
+  },
+  {
+    "id": "murphy",
+    "s": "m",
+    "name": "Cillian Murphy",
+    "fee": 18,
+    "star": 8,
+    "g": [
+      "thriller",
+      "drama",
+      "horror"
+    ],
+    "tone": [
+      "eerie",
+      "gritty"
+    ],
+    "known": "Oppenheimer, 28 Days Later, Inception"
+  },
+  {
+    "id": "powell",
+    "s": "m",
+    "name": "Glen Powell",
+    "fee": 14,
+    "star": 7,
+    "g": [
+      "action",
+      "comedy",
+      "romance"
+    ],
+    "tone": [
+      "funny",
+      "heartfelt"
+    ],
+    "known": "Top Gun: Maverick, Anyone But You, Twisters"
+  },
+  {
+    "id": "black",
+    "s": "m",
+    "name": "Jack Black",
+    "fee": 14,
+    "star": 7,
+    "g": [
+      "comedy",
+      "animation",
+      "horror"
+    ],
+    "tone": [
+      "funny",
+      "heartfelt"
+    ],
+    "known": "School of Rock, Kung Fu Panda, Jumanji"
+  },
+  {
+    "id": "robbie",
+    "s": "f",
+    "name": "Margot Robbie",
+    "fee": 22,
+    "star": 8,
+    "g": [
+      "comedy",
+      "drama",
+      "action"
+    ],
+    "tone": [
+      "funny",
+      "stylish"
+    ],
+    "known": "Barbie, I, Tonya, The Wolf of Wall Street"
+  },
+  {
+    "id": "stone",
+    "s": "f",
+    "name": "Emma Stone",
+    "fee": 20,
+    "star": 8,
+    "g": [
+      "comedy",
+      "drama",
+      "romance"
+    ],
+    "tone": [
+      "funny",
+      "heartfelt"
+    ],
+    "known": "La La Land, Easy A, Poor Things"
+  },
+  {
+    "id": "zendaya",
+    "s": "f",
+    "name": "Zendaya",
+    "fee": 22,
+    "star": 8,
+    "g": [
+      "drama",
+      "scifi",
+      "romance"
+    ],
+    "tone": [
+      "stylish",
+      "epic"
+    ],
+    "known": "Dune, Euphoria, Challengers"
+  },
+  {
+    "id": "pugh",
+    "s": "f",
+    "name": "Florence Pugh",
+    "fee": 14,
+    "star": 7,
+    "g": [
+      "horror",
+      "drama",
+      "thriller"
+    ],
+    "tone": [
+      "eerie",
+      "heartfelt"
+    ],
+    "known": "Midsommar, Little Women, Oppenheimer"
+  },
+  {
+    "id": "ortega",
+    "s": "f",
+    "name": "Jenna Ortega",
+    "fee": 6,
+    "star": 5,
+    "g": [
+      "horror",
+      "comedy"
+    ],
+    "tone": [
+      "eerie",
+      "funny"
+    ],
+    "known": "Scream, Wednesday, Beetlejuice Beetlejuice"
+  },
+  {
+    "id": "awkwafina",
+    "s": "f",
+    "name": "Awkwafina",
+    "fee": 9,
+    "star": 6,
+    "g": [
+      "comedy",
+      "animation"
+    ],
+    "tone": [
+      "funny",
+      "heartfelt"
+    ],
+    "known": "Crazy Rich Asians, The Farewell, Shang-Chi"
+  },
+  {
+    "id": "blunt",
+    "s": "f",
+    "name": "Emily Blunt",
+    "fee": 20,
+    "star": 8,
+    "g": [
+      "action",
+      "scifi",
+      "thriller",
+      "drama"
+    ],
+    "tone": [
+      "gritty",
+      "heartfelt"
+    ],
+    "known": "A Quiet Place, Sicario, Oppenheimer"
+  },
+  {
+    "id": "theron",
+    "s": "f",
+    "name": "Charlize Theron",
+    "fee": 22,
+    "star": 8,
+    "g": [
+      "action",
+      "scifi",
+      "thriller",
+      "drama"
+    ],
+    "tone": [
+      "gritty",
+      "stylish"
+    ],
+    "known": "Mad Max: Fury Road, Atomic Blonde, Monster"
+  },
+  {
+    "id": "saldana",
+    "s": "f",
+    "name": "Zoe Saldaña",
+    "fee": 22,
+    "star": 8,
+    "g": [
+      "action",
+      "scifi"
+    ],
+    "tone": [
+      "epic",
+      "stylish"
+    ],
+    "known": "Avatar, Guardians of the Galaxy, Star Trek"
+  }
+]

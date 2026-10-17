@@ -1,0 +1,130 @@
+[
+  {
+    "id": "nolan",
+    "name": "Christopher Nolan",
+    "fee": 35,
+    "skill": 1.25,
+    "spec": [
+      "action",
+      "scifi"
+    ],
+    "tone": [
+      "epic",
+      "gritty"
+    ],
+    "note": "Event cinema",
+    "known": "Inception, The Dark Knight, Oppenheimer"
+  },
+  {
+    "id": "villeneuve",
+    "name": "Denis Villeneuve",
+    "fee": 32,
+    "skill": 1.25,
+    "spec": [
+      "scifi",
+      "thriller"
+    ],
+    "tone": [
+      "epic",
+      "stylish"
+    ],
+    "note": "Epic-scale sci-fi",
+    "known": "Dune, Arrival, Sicario"
+  },
+  {
+    "id": "gerwig",
+    "name": "Greta Gerwig",
+    "fee": 25,
+    "skill": 1.2,
+    "spec": [
+      "comedy",
+      "drama"
+    ],
+    "tone": [
+      "stylish",
+      "funny"
+    ],
+    "note": "Critic and crowd favorite",
+    "known": "Barbie, Lady Bird, Little Women"
+  },
+  {
+    "id": "peele",
+    "name": "Jordan Peele",
+    "fee": 24,
+    "skill": 1.2,
+    "spec": [
+      "horror",
+      "comedy"
+    ],
+    "tone": [
+      "eerie",
+      "funny"
+    ],
+    "note": "Horror with a hook",
+    "known": "Get Out, Us, Nope"
+  },
+  {
+    "id": "docter",
+    "name": "Pete Docter",
+    "fee": 26,
+    "skill": 1.15,
+    "spec": [
+      "animation",
+      "comedy"
+    ],
+    "tone": [
+      "heartfelt",
+      "funny"
+    ],
+    "note": "Pixar storyteller",
+    "known": "Up, Inside Out, Monsters, Inc."
+  },
+  {
+    "id": "gluck",
+    "name": "Will Gluck",
+    "fee": 12,
+    "skill": 1.05,
+    "spec": [
+      "comedy",
+      "romance"
+    ],
+    "tone": [
+      "funny",
+      "heartfelt"
+    ],
+    "note": "Easy-breezy rom-coms",
+    "known": "Easy A, Anyone But You"
+  },
+  {
+    "id": "stahelski",
+    "name": "Chad Stahelski",
+    "fee": 12,
+    "skill": 1,
+    "spec": [
+      "action",
+      "thriller"
+    ],
+    "tone": [
+      "gritty",
+      "stylish"
+    ],
+    "note": "Stunt-driven action",
+    "known": "John Wick"
+  },
+  {
+    "id": "wan",
+    "name": "James Wan",
+    "fee": 18,
+    "skill": 1.1,
+    "spec": [
+      "horror",
+      "thriller"
+    ],
+    "tone": [
+      "eerie",
+      "gritty"
+    ],
+    "note": "Franchise scare-maker",
+    "known": "Saw, The Conjuring, Furious 7"
+  }
+]

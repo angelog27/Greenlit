@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GREENLIGHT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -169,142 +173,31 @@ footer p{margin:0 0 8px}
 
 <script>
 // ===== MODEL START =====
-var GENRES=[
- {id:"action",name:"Action",base:230,cost:45,blurb:"Stunts, chases, spectacle"},
- {id:"scifi",name:"Sci-Fi",base:220,cost:50,blurb:"Big ideas, big effects"},
- {id:"animation",name:"Animation",base:250,cost:60,blurb:"Family event, long production"},
- {id:"comedy",name:"Comedy",base:130,cost:22,blurb:"Laughs on a modest budget"},
- {id:"horror",name:"Horror",base:150,cost:14,blurb:"Cheap to make, loud to open"},
- {id:"thriller",name:"Thriller",base:125,cost:24,blurb:"Tension and twists"},
- {id:"drama",name:"Drama",base:95,cost:18,blurb:"Prestige, slower burn"},
- {id:"romance",name:"Romance",base:105,cost:16,blurb:"The date-night crowd"}];
+// Game data lives in data/*.json and is handed to initModel() before anything else runs.
 // tone tags: gritty, heartfelt, funny, epic, eerie, stylish
-var DIRS=[
- {id:"nolan",name:"Christopher Nolan",fee:35,skill:1.25,spec:["action","scifi"],tone:["epic","gritty"],note:"Event cinema",known:"Inception, The Dark Knight, Oppenheimer"},
- {id:"villeneuve",name:"Denis Villeneuve",fee:32,skill:1.25,spec:["scifi","thriller"],tone:["epic","stylish"],note:"Epic-scale sci-fi",known:"Dune, Arrival, Sicario"},
- {id:"gerwig",name:"Greta Gerwig",fee:25,skill:1.2,spec:["comedy","drama"],tone:["stylish","funny"],note:"Critic and crowd favorite",known:"Barbie, Lady Bird, Little Women"},
- {id:"peele",name:"Jordan Peele",fee:24,skill:1.2,spec:["horror","comedy"],tone:["eerie","funny"],note:"Horror with a hook",known:"Get Out, Us, Nope"},
- {id:"docter",name:"Pete Docter",fee:26,skill:1.15,spec:["animation","comedy"],tone:["heartfelt","funny"],note:"Pixar storyteller",known:"Up, Inside Out, Monsters, Inc."},
- {id:"gluck",name:"Will Gluck",fee:12,skill:1.05,spec:["comedy","romance"],tone:["funny","heartfelt"],note:"Easy-breezy rom-coms",known:"Easy A, Anyone But You"},
- {id:"stahelski",name:"Chad Stahelski",fee:12,skill:1.0,spec:["action","thriller"],tone:["gritty","stylish"],note:"Stunt-driven action",known:"John Wick"},
- {id:"wan",name:"James Wan",fee:18,skill:1.1,spec:["horror","thriller"],tone:["eerie","gritty"],note:"Franchise scare-maker",known:"Saw, The Conjuring, Furious 7"}];
-var ACTORS=[
- {id:"pascal",s:"m",name:"Pedro Pascal",fee:26,star:9,g:["action","scifi","drama"],tone:["gritty","heartfelt"],known:"The Last of Us, The Mandalorian, Gladiator II"},
- {id:"pattinson",s:"m",name:"Robert Pattinson",fee:24,star:8,g:["thriller","scifi","drama"],tone:["gritty","stylish"],known:"The Batman, Tenet, The Lighthouse"},
- {id:"hathaway",s:"f",name:"Anne Hathaway",fee:24,star:8,g:["romance","comedy","drama","animation"],tone:["heartfelt","stylish"],known:"The Devil Wears Prada, Interstellar, Rio"},
- {id:"momoa",s:"m",name:"Jason Momoa",fee:22,star:8,g:["action","scifi","comedy"],tone:["epic","funny"],known:"Aquaman, Dune, A Minecraft Movie"},
- {id:"gyllenhaal",s:"m",name:"Jake Gyllenhaal",fee:22,star:8,g:["thriller","drama","action"],tone:["gritty","eerie"],known:"Prisoners, Nightcrawler, Road House"},
- {id:"dearmas",s:"f",name:"Ana de Armas",fee:20,star:8,g:["action","thriller","romance"],tone:["stylish","gritty"],known:"Knives Out, Blade Runner 2049, No Time to Die"},
- {id:"foxx",s:"m",name:"Jamie Foxx",fee:20,star:8,g:["comedy","animation","action"],tone:["funny","stylish"],known:"Django Unchained, Soul, Rio"},
- {id:"sweeney",s:"f",name:"Sydney Sweeney",fee:18,star:7,g:["romance","comedy","horror"],tone:["funny","eerie"],known:"Euphoria, Anyone But You, Immaculate"},
- {id:"isaac",s:"m",name:"Oscar Isaac",fee:18,star:7,g:["scifi","drama","thriller"],tone:["stylish","epic"],known:"Dune, Ex Machina, Inside Llewyn Davis"},
- {id:"lupita",s:"f",name:"Lupita Nyong'o",fee:16,star:7,g:["horror","scifi","animation","drama"],tone:["eerie","heartfelt"],known:"Us, 12 Years a Slave, The Wild Robot"},
- {id:"ronan",s:"f",name:"Saoirse Ronan",fee:16,star:7,g:["drama","romance"],tone:["heartfelt","stylish"],known:"Lady Bird, Little Women, Brooklyn"},
- {id:"poehler",s:"f",name:"Amy Poehler",fee:12,star:6,g:["comedy","animation","romance"],tone:["funny","heartfelt"],known:"Inside Out, Parks and Recreation, Baby Mama"},
- {id:"kunis",s:"f",name:"Mila Kunis",fee:12,star:6,g:["comedy","romance"],tone:["funny","stylish"],known:"Friends with Benefits, Black Swan, Bad Moms"},
- {id:"skarsgard",s:"m",name:"Bill Skarsg\u00e5rd",fee:12,star:6,g:["horror","thriller","action"],tone:["eerie","gritty"],known:"It, John Wick: Chapter 4, Nosferatu"},
- {id:"wilson",s:"m",name:"Patrick Wilson",fee:10,star:6,g:["horror","thriller","drama"],tone:["eerie","heartfelt"],known:"The Conjuring, Insidious, Aquaman"},
- {id:"duke",s:"m",name:"Winston Duke",fee:8,star:5,g:["action","horror","comedy"],tone:["epic","eerie"],known:"Us, Black Panther, Nine Perfect Strangers"},
- {id:"cruise",s:"m",name:"Tom Cruise",fee:30,star:9,g:["action","thriller","scifi"],tone:["epic","gritty"],known:"Mission: Impossible, Top Gun: Maverick"},
- {id:"johnson",s:"m",name:"Dwayne Johnson",fee:28,star:9,g:["action","comedy","animation"],tone:["funny","epic"],known:"Moana, Jumanji, Fast & Furious"},
- {id:"gosling",s:"m",name:"Ryan Gosling",fee:28,star:9,g:["drama","comedy","scifi","action"],tone:["stylish","heartfelt"],known:"La La Land, Drive, Barbie"},
- {id:"chalamet",s:"m",name:"Timoth\u00e9e Chalamet",fee:22,star:8,g:["drama","scifi","romance"],tone:["heartfelt","epic"],known:"Dune, Call Me by Your Name, Wonka"},
- {id:"reeves",s:"m",name:"Keanu Reeves",fee:20,star:8,g:["action","scifi","thriller"],tone:["gritty","stylish"],known:"John Wick, The Matrix"},
- {id:"hardy",s:"m",name:"Tom Hardy",fee:18,star:8,g:["action","thriller","drama"],tone:["gritty","epic"],known:"Inception, Mad Max: Fury Road, Venom"},
- {id:"murphy",s:"m",name:"Cillian Murphy",fee:18,star:8,g:["thriller","drama","horror"],tone:["eerie","gritty"],known:"Oppenheimer, 28 Days Later, Inception"},
- {id:"powell",s:"m",name:"Glen Powell",fee:14,star:7,g:["action","comedy","romance"],tone:["funny","heartfelt"],known:"Top Gun: Maverick, Anyone But You, Twisters"},
- {id:"black",s:"m",name:"Jack Black",fee:14,star:7,g:["comedy","animation","horror"],tone:["funny","heartfelt"],known:"School of Rock, Kung Fu Panda, Jumanji"},
- {id:"robbie",s:"f",name:"Margot Robbie",fee:22,star:8,g:["comedy","drama","action"],tone:["funny","stylish"],known:"Barbie, I, Tonya, The Wolf of Wall Street"},
- {id:"stone",s:"f",name:"Emma Stone",fee:20,star:8,g:["comedy","drama","romance"],tone:["funny","heartfelt"],known:"La La Land, Easy A, Poor Things"},
- {id:"zendaya",s:"f",name:"Zendaya",fee:22,star:8,g:["drama","scifi","romance"],tone:["stylish","epic"],known:"Dune, Euphoria, Challengers"},
- {id:"pugh",s:"f",name:"Florence Pugh",fee:14,star:7,g:["horror","drama","thriller"],tone:["eerie","heartfelt"],known:"Midsommar, Little Women, Oppenheimer"},
- {id:"ortega",s:"f",name:"Jenna Ortega",fee:6,star:5,g:["horror","comedy"],tone:["eerie","funny"],known:"Scream, Wednesday, Beetlejuice Beetlejuice"},
- {id:"awkwafina",s:"f",name:"Awkwafina",fee:9,star:6,g:["comedy","animation"],tone:["funny","heartfelt"],known:"Crazy Rich Asians, The Farewell, Shang-Chi"},
- {id:"blunt",s:"f",name:"Emily Blunt",fee:20,star:8,g:["action","scifi","thriller","drama"],tone:["gritty","heartfelt"],known:"A Quiet Place, Sicario, Oppenheimer"},
- {id:"theron",s:"f",name:"Charlize Theron",fee:22,star:8,g:["action","scifi","thriller","drama"],tone:["gritty","stylish"],known:"Mad Max: Fury Road, Atomic Blonde, Monster"},
- {id:"saldana",s:"f",name:"Zoe Salda\u00f1a",fee:22,star:8,g:["action","scifi"],tone:["epic","stylish"],known:"Avatar, Guardians of the Galaxy, Star Trek"}];
-var WINDOWS=[
- {id:"val",name:"Valentine's Week",when:"Feb",vibe:"Date-night crowds, cheap to market",cost:6,base:.95,g:{romance:1.5,comedy:1.1,horror:.9,action:.9}},
- {id:"spring",name:"Spring Break",when:"Apr",vibe:"Families and students on holiday",cost:10,base:.95,g:{comedy:1.1,animation:1.15,drama:.95}},
- {id:"summer",name:"Summer Tentpole",when:"Jun",vibe:"Blockbuster season, pricey to market",cost:35,base:1,g:{action:1.3,scifi:1.25,animation:1.3,comedy:1.05,drama:.85,romance:.9,horror:.9,thriller:.95}},
- {id:"hallow",name:"Halloween Weekend",when:"Oct",vibe:"Spooky season",cost:8,base:.95,g:{horror:1.5,thriller:1.2,comedy:.95}},
- {id:"awards",name:"Awards Season",when:"Nov",vibe:"Prestige audiences, cold weather",cost:14,base:1,g:{drama:1.35,thriller:1.1,romance:1.1,animation:1.1,action:.9,comedy:.9}},
- {id:"holiday",name:"Holiday Weekend",when:"Dec",vibe:"Biggest crowds of the year, costly",cost:28,base:1.15,g:{animation:1.2,action:1.1,scifi:1.1,comedy:1.05,horror:.85,drama:1}},
- {id:"winter",name:"Winter Dump Month",when:"Jan",vibe:"Quiet January, cheap to market",cost:6,base:.9,hardOnly:true,g:{horror:1.05,thriller:1.05,drama:1.05,romance:.95,action:.9,animation:.9,comedy:.9,scifi:.9}}];
+// PLOTS: three pitches per genre. tones are what the story needs; win lists release seasons that suit it; lead/side say who the story needs.
+// LOYAL [director, actor, bonus, films] and CHEM [actor, actor, bonus, films]: films the people actually made together.
+// SLATE_RAW [date, title, our genre tag, our strength rating 1-10]: real upcoming releases as publicly reported in Oct 2026.
+var GENRES,DIRS,ACTORS,PLOTS,WINDOWS,LOYAL,CHEM,SLATE_RAW;
 var SEASON={1:"winter",2:"val",3:"spring",4:"spring",5:"summer",6:"summer",7:"summer",8:"summer",9:"hallow",10:"hallow",11:"awards",12:"holiday"};
 function seasonOf(ds){return SEASON[+ds.slice(5,7)]}
-// Pitches: three per genre. tones are what the story needs; win lists release seasons that suit it; lead/side say who the story needs.
-var PLOTS={
- action:[
-  {title:"Ironclad",text:"A bomb-disposal veteran must escort a stolen armored prototype train across a mountain range before its buyer's private army catches up.",tones:["epic","gritty"],win:["summer"],lead:{r:"the bomb-disposal veteran",t:"gritty"},side:{r:"the train's reluctant engineer",t:"funny"},anta:{r:"the arms dealer who wants it back",t:"stylish"}},
-  {title:"Dead Reckoning at Sea",text:"A getaway driver on her last job learns the vault she's robbing sits under a cruise ship that someone else is already hijacking.",tones:["stylish","funny"],win:["summer","holiday"],lead:{r:"the getaway driver",t:"stylish"},side:{r:"the safecracker who never stops talking",t:"funny"},anta:{r:"the pirate captain running the hijack",t:"epic"}},
-  {title:"Canyon Fire",text:"A former smuggler turned park ranger races a wildfire and a rogue militia to evacuate a canyon town through the only road left.",tones:["gritty","heartfelt"],win:["summer","awards"],lead:{r:"the park ranger",t:"gritty"},side:{r:"the town's teenage mechanic",t:"heartfelt"},anta:{r:"the militia leader who wants the road closed",t:"gritty"}}],
- scifi:[
-  {title:"Tidal Lock",text:"When the Earth stops spinning, a climatologist leads a convoy along the one thin strip of twilight that's still livable.",tones:["epic","heartfelt"],win:["summer","holiday"],lead:{r:"the climatologist",t:"heartfelt"},side:{r:"the convoy's pilot",t:"gritty"},anta:{r:"the billionaire hoarding the last greenhouse",t:"stylish"}},
-  {title:"The Understudy",text:"A cloned stage actor learns the original has been missing for years, and that he was grown to take his place.",tones:["stylish","eerie"],win:["awards","hallow"],lead:{r:"the clone",t:"stylish"},side:{r:"the theater director who knows",t:"gritty"},anta:{r:"the original, who comes back",t:"eerie"}},
-  {title:"Signal Fire",text:"A forest lookout starts hearing a transmission in her radio static that predicts disasters one day before they happen.",tones:["eerie","heartfelt"],win:["hallow","awards"],lead:{r:"the lookout",t:"heartfelt"},side:{r:"the voice on the radio",t:"eerie"},anta:{r:"the agency that buried similar reports",t:"gritty"}}],
- animation:[
-  {title:"Pepper and the Tide",text:"A timid lighthouse apprentice crab must keep a very sleepy sea monster from wrecking the village's summer fair.",tones:["funny","heartfelt"],win:["summer","spring"],lead:{r:"the apprentice crab",t:"heartfelt"},side:{r:"the sleepy sea monster",t:"funny"},anta:{r:"the fair's snobbish mayor",t:"stylish"}},
-  {title:"Cloud Nine Express",text:"A dreamy mail pigeon and a cranky station-master tortoise race to deliver one last letter before storm season shuts down the sky-train.",tones:["epic","funny"],win:["holiday","summer"],lead:{r:"the dreamy mail pigeon",t:"funny"},side:{r:"the cranky station-master tortoise",t:"heartfelt"},anta:{r:"the thundercloud that hates deliveries",t:"epic"}},
-  {title:"Grandma's Robot",text:"A retired robot vacuum teaches a lonely kid how to save his grandmother's bakery from a gleaming robot franchise.",tones:["heartfelt","stylish"],win:["holiday"],lead:{r:"the lonely kid",t:"heartfelt"},side:{r:"the retired robot vacuum",t:"funny"},anta:{r:"the franchise's slick CEO",t:"stylish"}}],
- comedy:[
-  {title:"Family Style",text:"Three siblings must run their late father's disastrous restaurant for one weekend to win a food critic's blessing and their inheritance.",tones:["funny","heartfelt"],win:["spring","holiday"],lead:{r:"the eldest sibling",t:"funny"},side:{r:"the sous-chef who knows the secret recipe",t:"heartfelt"},anta:{r:"the food critic who never smiles",t:"stylish"}},
-  {title:"Escape Room Reunion",text:"Old college friends get locked in an escape room for their reunion, and every puzzle is built from their secrets.",tones:["funny","eerie"],win:["hallow"],lead:{r:"the friend who organized it",t:"funny"},side:{r:"the friend with the biggest secret",t:"stylish"},anta:{r:"the unseen game master",t:"eerie"}},
-  {title:"Wrong Wedding",text:"A wedding crasher is mistaken for the officiant and can't find a way to back out before the vows.",tones:["funny","stylish"],win:["summer","spring"],lead:{r:"the crasher",t:"funny"},side:{r:"the bride's skeptical sister",t:"heartfelt"},anta:{r:"the wedding planner who runs everything",t:"stylish"}}],
- horror:[
-  {title:"Static Hours",text:"A late-night radio host starts taking calls from listeners who describe the inside of her own house.",tones:["eerie","stylish"],win:["hallow"],lead:{r:"the radio host",t:"stylish"},side:{r:"the caller who keeps ringing back",t:"eerie"},anta:{r:"the voice that answers from inside the house",t:"eerie"}},
-  {title:"Salt House",text:"A family buys a flooded village's old hotel where the guests never actually checked out.",tones:["eerie","gritty"],win:["hallow"],lead:{r:"the mother holding the family together",t:"gritty"},side:{r:"the longest-staying guest",t:"eerie"},anta:{r:"the proprietor who never leaves the lobby",t:"stylish"}},
-  {title:"Floor 13",text:"New hires in an office tower notice one floor is never lit, and nobody remembers hiring its tenant.",tones:["eerie","funny"],win:["hallow"],lead:{r:"the new hire who asks too many questions",t:"funny"},side:{r:"the night security guard",t:"gritty"},anta:{r:"the tenant on thirteen",t:"eerie"}}],
- thriller:[
-  {title:"Blind Spot",text:"A security-camera analyst realizes the same stranger has stood in the background of every incident for five years.",tones:["gritty","stylish"],win:["awards"],lead:{r:"the camera analyst",t:"stylish"},side:{r:"the detective who doubts her",t:"gritty"},anta:{r:"the stranger in the background",t:"eerie"}},
-  {title:"Last Ferry",text:"Passengers on the final night ferry learn that one of them holds a ticket for a crime that hasn't happened yet.",tones:["stylish","eerie"],win:["hallow","awards"],lead:{r:"the deckhand who spots the ticket",t:"gritty"},side:{r:"the passenger holding it",t:"eerie"},anta:{r:"the detective aboard who wants it unsolved",t:"stylish"}},
-  {title:"Deposition",text:"A junior lawyer gets the case of the decade and finds her own signature on evidence dated before she was hired.",tones:["stylish","gritty"],win:["awards","holiday"],lead:{r:"the junior lawyer",t:"stylish"},side:{r:"the retired judge who helps her",t:"heartfelt"},anta:{r:"the senior partner running the firm",t:"gritty"}}],
- drama:[
-  {title:"Harbor Light",text:"A fishing family fights to keep their boat, and each other, after the industry collapses around them.",tones:["heartfelt","gritty"],win:["awards"],lead:{r:"the family matriarch",t:"heartfelt"},side:{r:"the son tempted to leave",t:"gritty"},anta:{r:"the cannery owner buying up the harbor",t:"stylish"}},
-  {title:"Second Violin",text:"An aging orchestra's second violinist gets one chance to lead the final concert, and must face the prodigy who is replacing her.",tones:["stylish","heartfelt"],win:["awards","holiday"],lead:{r:"the second violinist",t:"heartfelt"},side:{r:"the prodigy",t:"stylish"},anta:{r:"the donor threatening to pull the funding",t:"gritty"}},
-  {title:"The Ferryman's Letters",text:"A son returns to his late father's island to deliver the last letters, and learns the secret his father kept.",tones:["heartfelt","epic"],win:["awards","holiday"],lead:{r:"the grieving son",t:"heartfelt"},side:{r:"the island postmistress",t:"funny"},anta:{r:"the landowner who wants the island's history buried",t:"gritty"}}],
- romance:[
-  {title:"Layover",text:"Two strangers stuck in a Reykjavik airport for 24 hours keep missing their flights on purpose.",tones:["heartfelt","funny"],win:["val"],lead:{r:"the stranded architect",t:"heartfelt"},side:{r:"the stranger carrying a tuba",t:"funny"},anta:{r:"the ex waiting at the destination",t:"stylish"}},
-  {title:"Tuesday Night Club",text:"A widowed baker and her new neighbor start a weekly dinner club that matchmakes everyone except themselves.",tones:["heartfelt","stylish"],win:["val","spring"],lead:{r:"the widowed baker",t:"heartfelt"},side:{r:"the new neighbor",t:"funny"},anta:{r:"the rival matchmaker",t:"funny"}},
-  {title:"Letters to August",text:"Two pen pals fall for each other across two cities, then discover they work for rival companies.",tones:["funny","stylish"],win:["val","summer"],lead:{r:"the pen pal in the city",t:"stylish"},side:{r:"the pen pal across the bay",t:"funny"},anta:{r:"the CEO who wants both fired",t:"gritty"}}]};
-var LOYAL=[["nolan","pattinson",.10,"Tenet"],["nolan","hathaway",.10,"Interstellar, The Dark Knight Rises"],["villeneuve","isaac",.10,"Dune, Dune: Part Two"],["villeneuve","momoa",.10,"Dune, Dune: Part Two"],["villeneuve","gyllenhaal",.10,"Prisoners, Enemy"],["villeneuve","dearmas",.08,"Blade Runner 2049"],["gerwig","ronan",.10,"Lady Bird, Little Women"],["peele","lupita",.10,"Us"],["peele","duke",.08,"Us"],["gluck","sweeney",.10,"Anyone But You"],["gluck","kunis",.08,"Friends with Benefits"],["docter","foxx",.08,"Soul"],["docter","poehler",.10,"Inside Out"],["stahelski","skarsgard",.10,"John Wick: Chapter 4"],["wan","wilson",.10,"Insidious, The Conjuring"],["wan","momoa",.08,"Aquaman"],["nolan","murphy",.10,"Inception, Dunkirk, Oppenheimer"],["nolan","hardy",.10,"Inception, Dunkirk, The Dark Knight Rises"],["nolan","blunt",.10,"Oppenheimer"],["villeneuve","zendaya",.10,"Dune, Dune: Part Two"],["villeneuve","chalamet",.10,"Dune, Dune: Part Two"],["villeneuve","gosling",.10,"Blade Runner 2049"],["villeneuve","blunt",.08,"Sicario"],["gerwig","robbie",.10,"Barbie"],["gerwig","gosling",.10,"Barbie"],["gerwig","chalamet",.08,"Little Women"],["gerwig","pugh",.08,"Little Women"],["gluck","stone",.08,"Easy A"],["gluck","powell",.10,"Anyone But You"],["stahelski","reeves",.10,"the John Wick films"],["wan","johnson",.08,"Furious 7"]];
-var CHEM=[["isaac","momoa",.10,"Dune"],["lupita","duke",.12,"Us"],["momoa","wilson",.10,"Aquaman"],["hathaway","gyllenhaal",.12,"Love & Other Drugs"],["foxx","hathaway",.10,"Rio"],["isaac","lupita",.10,"Star Wars: The Force Awakens"],["zendaya","chalamet",.12,"Dune"],["gosling","stone",.12,"La La Land"],["gosling","robbie",.10,"Barbie"],["cruise","powell",.12,"Top Gun: Maverick"],["murphy","hardy",.12,"Inception, Dunkirk"],["murphy","blunt",.10,"Oppenheimer"],["pugh","chalamet",.10,"Little Women, Dune: Part Two"],["black","awkwafina",.10,"Jumanji: The Next Level"],["johnson","black",.10,"Jumanji films"],["johnson","awkwafina",.10,"Jumanji: The Next Level"]];
-// Real upcoming releases (date as publicly reported in Oct 2026, title, our genre tag, our strength rating 1-10)
-var SLATE_RAW=[
- ["2026-10-16","Street Fighter","action",5],["2026-10-16","Sense and Sensibility","romance",3],
- ["2026-10-23","Clayface","horror",6],["2026-10-23","Klara and the Sun","scifi",3],
- ["2026-11-06","Wild Horse Nine","comedy",4],["2026-11-06","The Cat in the Hat","animation",5],["2026-11-06","Godzilla Minus Zero","scifi",3],
- ["2026-11-20","The Hunger Games: Sunrise on the Reaping","action",9],
- ["2026-11-25","Focker In-Law","comedy",7],["2026-11-25","The Further Mis-Adventures of Cliff Booth","drama",3],
- ["2026-12-04","Violent Night 2","action",5],["2026-12-04","Behemoth!","drama",3],
- ["2026-12-11","Jumanji 3","comedy",8],["2026-12-11","Ink","drama",3],
- ["2026-12-18","Avengers: Doomsday","action",10],["2026-12-18","Dune: Part Three","scifi",8],
- ["2026-12-23","The Angry Birds Movie 3","animation",5],["2026-12-25","Werwulf","horror",4],["2026-12-25","Artificial","drama",3],
- ["2027-01-08","The Liberation","thriller",2],["2027-01-15","The Beekeeper 2","action",5],["2027-01-15","Children of Blood and Bone","action",4],
- ["2027-01-22","Animal Friends","comedy",4],["2027-01-22","Air Bud Returns","comedy",2],["2027-01-29","The Rescue","action",3],["2027-01-29","Drag","horror",2],
- ["2027-02-05","Ice Age: Boiling Point","animation",6],["2027-02-05","Untitled Glen Powell and Judd Apatow Project","comedy",5],["2027-02-05","Remain","romance",3],
- ["2027-02-12","Wishful Thinking","romance",3],["2027-02-19","CoComelon: The Movie","animation",3],
- ["2027-02-24","Cliffhanger","action",4],["2027-02-26","The Revenge of La Llorona","horror",3],
- ["2027-03-05","Gatto","animation",4],["2027-03-05","The Thomas Crown Affair","action",5],["2027-03-12","The Exorcist: Martyrs","horror",5],
- ["2027-03-19","Sonic the Hedgehog 4","action",7],["2027-03-19","Wolf Creek: Legacy","horror",2],
- ["2027-03-26","Godzilla x Kong: Supernova","scifi",8],["2027-03-26","The Saviors","thriller",3],
- ["2027-04-09","Panic Carefully","thriller",3],["2027-04-16","Monitor","horror",3],["2027-04-16","Not Alone","animation",4],
- ["2027-04-23","Spaceballs: The New One","comedy",5],["2027-04-30","The Legend of Zelda","action",8],
- ["2027-05-06","The Resurrection of the Christ: Part One","drama",7],["2027-05-07","Beach Read","romance",3],["2027-05-14","F.A.S.T.","action",3],
- ["2027-05-21","Bad Fairies","animation",4],["2027-05-21","The Catch","romance",3],["2027-05-21","Paranormal Activity 8","horror",4],
- ["2027-05-28","Star Wars: Starfighter","scifi",9],["2027-06-04","John Rambo","action",5],["2027-06-04","Skeletons","horror",2],
- ["2027-06-11","How to Train Your Dragon 2","action",7],["2027-06-11","Possession","horror",3],["2027-06-20","Spider-Man: Beyond the Spider-Verse","animation",9],
- ["2027-06-25","Untitled Ocean's Eleven Prequel","thriller",5],["2027-06-30","Shrek 5","animation",8],["2027-07-09","Man of Tomorrow","action",9]];
 var LAST_DATE="2027-06-25";
 function byId(a){var m={};a.forEach(function(x){m[x.id]=x});return m}
-var G=byId(GENRES),D=byId(DIRS),A=byId(ACTORS),W=byId(WINDOWS);
+var G,D,A,W,SLATE;
 var SHARE=0.4;
 
 function dnum(s){return Math.round(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/86400000)}
 function addDays(s,n){var d=new Date(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))+n*86400000);return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0")}
 function dow(s){return new Date(dnum(s)*86400000).getUTCDay()}
 function wkFri(s){var w=dow(s);return w===5?s:(w>=1&&w<=4)?addDays(s,5-w):w===6?addDays(s,-1):addDays(s,-2)}
-var SLATE=SLATE_RAW.map(function(r){return {d:r[0],t:r[1],g:r[2],s:r[3],f:wkFri(r[0])}});
+function initModel(data){
+  GENRES=data.genres;DIRS=data.directors;ACTORS=data.actors;PLOTS=data.plots;WINDOWS=data.windows;
+  LOYAL=data.loyal.map(function(x){return [x.director,x.actor,x.bonus,x.films]});
+  CHEM=data.chem.map(function(x){return [x.a,x.b,x.bonus,x.films]});
+  SLATE_RAW=data.slate.map(function(x){return [x.date,x.title,x.genre,x.strength]});
+  G=byId(GENRES);D=byId(DIRS);A=byId(ACTORS);W=byId(WINDOWS);
+  SLATE=SLATE_RAW.map(function(r){return {d:r[0],t:r[1],g:r[2],s:r[3],f:wkFri(r[0])}});
+}
 function buildDates(today){
   var s=addDays(today,14);while(dow(s)!==5)s=addDays(s,1);
   var out=[];while(s<=LAST_DATE){out.push(s);s=addDays(s,7)}return out;
@@ -429,7 +322,7 @@ var MONTHS=["January","February","March","April","May","June","July","August","S
 function prettyDate(s){return DN[dow(s)]+", "+MS[+s.slice(5,7)-1]+" "+(+s.slice(8,10))+(s.slice(0,4)!==TODAY.slice(0,4)?", "+s.slice(0,4):"")}
 
 var TODAY=fmtDay(new Date());
-var state={type:"basic",diff:"medium",day:TODAY,env:makeEnv(TODAY),pick:{g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"},result:null,stage:"play",step:"genre",enter:false,
+var state={type:"basic",diff:"medium",day:TODAY,env:null,pick:{g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"},result:null,stage:"play",step:"genre",enter:false,
   myId:null,db:null,user:null,boards:{},days:{},canWrite:true,ceil:null,attempt:0,names:{},saveNote:""};
 var LKEY="greenlight.days.v2";
 function CFG(){return DIFFS[state.diff]}
@@ -713,7 +606,15 @@ document.addEventListener("click",function(e){
   else if(a==="copy")copyShare();
 });
 
-(function boot(){
+var DATA_URL="../data/",DATA_FILES=["genres","directors","actors","plots","windows","loyal","chem","slate"];
+function loadData(){
+  return Promise.all(DATA_FILES.map(function(n){return fetch(DATA_URL+n+".json").then(function(r){if(!r.ok)throw new Error(n+".json: HTTP "+r.status);return r.json()})}))
+    .then(function(v){var o={};DATA_FILES.forEach(function(n,i){o[n]=v[i]});return o});
+}
+(async function boot(){
+  try{initModel(await loadData())}catch(e){
+    $("#pickers").innerHTML='<div class="banner"><b>Could not load the game data.</b>'+esc(e.message)+'. Serve this folder over HTTP (see README) instead of opening the file directly.</div>';return}
+  state.env=makeEnv(TODAY);
   loadLocal();newGame();
   (async function(){
     try{

@@ -1,0 +1,188 @@
+[
+  {
+    "director": "nolan",
+    "actor": "pattinson",
+    "bonus": 0.1,
+    "films": "Tenet"
+  },
+  {
+    "director": "nolan",
+    "actor": "hathaway",
+    "bonus": 0.1,
+    "films": "Interstellar, The Dark Knight Rises"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "isaac",
+    "bonus": 0.1,
+    "films": "Dune, Dune: Part Two"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "momoa",
+    "bonus": 0.1,
+    "films": "Dune, Dune: Part Two"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "gyllenhaal",
+    "bonus": 0.1,
+    "films": "Prisoners, Enemy"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "dearmas",
+    "bonus": 0.08,
+    "films": "Blade Runner 2049"
+  },
+  {
+    "director": "gerwig",
+    "actor": "ronan",
+    "bonus": 0.1,
+    "films": "Lady Bird, Little Women"
+  },
+  {
+    "director": "peele",
+    "actor": "lupita",
+    "bonus": 0.1,
+    "films": "Us"
+  },
+  {
+    "director": "peele",
+    "actor": "duke",
+    "bonus": 0.08,
+    "films": "Us"
+  },
+  {
+    "director": "gluck",
+    "actor": "sweeney",
+    "bonus": 0.1,
+    "films": "Anyone But You"
+  },
+  {
+    "director": "gluck",
+    "actor": "kunis",
+    "bonus": 0.08,
+    "films": "Friends with Benefits"
+  },
+  {
+    "director": "docter",
+    "actor": "foxx",
+    "bonus": 0.08,
+    "films": "Soul"
+  },
+  {
+    "director": "docter",
+    "actor": "poehler",
+    "bonus": 0.1,
+    "films": "Inside Out"
+  },
+  {
+    "director": "stahelski",
+    "actor": "skarsgard",
+    "bonus": 0.1,
+    "films": "John Wick: Chapter 4"
+  },
+  {
+    "director": "wan",
+    "actor": "wilson",
+    "bonus": 0.1,
+    "films": "Insidious, The Conjuring"
+  },
+  {
+    "director": "wan",
+    "actor": "momoa",
+    "bonus": 0.08,
+    "films": "Aquaman"
+  },
+  {
+    "director": "nolan",
+    "actor": "murphy",
+    "bonus": 0.1,
+    "films": "Inception, Dunkirk, Oppenheimer"
+  },
+  {
+    "director": "nolan",
+    "actor": "hardy",
+    "bonus": 0.1,
+    "films": "Inception, Dunkirk, The Dark Knight Rises"
+  },
+  {
+    "director": "nolan",
+    "actor": "blunt",
+    "bonus": 0.1,
+    "films": "Oppenheimer"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "zendaya",
+    "bonus": 0.1,
+    "films": "Dune, Dune: Part Two"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "chalamet",
+    "bonus": 0.1,
+    "films": "Dune, Dune: Part Two"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "gosling",
+    "bonus": 0.1,
+    "films": "Blade Runner 2049"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "blunt",
+    "bonus": 0.08,
+    "films": "Sicario"
+  },
+  {
+    "director": "gerwig",
+    "actor": "robbie",
+    "bonus": 0.1,
+    "films": "Barbie"
+  },
+  {
+    "director": "gerwig",
+    "actor": "gosling",
+    "bonus": 0.1,
+    "films": "Barbie"
+  },
+  {
+    "director": "gerwig",
+    "actor": "chalamet",
+    "bonus": 0.08,
+    "films": "Little Women"
+  },
+  {
+    "director": "gerwig",
+    "actor": "pugh",
+    "bonus": 0.08,
+    "films": "Little Women"
+  },
+  {
+    "director": "gluck",
+    "actor": "stone",
+    "bonus": 0.08,
+    "films": "Easy A"
+  },
+  {
+    "director": "gluck",
+    "actor": "powell",
+    "bonus": 0.1,
+    "films": "Anyone But You"
+  },
+  {
+    "director": "stahelski",
+    "actor": "reeves",
+    "bonus": 0.1,
+    "films": "the John Wick films"
+  },
+  {
+    "director": "wan",
+    "actor": "johnson",
+    "bonus": 0.08,
+    "films": "Furious 7"
+  }
+]
