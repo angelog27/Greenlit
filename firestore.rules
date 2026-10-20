@@ -1,5 +1,5 @@
 rules_version = '2';
-// Only the release Cloud Function (Admin SDK, which bypasses these rules) writes scores.
+// Only the Cloud Functions (Admin SDK, which bypasses these rules) write scores and campaigns.
 // Boards are public to read; a player's own run history is readable only by them.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -13,6 +13,20 @@ service cloud.firestore {
     }
     match /users/{uid}/{document=**} {
       allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+    // Campaign: the studio and its films are readable by their owner only; the board is public. Only the
+    // campaign* Cloud Functions write either.
+    match /campaigns/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+      match /films/{film} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
+      }
+    }
+    match /campaignBoard/{uid} {
+      allow read: if true;
       allow write: if false;
     }
     match /{document=**} {

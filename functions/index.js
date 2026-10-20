@@ -1,4 +1,4 @@
-// GREENLIGHT Cloud Functions.
+// GREENLIGHT Cloud Functions (campaign callables at the end).
 // release: a signed-in player submits today's film; the server checks and re-scores it (game.js), then keeps
 // that player's best film of the day on the board and in their own history.
 //   boards/{board}/entries/{uid}   public leaderboard row (board = "r3-<type>-<diff>_<day>")
@@ -49,3 +49,26 @@ exports.release = onCall(async (req) => {
   const [ahead, total] = await Promise.all([entries.where("profit", ">", out.best.profit).count().get(), entries.count().get()]);
   return { board: run.board, film, best: out.best, better: out.better, attempts: out.attempts, rank: ahead.data().count + 1, total: total.data().count };
 });
+
+// Campaign (solo career): every write goes through these callables; the rules live in campaign.js and the
+// transactions in campaign_store.js. Each returns the player's updated studio so the page needs no extra reads.
+const { loadCampaign } = require("./campaign");
+const { makeStore } = require("./campaign_store");
+const store = makeStore(db, loadCampaign(game));
+
+function campaignCall(fn) {
+  return onCall(async (req) => {
+    if (!req.auth) throw new HttpsError("unauthenticated", "Sign in to run a studio.");
+    try {
+      return await fn(req.auth.uid, req.data || {}, Date.now());
+    } catch (e) {
+      if (e instanceof Reject) throw new HttpsError("failed-precondition", e.message);
+      throw e;
+    }
+  });
+}
+exports.campaignStart = campaignCall(store.start);
+exports.campaignProject = campaignCall(store.project);
+exports.campaignRelease = campaignCall(store.release);
+exports.campaignPass = campaignCall(store.pass);
+exports.campaignRename = campaignCall(store.rename);
