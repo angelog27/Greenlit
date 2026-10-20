@@ -74,13 +74,13 @@ Players sign in with Google or email/password (Firebase Auth). When they release
 2. In the Firebase console, enable the Google and Email/Password sign-in providers.
 3. `npm --prefix functions install`
 4. Local: `node tools/build_functions.mjs && firebase emulators:start` (needs JDK 21+), then serve the page as above. Add `?emu` to the page URL to use the emulators instead of the real project.
-5. Deploy: `firebase deploy --only functions,firestore` (Cloud Functions need the Blaze plan). `build_functions.mjs` runs automatically first.
+5. Deploy: `firebase deploy --only functions,firestore,storage` (Cloud Functions need the Blaze plan; create the Storage bucket once in the console under Storage → Get started). `build_functions.mjs` runs automatically first.
 
 Without `firebase-config.js` the game still runs; results stay on the device.
 
 ### Emulators and the rules test
 
-The emulators need JDK 21 or newer. If your default `java` is older, point `JAVA_HOME` (and `PATH`) at a JDK 21 for that shell before `firebase emulators:start`. With the Firestore emulator running, `node --test tests/js/*.test.mjs` also runs `tests/js/rules.test.mjs` (clients can't write campaigns or boards); without it that file is skipped.
+The emulators need JDK 21 or newer. If your default `java` is older, point `JAVA_HOME` (and `PATH`) at a JDK 21 for that shell before `firebase emulators:start`. With the Firestore emulator running, `node --test tests/js/*.test.mjs` also runs `tests/js/rules.test.mjs` (clients can't write campaigns or boards); with the Storage emulator too (`--only auth,functions,firestore,storage`) it also checks the studio-image rules. Without them those tests are skipped.
 
 ## Campaign
 
@@ -92,10 +92,11 @@ A self-paced solo career, separate from the daily modes. Pick **Campaign** in th
 - The first 3 films show every number (Easy); after that numbers stay hidden until release (Medium).
 - A pass skips the current pitches for a $5M development fee; you earn one every 3 films.
 - A **studio level** grows with lifetime box office (every film teaches you something, flops included). Each level gives an upgrade point: scouting that shows who fits the genre and the part, reunions and chemistry, story notes, market research, test screenings, and Reputation and Marketing Deals discounts.
-- Badges for milestones; Genre Master (3 profitable films in one genre) adds +3% box office in that genre.
+- 20 achievements, most with bronze, silver and gold tiers, shown as a medal row under your studio name; new ones animate in. Genre Master (3 profitable films in one genre) adds +3% box office in that genre.
+- Customize your studio: logo and backdrop images (uploaded to Firebase Storage), a colour, a tagline and a home city. Your logo, name and colour show on the campaign board.
 - The campaign board ranks studios by how few films they needed to reach the A-list (then fewer bailouts, then more lifetime profit), shown by studio name.
 
-Everything is decided on the server: the `campaignStart`, `campaignProject`, `campaignRelease`, `campaignPass`, `campaignUpgrade` and `campaignRename` callables (`functions/campaign.js` for the rules, `functions/campaign_store.js` for the transactions). The page reads your studio once per load and the film history only when you open it.
+Everything is decided on the server: the `campaignStart`, `campaignProject`, `campaignRelease`, `campaignPass`, `campaignUpgrade`, `campaignStyle` and `campaignRename` callables (`functions/campaign.js` for the rules, `functions/campaign_store.js` for the transactions). The page reads your studio once per load and the film history only when you open it.
 
 ### Tuning
 

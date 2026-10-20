@@ -115,6 +115,8 @@ The campaign (solo career mode) reads two files. The server enforces them; the p
 | `feasibility` | Every playable genre needs a film within budget that makes at least `margin` $M profit; otherwise it shows as too pricey. If no genre makes it, the project seed is salted again, up to `maxResalts` times |
 | `pass` | A pass skips the current pitches for `fee` $M. A studio starts with `start` passes and earns one every `every` films, holding at most `cap` |
 | `levels` | Lifetime box office ($M, every film counts) needed for each studio level, starting with level 1 at 0. Each level after the first gives one upgrade point. Keep at least as many levels as the upgrades cost in total |
+| `profile` | Limits for the studio look: `taglineMax`, `cityMax` (characters), `logoKB`, `backdropKB` (upload caps; keep `storage.rules` in step, it can't read this file) |
+| `studioColors` | The palette players pick their studio colour from: `id`, `name`, and a shade for each theme (`dark`, `light`; at least 3:1 contrast on that theme's panels) |
 | `upgrades` | Bought with points: `id` (fixed; the page and server key their effect on it), `name`, `cost` in points per rank, `ranks` (one line of text per rank; the number of lines is the max rank), optional `minLevel`. `talent` and `windows` list the fee and marketing discount for each rank (Reputation, Marketing Deals); the other upgrades reveal information on hidden-number projects |
 
 Tuning tips: the ladder sets the pace (the simulation reports films to each step for random and decent play). Caps set how big films can get at each tier. `start.bank` and `start.floor` must cover the cheapest D-list film (about $54M to $62M) plus the margin, or the first projects have no playable genre.
@@ -124,6 +126,7 @@ Tuning tips: the ladder sets the pace (the simulation reports films to each step
 | Field | Meaning |
 | --- | --- |
 | `gates` | One entry per ladder step (same `id`): the name and text shown on the HQ and in the unlock moment |
-| `badges` | `id` (fixed; the server's rule for each badge is keyed on it), `name`, `text`, and the numbers the rule uses: `blockbuster.profit`, `sleeper_hit.profit` and `costShare`, `genre_master.films` and `bonus` (the gross boost in that genre), `full_house.tier` and `after` |
+| `tierNames` | Names of the three tiers (Bronze, Silver, Gold) |
+| `badges` | `id` (fixed; the server's rule for each badge is keyed on it), `name`, `icon` (an icon name in the page), `text` (`{n}` is the tier's number, `(s)` becomes "s" unless it is 1), optional `tiers` (thresholds, lowest first; `atMost: true` when lower is better, as for Fast Track), `unit` (`money` or `percent` for display), and the numbers some rules use: `sleeper_hit.profit` and `costShare`, `genre_master.films` and `bonus` (the gross boost in that genre), `full_house.tier` and `after` |
 
-Badges are earned once and stored with a timestamp. Genre Master also adds its `bonus` to every later film in that genre (the server applies it as a multiplier step in the scoring).
+A badge without `tiers` has one step. Each studio stores `{ tier, at }` per badge, and a badge fires again only when a higher tier is reached. Genre Master also adds its `bonus` to every later film in that genre (the server applies it as a multiplier step in the scoring).

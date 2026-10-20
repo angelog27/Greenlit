@@ -14,12 +14,12 @@ function off(why) {
 async function start() {
   const cfg = window.FIREBASE_CONFIG;
   if (!cfg || !cfg.apiKey || !cfg.projectId) return off("no-config");
-  const [{ initializeApp }, Au, Fs, Fn] = await Promise.all([
+  const [{ initializeApp }, Au, Fs, Fn, St] = await Promise.all([
     import(SDK + "firebase-app.js"), import(SDK + "firebase-auth.js"),
-    import(SDK + "firebase-firestore.js"), import(SDK + "firebase-functions.js"),
+    import(SDK + "firebase-firestore.js"), import(SDK + "firebase-functions.js"), import(SDK + "firebase-storage.js"),
   ]);
   const app = initializeApp(cfg);
-  const auth = Au.getAuth(app), db = Fs.getFirestore(app), fns = Fn.getFunctions(app);
+  const auth = Au.getAuth(app), db = Fs.getFirestore(app), fns = Fn.getFunctions(app), storage = St.getStorage(app);
   // The real project by default; the local emulators only when asked for with ?emu (or useEmulators in the config).
   const local = ["localhost", "127.0.0.1"].includes(location.hostname);
   const emu = cfg.useEmulators ?? (local && new URLSearchParams(location.search).has("emu"));
@@ -27,6 +27,7 @@ async function start() {
     Au.connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
     Fs.connectFirestoreEmulator(db, "127.0.0.1", 8080);
     Fn.connectFunctionsEmulator(fns, "127.0.0.1", 5001);
+    St.connectStorageEmulator(storage, "127.0.0.1", 9199);
   }
   const callRelease = Fn.httpsCallable(fns, "release");
   const listeners = new Set();
@@ -58,6 +59,17 @@ async function start() {
       return s.exists() ? s.data() : null;
     },
     async campaign(name, payload) { return (await Fn.httpsCallable(fns, name)(payload || {})).data; },
+    // Studio images: the owner uploads studios/{uid}/logo or /backdrop (storage.rules), then calls campaignStyle,
+    // which checks the upload. Anyone can view them by URL; v (the stored version) busts the browser cache.
+    async uploadStudioImage(name, blob) {
+      if (!net.user) throw new Error("not signed in");
+      await St.uploadBytes(St.ref(storage, `studios/${net.user.uid}/${name}`), blob, { contentType: blob.type });
+    },
+    studioImageUrl(uid, name, v) {
+      if (!v || !cfg.storageBucket) return null;
+      const host = emu ? "http://127.0.0.1:9199" : "https://firebasestorage.googleapis.com";
+      return `${host}/v0/b/${cfg.storageBucket}/o/${encodeURIComponent(`studios/${uid}/${name}`)}?alt=media&v=${encodeURIComponent(v)}`;
+    },
     // Every released film of the studio, newest first (only for the history screen).
     async campaignFilms() {
       if (!net.user) return [];
@@ -109,6 +121,8 @@ async function start() {
         "auth/network-request-failed": "Can't reach the sign-in service. Check your connection.",
         "functions/unauthenticated": "Sign in to post to the leaderboard.",
         "functions/deadline-exceeded": "The server took too long. Try again.",
+        "storage/unauthorized": "That image couldn't be uploaded. Use a JPEG, PNG or WebP picture under the size limit.",
+        "storage/retry-limit-exceeded": "The upload kept failing. Check your connection and try again.",
         "functions/unavailable": "The leaderboard server can't be reached right now.",
         "functions/internal": "The leaderboard server hit an error.",
         "permission-denied": "The leaderboard can't be read right now.",

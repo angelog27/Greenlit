@@ -19,6 +19,7 @@
   --mono:var(--body); /* numbers use the body font with tabular figures; no code font anywhere */
   --ease:cubic-bezier(.2,.75,.15,1); --cut:16px; --toph:72px;
   --sig-bg:#000; --sig-off:#2A2F2A; --scrim:rgba(0,0,0,.62);
+  --bronze:#D29560; --silver:#C6CFC9; --gold:#F2C14E; --bdscrim:rgba(10,11,10,.74);
   color-scheme:dark;
 }
 /* Light theme: follows the system unless the theme button picked one (html[data-theme]). */
@@ -27,6 +28,7 @@
   --ink:#111411; --muted:#566058; --dim:#8A938B;
   --accent:#12924C; --accent2:#0E7A3F; --on-accent:#FFFFFF; --amber:#A86E06; --orange:#BC5A08; --bad:#C2352A; --cold:#2D67A8;
   --sig-bg:#1B1E1B; --sig-off:#3A403A; --scrim:rgba(20,24,20,.45);
+  --bronze:#94551F; --silver:#56625B; --gold:#946800; --bdscrim:rgba(244,245,241,.82);
   color-scheme:light;
 }}
 :root[data-theme="light"]{
@@ -34,8 +36,13 @@
   --ink:#111411; --muted:#566058; --dim:#8A938B;
   --accent:#12924C; --accent2:#0E7A3F; --on-accent:#FFFFFF; --amber:#A86E06; --orange:#BC5A08; --bad:#C2352A; --cold:#2D67A8;
   --sig-bg:#1B1E1B; --sig-off:#3A403A; --scrim:rgba(20,24,20,.45);
+  --bronze:#94551F; --silver:#56625B; --gold:#946800; --bdscrim:rgba(244,245,241,.82);
   color-scheme:light;
 }
+/* Studio colour: each palette entry has a dark-theme and a light-theme shade (--sd / --sl). */
+.tint{--studio:var(--sd);--on-studio:#0A0B0A}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .tint{--studio:var(--sl);--on-studio:#FFFFFF}}
+:root[data-theme="light"] .tint{--studio:var(--sl);--on-studio:#FFFFFF}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
@@ -373,10 +380,6 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 /* ---------- campaign: studio HQ, unlocks, badges ---------- */
 .hq{display:grid;gap:24px}
 .hq .hero{margin-bottom:0}
-.hq-name{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
-.hq-name form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.hq-name input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line2);padding:8px 10px;min-width:220px}
-.hq-name input:focus{outline:none;border-color:var(--accent)}
 .hqgrid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start}
 .hqgrid>*{min-width:0}
 .pbar{position:relative;height:10px;background:var(--line);overflow:hidden;margin:12px 0 8px}
@@ -391,14 +394,74 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 .ladder li.next .ck{border-color:var(--accent)}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;margin-top:10px}
 .kv dd{margin:0;display:flex;flex-wrap:wrap;gap:4px}
-.shelf{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));margin-top:10px}
-.badge{display:grid;gap:6px;align-content:start;padding:12px;border:1px solid var(--line);background:var(--panel2)}
-.badge .bi{width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--accent);color:var(--accent);background:var(--panel)}
-.badge b{font-family:var(--display);font-weight:800;font-size:18px;line-height:1;text-transform:uppercase}
-.badge small{font-size:11.5px;color:var(--muted);line-height:1.35}
-.badge.off{background:var(--panel)}
-.badge.off .bi{border-color:var(--line2);color:var(--dim);background:var(--line);filter:grayscale(1)}
-.badge.off b{color:var(--dim)}
+/* studio header: backdrop under a flat scrim, logo, name, tagline, city, badge row */
+.studio{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--studio);clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%)}
+.studio .bd{position:absolute;inset:0}
+.studio .bd img{width:100%;height:100%;object-fit:cover}
+.studio .bd::after{content:"";position:absolute;inset:0;background:var(--bdscrim)}
+.studio .in{position:relative;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+.studio .who{padding:24px 28px;display:grid;gap:12px;align-content:center;min-width:0}
+.studio .side{border-left:1px solid var(--line);padding:22px 26px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.studio .id{display:flex;gap:16px;align-items:center;min-width:0}
+.studio h2{font-family:var(--display);font-weight:900;font-size:clamp(40px,4.6vw,66px);line-height:.88;text-transform:uppercase;margin:0;text-wrap:balance}
+.tagline{font-size:16px;font-weight:600;color:var(--ink);margin-top:6px}
+.city{font-size:13px;color:var(--muted);margin-top:2px}
+.logo{width:76px;height:76px;flex:none;display:grid;place-items:center;overflow:hidden;background:var(--studio);color:var(--on-studio);font-family:var(--display);font-weight:900;font-size:32px;border:1px solid var(--line2)}
+.logo img{width:100%;height:100%;object-fit:cover}
+.logo.sm{width:30px;height:30px;font-size:14px}
+/* medals: circle in the tier colour; locked ones are a dashed outline */
+.medal{--tc:var(--line2);position:relative;display:inline-grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;border:2px solid var(--tc);color:var(--tc);background:var(--panel);transition:transform .25s var(--ease)}
+.medal svg{width:16px;height:16px}
+.medal.t1{--tc:var(--bronze)} .medal.t2{--tc:var(--silver)} .medal.t3{--tc:var(--gold)}
+.medal.off{border-style:dashed;color:var(--dim);opacity:.6}
+.medal.lg{width:46px;height:46px} .medal.lg svg{width:22px;height:22px}
+.bstrip{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bstrip .medal:hover,.bstrip .medal:focus-visible{transform:translateY(-2px)}
+.bstrip .cnt{font-size:12.5px;font-weight:600;color:var(--muted);margin-left:6px}
+.tip:hover::after,.tip:focus-visible::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--ink);color:var(--bg);font-family:var(--body);font-size:12px;font-weight:600;padding:4px 8px;z-index:6;pointer-events:none}
+.ach{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));margin-top:12px}
+.achc{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;padding:12px 14px;border:1px solid var(--line);background:var(--panel2)}
+.achc.off{background:var(--panel)}
+.achc b{display:block;font-family:var(--display);font-weight:800;font-size:19px;line-height:1;text-transform:uppercase}
+.achc.off b{color:var(--muted)}
+.achc small{display:block;font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:4px}
+.achc .tn{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tc,var(--muted))}
+.achc .pbar{height:5px;margin:8px 0 2px}
+.achc.hl{border-color:var(--accent)}
+/* earning a badge: the medal pops in, a ring bursts, sparks fly and a shine sweeps across */
+.earn{--tc:var(--gold);display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;padding:12px 14px;border:1px solid var(--tc);border-left-width:4px;background:var(--panel2);animation:rise .5s var(--ease) both;animation-delay:var(--d,0s)}
+.earn.t1{--tc:var(--bronze)} .earn.t2{--tc:var(--silver)} .earn.t3{--tc:var(--gold)}
+.earn b{display:block;font-family:var(--display);font-weight:900;font-size:22px;line-height:1;text-transform:uppercase}
+.earn small{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+.earn .tn{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tc)}
+.earn .medal{width:54px;height:54px;animation:medalIn .8s var(--ease) both;animation-delay:calc(var(--d,0s) + .15s)}
+.earn .medal svg{width:26px;height:26px}
+.medal .ring{position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--tc);opacity:0;animation:ring 1s ease-out both;animation-delay:calc(var(--d,0s) + .55s)}
+.medal .shine{position:absolute;inset:0;border-radius:50%;overflow:hidden;pointer-events:none}
+.medal .shine::before{content:"";position:absolute;top:-30%;bottom:-30%;left:-60%;width:34%;background:rgba(255,255,255,.5);transform:skewX(-20deg);animation:shine .9s ease-in-out both;animation-delay:calc(var(--d,0s) + .75s)}
+.spk{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--tc);opacity:0;animation:spk .9s ease-out both;animation-delay:calc(var(--d,0s) + .5s)}
+@keyframes medalIn{0%{opacity:0;transform:scale(.3) rotate(-50deg)}60%{opacity:1;transform:scale(1.2) rotate(8deg)}100%{opacity:1;transform:none}}
+@keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.3)}}
+@keyframes shine{0%{left:-60%}100%{left:130%}}
+@keyframes spk{0%{opacity:1;transform:rotate(var(--a)) translateY(0) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(-46px) scale(.3)}}
+.toast{position:fixed;right:16px;bottom:16px;z-index:80;display:grid;gap:8px;width:min(380px,calc(100vw - 32px))}
+.toast .earn{box-shadow:0 10px 30px rgba(0,0,0,.35)}
+/* studio editor */
+.mbox.wide{width:min(560px,100%)}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatches label{position:relative;cursor:pointer}
+.swatches input{position:absolute;opacity:0;width:0;height:0}
+.swatches span{display:block;width:32px;height:32px;border-radius:50%;background:var(--studio);border:2px solid var(--line2)}
+.swatches input:checked+span{outline:2px solid var(--ink);outline-offset:2px}
+.swatches input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.imgf{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.imgf .pv{width:72px;height:72px;display:grid;place-items:center;overflow:hidden;background:var(--bg);border:1px solid var(--line2);color:var(--dim);font-size:11px;text-align:center}
+.imgf .pv.wide{width:128px;height:72px}
+.imgf .pv img{width:100%;height:100%;object-fit:cover}
+.imgf input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+.imgf .row{align-items:center}
+.mform .imgf .btn{width:auto}
+.studio .side .lbl{display:block;margin-bottom:6px}
 .ugrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin-top:12px}
 .upg{display:grid;gap:6px;align-content:start;padding:12px 14px;border:1px solid var(--line);background:var(--panel2)}
 .upg b{font-family:var(--display);font-weight:800;font-size:19px;line-height:1;text-transform:uppercase}
@@ -443,6 +506,7 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
 @keyframes vt-out-back{to{opacity:0;transform:translateX(32px)}}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
+  .spk,.medal .ring,.medal .shine{display:none}
   ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
 }
 
@@ -462,7 +526,15 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
   .mark{left:6px;right:6px;top:auto;bottom:-9px;width:auto;height:3px}
   .rail-foot{display:none}
   .rpurse{display:flex;min-width:120px;flex:none}
-  .hq>.hero{order:-2}
+  .hq>.hero,.hq>.studio{order:-2}
+  .studio .in{grid-template-columns:1fr}
+  .studio .side{border-left:0;border-top:1px solid var(--line)}
+  .studio .who{padding:20px}
+  .logo{width:60px;height:60px;font-size:26px}
+  .toast{right:8px;bottom:8px;width:calc(100vw - 16px);gap:6px}
+  .toast .earn{padding:8px 10px;gap:10px}
+  .toast .earn small{display:none}
+  .toast .earn .medal{width:40px;height:40px}
   .hq>.hqbar{order:-1;position:static;border-top:0;border-bottom:1px solid var(--line);padding-top:0}
   .rpurse .lbl{display:none}
   .top .purse{display:none}
@@ -524,6 +596,8 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
 
 <section id="intro" aria-label="How to play" hidden></section>
 <div class="modal" id="authm" role="dialog" aria-modal="true" aria-labelledby="auth-h" inert><div class="mbox" id="authbox"></div></div>
+<div class="modal" id="studiom" role="dialog" aria-modal="true" aria-labelledby="studio-h" inert><div class="mbox wide" id="studiobox"></div></div>
+<div class="toast" id="toast" aria-live="polite"></div>
 
 <script src="firebase-config.js" onerror="window.FIREBASE_CONFIG=null"></script>
 <script type="module" src="net.js"></script>
@@ -776,7 +850,25 @@ var ICON={
   check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
   sun:'<path d="M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
   moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
-  auto:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 3v18"/>'
+  auto:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 3v18"/>',
+  star:'<path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/>',
+  piggy:'<path d="M5.5 10.5a6.5 5.5 0 0 1 11-2.5H19l1 3-1.5 1v3h-2l-1 3H13v-2h-3v2H7.5l-1-2.5a6 6 0 0 1-1-5zM15 10.5h.01M3.5 9.5c0 1 .7 1.8 2 2"/>',
+  rise:'<path d="M4 18l6-6 4 4 6-8M14 8h6v6"/>',
+  crown:'<path d="M4 18.5h16M5 15.5l-1-9 5 4 3-6 3 6 5-4-1 9z"/>',
+  house:'<path d="M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-6h4v6"/>',
+  clock:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2"/>',
+  flame:'<path d="M12 21c3.9 0 7-2.6 7-6.5 0-3.4-2.5-5.6-3.6-8.5-.6 2-1.8 3-3 3.4.4-2.8-.6-5.6-2.9-7.4.2 3.3-1.6 5.2-3 7A7.5 7.5 0 0 0 5 14.5C5 18.4 8.1 21 12 21z"/>',
+  coins:'<path d="M9 9.5c3.3 0 6-1.1 6-2.5S12.3 4.5 9 4.5 3 5.6 3 7s2.7 2.5 6 2.5zM3 7v5c0 1.4 2.7 2.5 6 2.5M15 7v2.5M9 14.5V17c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5M15 14.5c3.3 0 6-1.1 6-2.5S18.3 9.5 15 9.5 9 10.6 9 12s2.7 2.5 6 2.5z"/>',
+  reel:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM12 17.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM8 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM16 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>',
+  compass:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z"/>',
+  heart:'<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/>',
+  tools:'<path d="M14.5 5.5a4 4 0 0 0 4 5.5l-8.8 8.8a2.1 2.1 0 0 1-3-3l8.8-8.8a4 4 0 0 1-1-2.5zM16.5 3.5l-2 2"/>',
+  shield:'<path d="M12 21s7-3 7-9V5.5l-7-2.5-7 2.5V12c0 6 7 9 7 9zM9 12l2 2 4-4"/>',
+  rocket:'<path d="M12 15l-3-3c1.5-4.5 4.5-8 10-9-1 5.5-4.5 8.5-9 10zM9 12l-4 1 2-4h4.5M12 15l-1 4 4-2v-4.5M6.5 17.5c-1 1-1.5 3-1.5 3s2-.5 3-1.5"/>',
+  ticket:'<path d="M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zM15 7v10"/>',
+  phoenix:'<path d="M12 20.5c-2-2-2.5-5-1-8-3 1-6-1-7-4 3 1 5 1 7 0-1-2-.5-4 1-5 .5 2 2 3 4 3 2 0 3.5 1.5 3 4-.5 2-2 3-3.5 3.5 1 2 1 4.5-.5 6.5z"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>',
+  image:'<path d="M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15.5 9.5h.01"/>'
 };
 function icon(k){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">'+ICON[k]+'</svg>'}
 function tag(t,c){return '<span class="tag '+(c||"")+'">'+esc(t)+'</span>'}
@@ -1112,7 +1204,7 @@ function watchBoard(){
 function campBoardHtml(ctl){
   var lb=state.lb,me=state.me,st=CAMP.st,body;
   function row(e,rank,isMe){
-    return '<tr class="'+(isMe?"me":"")+'"><td class="r">'+rank+'</td><td>'+esc(e.displayName)+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+(e.bailouts?e.bailouts+" bailout"+(e.bailouts>1?"s":""):"No bailouts")+' · '+money(e.lifetimeProfit)+' lifetime</div></td><td class="n">'+e.filmsToATier+'</td></tr>';
+    return '<tr class="'+(isMe?"me":"")+'"><td class="r">'+rank+'</td><td><span style="display:flex;gap:10px;align-items:center">'+logoHtml(e.uid,e.displayName,{logo:e.logo,color:e.color}," sm")+'<span>'+esc(e.displayName)+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+(e.bailouts?e.bailouts+" bailout"+(e.bailouts>1?"s":""):"No bailouts")+' · '+money(e.lifetimeProfit)+' lifetime</div></span></span></td><td class="n">'+e.filmsToATier+'</td></tr>';
   }
   var head='<thead><tr><th>#</th><th>Studio</th><th class="n">Films</th></tr></thead>';
   if(!NET)body='<p class="note">The online board isn\'t set up in this build.</p>';
@@ -1218,7 +1310,7 @@ function runsToDays(runs){var o={};runs.forEach(function(e){var k=e.id.replace(/
 function onUser(u){
   var changed=(state.me&&state.me.uid)!==(u&&u.uid);
   state.me=u;drawAcct();
-  if(changed){CAMP.st=null;CAMP.loaded=false;CAMP.history=null;CAMP.renaming=false;if(state.type==="campaign"){if(state.stage!=="hq")newGame();else campLoad()}}
+  if(changed){CAMP.st=null;CAMP.loaded=false;CAMP.history=null;if(state.type==="campaign"){if(state.stage!=="hq")newGame();else campLoad()}}
   if(runsUnsub){runsUnsub();runsUnsub=null}
   if(u)runsUnsub=NET.watchRuns(function(runs){state.days=mergeDays(state.days,runsToDays(runs));saveLocal();if(document.body.classList.contains("lb-open"))drawBoard()},function(){});
   if($("#authm").classList.contains("open"))drawAuth();
@@ -1275,7 +1367,7 @@ function introSeen(){try{return localStorage.getItem(IKEY)==="1"}catch(e){return
 // studio once per load (NET.campaignLoad); every change goes through a campaign* callable, which returns the new
 // studio. Shortlists, budget and visibility come from the server's current project; the page only draws them.
 var CAMPCFG=null,ACH=null;
-var CAMP={st:null,loaded:false,loading:false,err:"",note:"",busy:"",history:null,renaming:false,passArm:false};
+var CAMP={st:null,loaded:false,loading:false,err:"",note:"",busy:"",history:null,passArm:false};
 function campProject(){return CAMP.st&&CAMP.st.currentProject}
 // The stored project in the shape the model expects (Firestore can't hold nested arrays).
 function projEnv(pj){
@@ -1330,8 +1422,134 @@ function passBtn(){
   return '<p class="note" style="margin-top:6px">'+(n?'<button class="btn sm" data-act="camppass"'+(CAMP.busy?" disabled":"")+'>'+(CAMP.passArm?"Confirm: pass for $"+fee+"M":"Pass on these pitches")+'</button> ':'')+
     (n?n+' pass'+(n>1?"es":"")+' left. A pass costs a $'+fee+'M development fee and brings new pitches.':'No passes left. You earn one every '+CAMPCFG.pass.every+' films.')+'</p>';
 }
-function badgeTile(b,when,i){
-  return '<div class="badge'+(when?" pop":" off")+'" style="--i:'+(i||0)+'"><span class="bi">'+icon(when?"trophy":"spark")+'</span><b>'+esc(b.name)+'</b><small>'+esc(b.text)+'</small>'+(when&&typeof when==="number"?'<small class="mono">'+new Date(when).toISOString().slice(0,10)+'</small>':"")+'</div>';
+// ---- achievements (data/achievements.json). A studio stores { tier, at } per badge (older studios: a timestamp).
+function badgeDef(id){return ACH.badges.filter(function(b){return b.id===id})[0]}
+function badgeTier(st,id){var v=(st.badges||{})[id];return !v?0:typeof v==="number"?1:v.tier}
+function badgeAt(st,id){var v=(st.badges||{})[id];return !v?null:typeof v==="number"?v:v.at}
+function tierCount(b){return (b.tiers||[1]).length}
+// Bronze/Silver/Gold for tiered badges; a one-step badge is gold once earned.
+function medalCls(b,tier){return !tier?"off":b.tiers?"t"+tier:"t3"}
+function tierName(b,tier){return b.tiers?ACH.tierNames[tier-1]:"Earned"}
+function bigMoney(v){return v>=1000?"$"+(v/1000)+"B":"$"+v+"M"}
+function badgeN(b,i){var v=(b.tiers||[1])[i];return b.unit==="money"?bigMoney(v):b.unit==="percent"?"+"+Math.round(v*100)+"%":String(v)}
+// "{n}" is the tier's number; "(s)" is dropped when that number is 1 ("1 film", "3 films").
+function badgeText(b,i){var k=Math.min(i,tierCount(b)-1),v=(b.tiers||[1])[k];return b.text.replace("{n}",badgeN(b,k)).replace(/\(s\)/g,v===1?"":"s")}
+// Running progress for badges that build up over the studio's life (the server decides; this only shows it).
+function badgeProgress(st,id){
+  var s=st.stats||{},v={box_office:st.lifetimeGross||0,prolific:st.filmsMade,genre_master:Object.keys(st.perks||{}).length,
+    genre_explorer:Object.keys(st.genreHits||{}).filter(function(g){return st.genreHits[g]>0}).length,
+    well_equipped:Object.keys(st.upgrades||{}).reduce(function(a,k){return a+st.upgrades[k]},0),
+    hit_streak:s.streak||0,reunion:s.reunions||0,chemistry:s.chemistry||0,perfect_timing:s.timing||0,
+    year_round:(s.seasons||[]).length,opening_weekend:s.realHits||0}[id];
+  return v===undefined?null:v;
+}
+function medal(b,tier,extra){return '<span class="medal '+medalCls(b,tier)+(extra||"")+'" aria-hidden="true">'+icon(b.icon)+'</span>'}
+function badgeStrip(st){
+  var n=0,h=ACH.badges.map(function(b){var t=badgeTier(st,b.id);if(t)n++;
+    var tip=b.name+(t?" · "+tierName(b,t):" · locked");
+    return '<button class="medal tip '+medalCls(b,t)+'" data-act="campach" data-id="'+b.id+'" data-tip="'+esc(tip)+'" aria-label="'+esc(tip)+'">'+icon(b.icon)+'</button>'}).join("");
+  return '<div class="bstrip">'+h+'<span class="cnt">'+n+' of '+ACH.badges.length+'</span></div>';
+}
+function achHtml(st){
+  var cards=ACH.badges.map(function(b){
+    var t=badgeTier(st,b.id),max=tierCount(b),at=badgeAt(st,b.id),pv=badgeProgress(st,b.id),goal=t<max&&b.tiers&&!b.atMost?b.tiers[t]:null;
+    var bar=pv!==null&&goal!==null?'<span class="pbar" aria-hidden="true"><i style="width:'+Math.min(100,pv/goal*100)+'%;background:var(--tc,var(--accent))"></i></span><small>'+(b.unit==="money"?bigMoney(pv)+" of "+bigMoney(goal):pv+" of "+goal)+'</small>':"";
+    var tn=t?tierName(b,t)+(b.tiers&&t<max?" · next: "+ACH.tierNames[t]:""):(b.tiers?"Bronze, silver, gold":"Locked");
+    return '<div class="achc'+(t?"":" off")+'" id="ach-'+b.id+'" style="--tc:var(--'+(t?(b.tiers?["","bronze","silver","gold"][t]:"gold"):"line2")+')">'+medal(b,t," lg")+'<div><b>'+esc(b.name)+'</b><span class="tn">'+esc(tn)+'</span>'+
+      '<small>'+esc(badgeText(b,t<max?t:max-1))+'</small>'+bar+(at?'<small>Earned '+new Date(at).toISOString().slice(0,10)+'</small>':"")+'</div></div>'}).join("");
+  return '<section class="panel" id="achpanel"><div class="sech"><h3>Achievements</h3><span class="note">'+ACH.badges.filter(function(b){return badgeTier(st,b.id)}).length+' of '+ACH.badges.length+' earned</span></div><div class="ach">'+cards+'</div></section>';
+}
+// A freshly earned badge: pops in with a ring burst, sparks and a shine (static under reduced motion).
+function earnHtml(e,i){
+  var b=badgeDef(e.id);if(!b)return "";
+  var sparks="";for(var k=0;k<8;k++)sparks+='<i class="spk" style="--a:'+(k*45)+'deg"></i>';
+  return '<div class="earn '+medalCls(b,e.tier)+'" style="--d:'+(i*0.25)+'s"><span class="medal '+medalCls(b,e.tier)+'" aria-hidden="true">'+icon(b.icon)+'<span class="ring"></span><span class="shine"></span>'+sparks+'</span>'+
+    '<div><span class="tn">'+(b.tiers?ACH.tierNames[e.tier-1]+" badge":"New badge")+'</span><b>'+esc(b.name)+'</b><small>'+esc(badgeText(b,e.tier-1))+'</small></div></div>';
+}
+var toastT=null;
+function toastBadges(list){
+  if(!list||!list.length)return;
+  var el=$("#toast");el.innerHTML=list.map(earnHtml).join("");clearTimeout(toastT);
+  toastT=setTimeout(function(){el.innerHTML=""},6000+list.length*600);
+}
+// ---- studio look: colour from the palette, logo and backdrop from Storage, tagline and city.
+function studioCol(id){var c=CAMPCFG.studioColors.filter(function(x){return x.id===id})[0]||CAMPCFG.studioColors[0];return c}
+function tintStyle(id){var c=studioCol(id);return '--sd:'+c.dark+';--sl:'+c.light}
+function studioImg(uid,name,v){return NET&&v?NET.studioImageUrl(uid,name,v):null}
+function logoHtml(uid,name,pr,cls){
+  var u=studioImg(uid,"logo",pr&&pr.logo);
+  return '<span class="logo tint'+(cls||"")+'" style="'+tintStyle(pr&&pr.color)+'">'+(u?'<img src="'+esc(u)+'" alt="">':esc(initials(name)))+'</span>';
+}
+function studioHead(st,rules){
+  var pr=st.profile||{},uid=state.me.uid,bd=studioImg(uid,"backdrop",pr.backdrop),pj=st.currentProject;
+  return '<section class="studio tint" style="'+tintStyle(pr.color)+'">'+(bd?'<div class="bd"><img src="'+esc(bd)+'" alt=""></div>':"")+'<div class="in"><div class="who">'+
+    '<p class="lbl">Studio HQ · Level '+campLevel(st)+' · Film #'+(st.filmsMade+1)+' next</p>'+
+    '<div class="id">'+logoHtml(uid,st.studioName,pr)+'<div><h2>'+esc(st.studioName)+'</h2>'+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+'</div></div>'+
+    badgeStrip(st)+
+    '<p>Next project: <b>$'+pj.budget+'M budget</b> · '+esc(rules)+'.</p>'+(CAMP.note?'<p class="bail">'+esc(CAMP.note)+'</p>':"")+(st.bailouts?'<p class="note">Bailed out '+st.bailouts+' time'+(st.bailouts>1?"s":"")+'.</p>':"")+
+    '<div class="row"><button class="btn sm" data-act="campedit">'+icon("edit")+'Customize studio</button></div></div>'+
+    '<div class="side"><div><span class="lbl">Bank</span><b class="big mono">'+money(st.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="big2 mono pos">'+money(st.lifetimeProfit)+'</b></div></div></div></section>';
+}
+// Studio editor: images are cropped and shrunk in the browser, uploaded to Storage, then campaignStyle checks them.
+var EDIT=null;
+function shrink(file,w,h,maxKB){
+  return createImageBitmap(file).then(function(bm){
+    var c=document.createElement("canvas");c.width=w;c.height=h;var s=Math.max(w/bm.width,h/bm.height),dw=bm.width*s,dh=bm.height*s;
+    c.getContext("2d").drawImage(bm,(w-dw)/2,(h-dh)/2,dw,dh);
+    function blob(type,q){return new Promise(function(res){c.toBlob(res,type,q)})}
+    return blob("image/webp",0.86).then(function(b){return b&&b.type==="image/webp"&&b.size<=maxKB*1024?b:blob("image/jpeg",0.84)})
+      .then(function(b){return b.size<=maxKB*1024?b:blob("image/jpeg",0.6)});
+  });
+}
+function editorHtml(){
+  var st=CAMP.st,pr=st.profile||{},P=CAMPCFG.profile,e=EDIT;
+  function imgField(k,label,wide){var cur=e[k].url||(e[k].remove?null:studioImg(state.me.uid,k,pr[k]));
+    return '<div class="field"><span>'+label+'</span><div class="imgf"><span class="pv'+(wide?" wide":"")+'">'+(cur?'<img src="'+esc(cur)+'" alt="">':"None")+'</span><div class="row">'+
+      '<label class="btn sm">'+icon("image")+'Choose image<input type="file" accept="image/png,image/jpeg,image/webp" data-img="'+k+'"></label>'+
+      (cur?'<button class="btn sm" type="button" data-act="editrm" data-id="'+k+'">Remove</button>':"")+'</div></div></div>'}
+  return '<div class="dh"><div><p class="lbl">Campaign</p><h2 id="studio-h">Customize studio</h2></div><button class="xbtn" data-act="editclose" aria-label="Close">'+icon("close")+'</button></div>'+
+    '<form class="mform" id="studioform" novalidate>'+
+    (st.renamed?'<p class="note">Studio name: <b>'+esc(st.studioName)+'</b> (already renamed once).</p>':'<label class="field"><span>Studio name (you can change it once)</span><input name="name" maxlength="30" value="'+esc(st.studioName)+'"></label>')+
+    '<label class="field"><span>Tagline</span><input name="tagline" maxlength="'+P.taglineMax+'" value="'+esc(pr.tagline||"")+'" placeholder="Small budgets, big screams"></label>'+
+    '<label class="field"><span>Home city</span><input name="city" maxlength="'+P.cityMax+'" value="'+esc(pr.city||"")+'" placeholder="Los Angeles"></label>'+
+    '<div class="field"><span>Studio colour</span><div class="swatches" role="radiogroup" aria-label="Studio colour">'+CAMPCFG.studioColors.map(function(c){
+      return '<label class="tint" style="'+tintStyle(c.id)+'" title="'+esc(c.name)+'"><input type="radio" name="color" value="'+c.id+'"'+(c.id===(pr.color||CAMPCFG.studioColors[0].id)?" checked":"")+' aria-label="'+esc(c.name)+'"><span></span></label>'}).join("")+'</div></div>'+
+    imgField("logo","Logo (square, cropped to fit)",false)+imgField("backdrop","Backdrop (wide, shown behind your studio name)",true)+
+    '<p class="note">Your logo, name and colour appear on the campaign board, so other players see them. Images are resized before they upload.</p>'+
+    (e.err?'<p class="merr" role="alert">'+esc(e.err)+'</p>':"")+
+    '<button class="btn go" type="submit"'+(e.busy?" disabled":"")+'>'+(e.busy||"Save studio")+'</button></form>';
+}
+function drawEditor(){$("#studiobox").innerHTML=editorHtml()}
+var editReturn=null;
+function openEditor(){
+  editReturn=document.activeElement;EDIT={busy:"",err:"",logo:{},backdrop:{}};drawEditor();
+  var m=$("#studiom");m.inert=false;m.classList.add("open");setTimeout(function(){var f=m.querySelector("input");if(f)f.focus()},80);
+}
+function closeEditor(){var m=$("#studiom");if(!m.classList.contains("open"))return;m.classList.remove("open");m.inert=true;
+  ["logo","backdrop"].forEach(function(k){if(EDIT&&EDIT[k].url)URL.revokeObjectURL(EDIT[k].url)});EDIT=null;
+  if(editReturn&&editReturn.focus&&document.body.contains(editReturn))editReturn.focus()}
+// Keep what was typed when the editor redraws (after picking an image).
+function editorKeep(){var f=$("#studioform");if(!f)return;EDIT.form={name:f.name?f.name.value:null,tagline:f.tagline.value,city:f.city.value,color:(f.querySelector("input[name=color]:checked")||{}).value}}
+function editorRestore(){var f=$("#studioform"),v=EDIT&&EDIT.form;if(!f||!v)return;if(f.name&&v.name!==null)f.name.value=v.name;f.tagline.value=v.tagline;f.city.value=v.city;
+  var c=f.querySelector('input[name=color][value="'+v.color+'"]');if(c)c.checked=true}
+function pickImage(input){
+  var k=input.dataset.img,file=input.files&&input.files[0],P=CAMPCFG.profile;if(!file)return;
+  editorKeep();
+  if(!/^image\/(png|jpeg|webp)$/.test(file.type)){EDIT.err="Use a JPEG, PNG or WebP image.";drawEditor();editorRestore();return}
+  if(file.size>20*1024*1024){EDIT.err="That file is too large to use.";drawEditor();editorRestore();return}
+  EDIT.err="";EDIT.busy="Preparing image…";drawEditor();editorRestore();
+  (k==="logo"?shrink(file,512,512,P.logoKB):shrink(file,1600,900,P.backdropKB)).then(function(b){
+    if(EDIT[k].url)URL.revokeObjectURL(EDIT[k].url);EDIT[k]={blob:b,url:URL.createObjectURL(b)};EDIT.busy="";editorKeep();drawEditor();editorRestore();
+  },function(){EDIT.busy="";EDIT.err="That image couldn't be read. Try another one.";drawEditor();editorRestore()});
+}
+function saveEditor(f){
+  var st=CAMP.st,pr=st.profile||{},payload={tagline:f.tagline.value,city:f.city.value,color:(f.querySelector("input[name=color]:checked")||{}).value||pr.color},name=f.name?f.name.value.trim():null;
+  EDIT.err="";EDIT.busy="Saving…";editorKeep();drawEditor();editorRestore();
+  var ups=[];
+  ["logo","backdrop"].forEach(function(k){if(EDIT[k].blob){payload[k]=true;ups.push(NET.uploadStudioImage(k,EDIT[k].blob))}else if(EDIT[k].remove&&pr[k])payload[k]=false});
+  Promise.all(ups).then(function(){return NET.campaign("campaignStyle",payload)}).then(function(o){CAMP.st=o.state;
+    if(name&&!st.renamed&&name!==st.studioName)return NET.campaign("campaignRename",{name:name}).then(function(r){CAMP.st=r.state});
+  }).then(function(){closeEditor();drawCamp()},function(e){if(!EDIT)return;EDIT.busy="";EDIT.err=NET.errorText(e,"campaign");drawEditor();editorRestore()});
 }
 function tierChips(st){
   var u=st.unlocked;
@@ -1363,20 +1581,15 @@ function hqHtml(){
     '<button class="btn go" type="submit"'+(busy?" disabled":"")+'>'+(busy==="start"?"Opening…":"Open the studio")+'</button></form>'});
   var pj=st.currentProject,life=st.lifetimeProfit,l=ladderAt(life),pct=ladderPct(life);
   var rules=pj.diff==="easy"?"Training wheels: every number on screen":pj.diff==="hard"?"Real calendar, numbers hidden":"Numbers hidden until release";
-  var name='<div class="hq-name">'+(CAMP.renaming?'<form id="renameform"><input name="name" maxlength="30" value="'+esc(st.studioName)+'" aria-label="Studio name"><button class="btn sm go" type="submit"'+(busy?" disabled":"")+'>Save</button><button class="btn sm" type="button" data-act="camprenamex">Cancel</button></form><span class="note">You can rename your studio once.</span>':
-    (!st.renamed?'<button class="btn sm" data-act="camprename">Rename (once)</button>':""))+'</div>';
-  var h='<div class="hq">'+hero({cls:"res",eyebrow:"Studio HQ · Level "+campLevel(st)+" · Film #"+(st.filmsMade+1)+" next",title:st.studioName,text:name+
-    '<p>Next project: <b>$'+pj.budget+'M budget</b> · '+esc(rules)+'.</p>'+(CAMP.note?'<p class="bail">'+esc(CAMP.note)+'</p>':"")+(st.bailouts?'<p class="note">Bailed out '+st.bailouts+' time'+(st.bailouts>1?"s":"")+'.</p>':""),
-    art:'<div class="figs"><div><span class="lbl">Bank</span><b class="big mono">'+money(st.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="big2 mono pos">'+money(life)+'</b></div></div>',artCls:"side"});
+  var h='<div class="hq">'+studioHead(st,rules);
   h+='<section class="panel"><div class="sech"><h3>'+(l.next?"Next unlock: "+esc(gateInfo(l.next.id).name):"Everything unlocked")+'</h3><span class="mono">'+money(life)+(l.next?" / $"+l.next.at+"M":"")+'</span></div>'+
     '<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(pct)+'" aria-label="Progress to the next unlock"><i style="width:'+pct+'%"></i></div>'+
     '<p class="note">'+(l.next?esc(gateInfo(l.next.id).text)+" Only profitable films count toward it.":"Your studio has the whole roster, every genre and real release dates.")+'</p>'+ladderHtml(life)+'</section>';
   h+=levelHtml(st);
-  var shelf=ACH.badges.map(function(b,i){return badgeTile(b,st.badges[b.id],i)}).join("");
   h+='<div class="hqgrid"><section class="panel"><h3>Your talent</h3>'+tierChips(st)+'<dl class="kv"><dt class="lbl">Films made</dt><dd class="mono">'+st.filmsMade+'</dd><dt class="lbl">Passes</dt><dd class="mono">'+st.passesAvailable+'</dd></dl></section>'+
     '<section class="panel"><div class="sech"><h3>'+(CAMP.history?"All films":"Recent films")+'</h3>'+(st.filmsMade>(st.recent||[]).length||CAMP.history?'<button class="btn sm" data-act="camphistory">'+(CAMP.history?"Recent only":"All films")+'</button>':"")+'</div>'+
       (CAMP.history==="loading"?'<p class="note">Loading…</p>':filmRows(Array.isArray(CAMP.history)?CAMP.history:st.recent||[]))+'</section></div>';
-  h+='<section class="panel"><h3>Badges</h3><p class="note">'+Object.keys(st.badges).length+' of '+ACH.badges.length+' earned.</p><div class="shelf">'+shelf+'</div></section>';
+  h+=achHtml(st);
   var hard=st.unlocked.hard?'<label class="switch"><input type="checkbox" data-act="camphard"'+(pj.diff==="hard"?" checked":"")+(busy?" disabled":"")+'> Real release dates for this project</label>':"";
   h+='<div class="hqbar">'+(err||'<span>'+passBtn()+'</span>')+'<div class="row">'+hard+'<button class="btn go" data-act="campnext"'+(busy?" disabled":"")+'>'+(busy==="hard"?"Updating the calendar…":busy==="pass"?"Passing…":"Start next project")+'</button></div></div></div>';
   return h;
@@ -1400,7 +1613,7 @@ function campResultHtml(res){
     (s.genres||[]).forEach(function(g){what.push(tag(G[g].name,"ok"))});if(s.hard)what.push(tag("Real release dates","ok"));
     h+='<div class="unlock pop flash" style="--i:'+i+'"><span class="lbl">Unlocked!</span><h4>'+esc(gi.name)+'</h4><p class="note">'+esc(gi.text)+'</p><span class="chips">'+what.join("")+'</span></div>'});
   if(ev.level)h+='<div class="unlock pop flash" style="--i:'+ev.gates.length+'"><span class="lbl">Level up!</span><h4>Studio level '+ev.level.to+'</h4><p class="note">Your studio learned from this release. You have '+ev.level.points+' upgrade point'+(ev.level.points===1?"":"s")+' to spend at HQ.</p></div>';
-  if(ev.badges.length)h+='<div><p class="lbl" style="margin-bottom:8px">New badge'+(ev.badges.length>1?"s":"")+'</p><div class="shelf">'+ev.badges.map(function(id,i){return badgeTile(ACH.badges.filter(function(b){return b.id===id})[0],true,i+ev.gates.length)}).join("")+'</div></div>';
+  if(ev.badges.length)h+='<div style="display:grid;gap:8px"><p class="lbl">New badge'+(ev.badges.length>1?"s":"")+'</p>'+ev.badges.map(function(e,i){return earnHtml(typeof e==="string"?{id:e,tier:1}:e,i+ev.gates.length)}).join("")+'</div>';
   ev.perks.forEach(function(g){h+='<p class="note"><b class="pos">Genre Master:</b> your '+esc(G[g].name)+' films earn +'+Math.round(b1.perks[g]*100)+'% at the box office from now on.</p>'});
   return h+btn+'</section>';
 }
@@ -1462,8 +1675,10 @@ document.addEventListener("click",function(e){
   else if(a==="camphq")campHQ();
   else if(a==="campretry")campLoad();
   else if(a==="campretryrel"){if(state.result&&state.result.camp)campSend(state.result)}
-  else if(a==="camprename"){CAMP.renaming=true;drawHQ();var ri=$("#renameform input");if(ri)ri.focus()}
-  else if(a==="camprenamex"){CAMP.renaming=false;drawHQ()}
+  else if(a==="campedit")openEditor();
+  else if(a==="editclose")closeEditor();
+  else if(a==="editrm"){editorKeep();if(EDIT[id].url)URL.revokeObjectURL(EDIT[id].url);EDIT[id]={remove:true};drawEditor();editorRestore()}
+  else if(a==="campach"){var c=$("#ach-"+id);if(c){c.scrollIntoView({behavior:REDUCED?"auto":"smooth",block:"center"});c.classList.add("hl");setTimeout(function(){c.classList.remove("hl")},1600)}}
   else if(a==="camppass"){
     if(!CAMP.passArm){CAMP.passArm=true;drawCamp();return}
     CAMP.passArm=false;var wasPlay=state.stage==="play";
@@ -1471,7 +1686,7 @@ document.addEventListener("click",function(e){
       CAMP.note=o.events.bailout?"The development fee took the bank below $"+CAMPCFG.start.floor+"M, so the studio was bailed out back to $"+CAMPCFG.start.floor+"M.":"";
       if(wasPlay)campPlay();else newGame()});
   }
-  else if(a==="campup")campCall("campaignUpgrade",{id:id},"up",function(o){if(o)newGame()});
+  else if(a==="campup")campCall("campaignUpgrade",{id:id},"up",function(o){if(o){newGame();toastBadges(o.badges)}});
   else if(a==="camphistory"){
     if(CAMP.history){CAMP.history=null;drawHQ();return}
     CAMP.history="loading";drawHQ();NET.campaignFilms().then(function(fs){CAMP.history=fs;drawHQ()},function(e){CAMP.history=null;CAMP.err=NET.errorText(e,"campaign");drawHQ()});
@@ -1508,14 +1723,16 @@ document.addEventListener("submit",function(e){
   var f=e.target;
   if(f.id==="authform"){e.preventDefault();submitAuth(f)}
   else if(f.id==="campform"){e.preventDefault();campCall("campaignStart",{studioName:f.name.value.trim()},"start",function(){newGame()})}
-  else if(f.id==="renameform"){e.preventDefault();campCall("campaignRename",{name:f.name.value},"rename",function(o){if(o)CAMP.renaming=false})}
+  else if(f.id==="studioform"){e.preventDefault();saveEditor(f)}
 });
 // The hard-mode switch on the HQ: same project and pitches, real release dates instead of windows.
 document.addEventListener("change",function(e){
-  var t=e.target;if(!t.dataset||t.dataset.act!=="camphard")return;
+  var t=e.target;if(t.dataset&&t.dataset.img){pickImage(t);return}
+  if(!t.dataset||t.dataset.act!=="camphard")return;
   campCall("campaignProject",{index:campProject().index,hard:t.checked},"hard",function(){newGame()});
 });
 $("#authm").addEventListener("click",function(e){if(e.target===this)closeAuth()});
+$("#studiom").addEventListener("click",function(e){if(e.target===this)closeEditor()});
 // Reels: keep the arrows in sync, and let a plain mouse wheel scroll them sideways until an end is reached.
 document.addEventListener("scroll",function(e){var t=e.target;if(t&&t.classList&&t.classList.contains("track"))reelState(t)},true);
 document.addEventListener("wheel",function(e){
@@ -1524,7 +1741,7 @@ document.addEventListener("wheel",function(e){
   if((e.deltaY>0&&tr.scrollLeft<max-1)||(e.deltaY<0&&tr.scrollLeft>1)){e.preventDefault();tr.scrollLeft+=e.deltaY*(e.deltaMode===1?32:1)}
 },{passive:false});
 window.addEventListener("resize",function(){var tr=$("#page .track");if(tr)reelState(tr)});
-document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;if($("#authm").classList.contains("open"))closeAuth();else if(document.body.classList.contains("intro-open"))closeIntro();else closeBoard()});
+document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;if($("#studiom").classList.contains("open"))closeEditor();else if($("#authm").classList.contains("open"))closeAuth();else if(document.body.classList.contains("intro-open"))closeIntro();else closeBoard()});
 function setTopH(){document.documentElement.style.setProperty("--toph",$("#top").offsetHeight+"px")}
 if(window.ResizeObserver)new ResizeObserver(setTopH).observe($("#top"));else window.addEventListener("resize",setTopH);
 $("#lbbtn").innerHTML=icon("trophy")+"<span>Leaderboard</span>";$("#lbbtn").setAttribute("aria-label","Leaderboard");
