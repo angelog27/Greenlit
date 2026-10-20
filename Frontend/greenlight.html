@@ -399,6 +399,15 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 .badge.off{background:var(--panel)}
 .badge.off .bi{border-color:var(--line2);color:var(--dim);background:var(--line);filter:grayscale(1)}
 .badge.off b{color:var(--dim)}
+.ugrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin-top:12px}
+.upg{display:grid;gap:6px;align-content:start;padding:12px 14px;border:1px solid var(--line);background:var(--panel2)}
+.upg b{font-family:var(--display);font-weight:800;font-size:19px;line-height:1;text-transform:uppercase}
+.upg small{font-size:12px;color:var(--muted);line-height:1.4}
+.upg small em{color:var(--ink)}
+.upg .btn{justify-self:start;margin-top:4px}
+.pips{display:flex;gap:4px}
+.pips i{width:20px;height:6px;background:var(--line2)}
+.pips i.on{background:var(--accent)}
 .hqbar{position:sticky;bottom:0;z-index:5;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;background:var(--bg);border-top:1px solid var(--line)}
 .hqbar .row{align-items:center}
 .switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
@@ -717,7 +726,18 @@ function mergeDays(a,b){var o={};[a,b].forEach(function(src){Object.keys(src||{}
 
 function curPick(){var P=state.pick;return {g:P.g,d:P.d,a1:P.a1,a2:P.a2,a3:P.a3,w:P.w}}
 function complete(){var p=curPick();return !!(p.g&&p.d&&p.a1&&p.a2&&p.a3&&p.w)}
-function curCost(){return costOf(curPick(),CFG())}
+function curCost(){return costOf(curPick(),CFG(),state.env)}
+// What the player may see before release. Easy shows everything and Medium/Hard nothing; on a campaign
+// project with hidden numbers, the studio's information upgrades open parts of it.
+function SEE(){
+  var all=CFG().show;
+  if(all||state.type!=="campaign"||!CAMP.st)return {fit:all,tone:all,stars:all,links:all,story:all,market:all,proj:all};
+  var u=CAMP.st.upgrades||{};
+  return {fit:u.scout>=1,tone:u.scout>=2,stars:u.scout>=3,links:u.casting>=1,story:u.story>=1,market:u.market>=1,proj:u.screenings>=1};
+}
+// Fees as this project charges them (campaign Reputation and Marketing Deals discounts; listed fees otherwise).
+function fee(x){return talentFee(state.env,x)}
+function wcost(w){return windowCost(state.env,w)}
 
 // ---- images: data/images.json holds public TMDB paths only (no key). Missing ones fall back to initials.
 var IMG={base:"",people:{},genres:{},slate:{}},SEEN={};
@@ -875,7 +895,7 @@ function modeNote(){
 // Budget always; market hints (heat, rival window) only on Easy.
 function marketArt(){
   var env=state.env,cfg=CFG(),h='<div class="market"><span class="lbl">Studio budget</span><b class="budget mono">$'+env.budget+'M</b>';
-  if(cfg.show){
+  if(SEE().market){
     var gs=GENRES.filter(function(x){return !x.mix}).sort(function(a,b){return env.heat[b.id]-env.heat[a.id]});
     h+='<dl><dt class="lbl">Audiences want</dt><dd>'+gs.slice(0,2).map(function(g){return tag(g.name+" "+x2(env.heat[g.id]),"hot")}).join("")+'</dd>'+
       '<dt class="lbl">Cooling off</dt><dd>'+gs.slice(-2).reverse().map(function(g){return tag(g.name+" "+x2(env.heat[g.id]),"cold")}).join("")+'</dd>'+
@@ -886,8 +906,8 @@ function marketArt(){
 // Cheapest film a genre allows today, from public fees only: on a tight budget some genres are out of reach.
 function minCost(gid){
   var env=state.env,cfg=CFG(),wins=cfg.real?env.dates.map(seasonOf):WINDOWS.filter(function(w){return !w.hardOnly}).map(function(w){return w.id});
-  function lo(ids,M){return Math.min.apply(null,ids.map(function(i){return M[i].fee}))}
-  return G[gid].cost+lo(dirsFor(env,gid),D)+Math.min.apply(null,wins.map(function(w){return W[w].cost}))+poolsFor(env,gid).reduce(function(s,p){return s+lo(p,A)},0);
+  function lo(ids,M){return Math.min.apply(null,ids.map(function(i){return talentFee(env,M[i])}))}
+  return G[gid].cost+lo(dirsFor(env,gid),D)+Math.min.apply(null,wins.map(function(w){return windowCost(env,W[w])}))+poolsFor(env,gid).reduce(function(s,p){return s+lo(p,A)},0);
 }
 function nav(label,ok,act){
   var l=stepList(),i=l.indexOf(state.step);
@@ -896,7 +916,7 @@ function nav(label,ok,act){
 }
 
 function stepHtml(){
-  var env=state.env,cfg=CFG(),P=state.pick,g=G[P.g],d=D[P.d],cur=curCost(),h="",show=cfg.show,id=state.step;
+  var env=state.env,cfg=CFG(),P=state.pick,g=G[P.g],d=D[P.d],cur=curCost(),h="",see=SEE(),show=see.market,id=state.step;
   var plot=g?plotFor(env,g.id):null,L=A[P.a1],S=A[P.a2],T=A[P.a3],wid=winId(curPick(),cfg);
   function over(add,sub){return cur-(sub||0)+add>env.budget?tag("Over budget","no"):""}
   if(id==="genre"){
@@ -918,37 +938,37 @@ function stepHtml(){
     var daily=state.type==="daily";
     h+=hero({cls:"pitch",eyebrow:(daily?"Today's challenge · ":"Your pitch · ")+esc(g.name),title:plot.title,text:'<p class="log">'+esc(plot.text)+'</p>',art:photoArt(g.id)});
     var rl=[[cfg.roles?"Lead":"Hero",plot.lead],[cfg.roles?"Supporting":"Partner",plot.side],["Villain",plot.anta]];
-    h+='<div class="roles3 anim">'+rl.map(function(r,i){var tone=show&&(cfg.roles||i===2)?tag(r[1].t+" presence","ok"):"";
+    h+='<div class="roles3 anim">'+rl.map(function(r,i){var tone=see.story&&(cfg.roles||i===2)?tag(r[1].t+" presence","ok"):"";
       return '<div class="role" style="--i:'+i+'"><span class="lbl">0'+(i+1)+' · '+r[0]+'</span><p>'+esc(r[1].r)+'</p>'+(tone?'<span class="chips">'+tone+'</span>':"")+'</div>'}).join("")+'</div>';
-    if(show)h+='<div class="hints"><b>Easy hints:</b> the story wants '+plot.tones.map(esc).join(" and ")+' tones and suits '+plot.win.map(function(x){return esc(W[x].name)}).join(" or ")+'. The villain needs a '+esc(plot.anta.t)+' presence.</div>';
+    if(see.story)h+='<div class="hints"><b>'+(cfg.show?"Easy hints:":"Story notes:")+'</b> the story wants '+plot.tones.map(esc).join(" and ")+' tones and suits '+plot.win.map(function(x){return esc(W[x].name)}).join(" or ")+'. The villain needs a '+esc(plot.anta.t)+' presence.</div>';
     if(daily)h+='<div class="facts"><div><span class="lbl">Studio budget</span><b class="mono">$'+env.budget+'M</b></div><div style="flex:1;min-width:240px">'+modeNote()+'</div></div>';
     h+='<p class="note" style="margin-top:14px">Next you choose a director, then cast three parts from a shortlist of six each, then pick when to release.</p>'+nav("Start casting",true);
   }else if(id==="dir"){
     h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(g.name),title:"Choose your director",text:'<p>Who sees this story best? Their fee comes out of your $'+env.budget+'M.</p>',art:sheet("dir"),artCls:"side"});
     var dpool=dirsFor(env,g.id).map(function(i){return D[i]});
     h+=reelOpen("Today's shortlist of "+dpool.length)+dpool.map(function(x,i){
-      var sub,ch="";
-      if(show){sub='Skill '+x2(x.skill)+' · <em>'+esc(x.note)+'</em><br>'+esc(x.known);
-        ch=x.spec.filter(function(s){return G[s]}).map(function(s){return tag(G[s].name,partsOf(P.g).indexOf(s)>-1?"ok":"")}).join("")+x.tone.map(function(t){return tag(t,plot.tones.indexOf(t)>-1?"ok":"")}).join("");
-        [L,S,T].forEach(function(a){if(a)LOYAL.forEach(function(l){if(l[0]===x.id&&l[1]===a.id)ch+=tag("Reunion with "+a.name.split(" ").pop(),"ok")})});}
-      else sub='<em>'+esc(x.note)+'</em><br>'+esc(x.known);
-      return card({act:"d",id:x.id,sel:P.d===x.id,title:x.name,cost:x.fee,img:faceUrl(x.id),i:i,sub:sub,chips:ch+(P.d!==x.id?over(x.fee,d?d.fee:0):"")});
+      var sub=(see.stars?'Skill '+x2(x.skill)+' · ':'')+'<em>'+esc(x.note)+'</em><br>'+esc(x.known),ch="";
+      if(see.fit)ch+=x.spec.filter(function(s){return G[s]}).map(function(s){return tag(G[s].name,partsOf(P.g).indexOf(s)>-1?"ok":"")}).join("");
+      if(see.tone)ch+=x.tone.map(function(t){return tag(t,plot.tones.indexOf(t)>-1?"ok":"")}).join("");
+      if(see.links)[L,S,T].forEach(function(a){if(a)LOYAL.forEach(function(l){if(l[0]===x.id&&l[1]===a.id)ch+=tag("Reunion with "+a.name.split(" ").pop(),"ok")})});
+      return card({act:"d",id:x.id,sel:P.d===x.id,title:x.name,cost:fee(x),img:faceUrl(x.id),i:i,sub:sub,chips:ch+(P.d!==x.id?over(fee(x),d?fee(d):0):"")});
     }).join("")+'</div></div>'+nav("Next",!!P.d);
   }else if(id==="a1"||id==="a2"||id==="a3"){
     var k=id==="a1"?0:id==="a2"?1:2,pool=poolsFor(env,g.id)[k].map(function(i){return A[i]});
     var rol=k===0?plot.lead:k===1?plot.side:plot.anta;
     var title=k===2?"Cast the villain":cfg.roles?(k===0?"Cast the lead":"Cast the supporting role"):(k===0?"Choose your first actor":"Choose your second actor");
     var desc=(cfg.roles||k===2)?'Playing <b>'+esc(rol.r)+'</b>.':'Either of your two actors can carry the story.';
-    h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(stepName(id)),title:title,text:'<p>'+desc+(state.type==="campaign"?' Your shortlist: three men and three women your studio can sign'+(campProject().loans.length?', plus a few on loan from the next tier up while yours is thin':'')+'.':' Today\'s shortlist: three men and three women, found only for this part.')+(show&&(cfg.roles||k===2)?' This role needs a <b>'+esc(rol.t)+'</b> presence.':'')+'</p>',art:sheet(id),artCls:"side"});
+    h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(stepName(id)),title:title,text:'<p>'+desc+(state.type==="campaign"?' Your shortlist: three men and three women your studio can sign'+(campProject().loans.length?', plus a few on loan from the next tier up while yours is thin':'')+'.':' Today\'s shortlist: three men and three women, found only for this part.')+(see.story&&(cfg.roles||k===2)?' This role needs a <b>'+esc(rol.t)+'</b> presence.':'')+'</p>',art:sheet(id),artCls:"side"});
     h+=reelOpen("Shortlist of "+pool.length)+pool.map(function(x,i){
       var sel=P[id]===x.id,sub,ch=tag(x.s==="f"?"Woman":"Man","")+(state.type==="campaign"&&campProject().loans.indexOf(x.id)>-1?tag("On loan",""):"");
-      if(show){sub='★ '+x.star+' · '+esc(x.known);
-        ch+=x.g.filter(function(s){return G[s]}).map(function(s){return tag(G[s].name,partsOf(P.g).indexOf(s)>-1?"ok":"")}).join("")+x.tone.map(function(t){var m=(cfg.roles||k===2)?rol.t===t:plot.tones.indexOf(t)>-1;return tag(t,m?"ok":"")}).join("");
-        if(d)LOYAL.forEach(function(l){if(l[0]===d.id&&l[1]===x.id)ch+=tag("Reunion with "+d.name.split(" ").pop(),"ok")});
-        [L,S,T].forEach(function(o){if(o&&o.id!==x.id&&o.id!==P[id])CHEM.forEach(function(c){if(pairKey(c[0],c[1])===pairKey(o.id,x.id))ch+=tag("Chemistry +"+Math.round(c[2]*100)+"%","ok")})});}
-      else sub=esc(x.known);
+      sub=(see.stars?'★ '+x.star+' · ':'')+esc(x.known);
+      if(see.fit)ch+=x.g.filter(function(s){return G[s]}).map(function(s){return tag(G[s].name,partsOf(P.g).indexOf(s)>-1?"ok":"")}).join("");
+      if(see.tone)ch+=x.tone.map(function(t){var m=(cfg.roles||k===2)?rol.t===t:plot.tones.indexOf(t)>-1;return tag(t,m?"ok":"")}).join("");
+      if(see.links){if(d)LOYAL.forEach(function(l){if(l[0]===d.id&&l[1]===x.id)ch+=tag("Reunion with "+d.name.split(" ").pop(),"ok")});
+        // Chemistry tags show their size only when every number is on screen.
+        [L,S,T].forEach(function(o){if(o&&o.id!==x.id&&o.id!==P[id])CHEM.forEach(function(c){if(pairKey(c[0],c[1])===pairKey(o.id,x.id))ch+=tag(cfg.show?"Chemistry +"+Math.round(c[2]*100)+"%":"Chemistry","ok")})})}
       var filled=P[id];
-      return card({act:"c",id:x.id,sel:sel,title:x.name,cost:x.fee,img:faceUrl(x.id),i:i,sub:sub,chips:ch+(!sel?over(x.fee,filled?A[filled].fee:0):"")});
+      return card({act:"c",id:x.id,sel:sel,title:x.name,cost:fee(x),img:faceUrl(x.id),i:i,sub:sub,chips:ch+(!sel?over(fee(x),filled?fee(A[filled]):0):"")});
     }).join("")+'</div></div>'+nav("Next",!!P[id]);
   }else if(id==="win"){
     h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(stepName(id)),title:cfg.real?"Pick your release date":"Pick your release window",text:'<p>'+(cfg.real?"Real films are opening on these weekends. Marketing cost depends on the season.":"When should audiences see it? Marketing cost depends on the season.")+'</p>'});
@@ -960,14 +980,15 @@ function stepHtml(){
         var sub=same.length?'<span class="lbl">Opens against</span><span class="vs">'+same.map(function(x){return '<span class="film"><span class="pst">'+pic(posterUrl(x.t),x.t)+'</span><span><b>'+esc(x.t)+'</b><small>'+G[x.g].name+'</small></span></span>'}).join("")+'</span>':'No major openers listed';
         if(near.length)sub+='<span style="display:block;margin-top:6px">Nearby: '+near.map(function(x){return esc(x.t)+(dnum(x.f)<dnum(ds)?" (week before)":" (week after)")}).join(", ")+'</span>';
         var media='<span class="dtile"><span class="lbl">'+DN[dow(ds)]+'</span><b>'+MS[+ds.slice(5,7)-1]+' '+(+ds.slice(8,10))+'</b></span>';
-        h+=card({act:"w",id:ds,sel:P.w===ds,title:W[sid].name,cost:W[sid].cost,media:media,i:n++,sub:sub,chips:P.w!==ds?over(W[sid].cost,wsel?wsel.cost:0):""});
+        h+=card({act:"w",id:ds,sel:P.w===ds,title:W[sid].name,cost:wcost(W[sid]),media:media,i:n++,sub:sub,chips:P.w!==ds?over(wcost(W[sid]),wsel?wcost(wsel):0):""});
       });
       if(cur_m)h+='</div>';
     }else{
       h+='<div class="grid anim">'+WINDOWS.filter(function(x){return !x.hardOnly}).map(function(x,i){
         var ch="",w0=W[wid];
-        if(show){ch+=tag(x2(x.base*winG(x,g.id))+" for "+g.name,(x.base*winG(x,g.id))>=1.1?"ok":(x.base*winG(x,g.id))<.95?"no":"");if(env.rival===x.id)ch+=tag("Rival ×0.80","no");if(plot.win.indexOf(x.id)>-1)ch+=tag("Suits the story","ok")}
-        return card({act:"w",id:x.id,sel:P.w===x.id,title:x.name,cost:x.cost,media:'<span class="wtile"><b>'+esc(x.when)+'</b></span>',i:i,sub:esc(x.vibe),chips:ch+(P.w!==x.id?over(x.cost,w0?w0.cost:0):"")});
+        if(see.market){ch+=tag(x2(x.base*winG(x,g.id))+" for "+g.name,(x.base*winG(x,g.id))>=1.1?"ok":(x.base*winG(x,g.id))<.95?"no":"");if(env.rival===x.id)ch+=tag("Rival ×0.80","no")}
+        if(see.story&&plot.win.indexOf(x.id)>-1)ch+=tag("Suits the story","ok");
+        return card({act:"w",id:x.id,sel:P.w===x.id,title:x.name,cost:wcost(x),media:'<span class="wtile"><b>'+esc(x.when)+'</b></span>',i:i,sub:esc(x.vibe),chips:ch+(P.w!==x.id?over(wcost(x),w0?wcost(w0):0):"")});
       }).join("")+'</div>';
     }
     h+=nav("Review",!!P.w);
@@ -975,19 +996,19 @@ function stepHtml(){
     var cost=curCost(),ov=cost-env.budget,full=complete();
     function row(step,lbl,val,c){return '<tr><td><span class="lbl">'+lbl+'</span><div class="who">'+val+'</div></td><td class="n">'+(c!==null?"$"+c+"M":"")+'</td><td class="n"><button class="btn sm" data-act="goto" data-id="'+step+'">Change</button></td></tr>'}
     function bill(a,lbl){return '<div class="bill"><span class="fm">'+(a?pic(faceUrl(a.id),a.name):"")+'</span><b>'+(a?esc(a.name):"—")+'</b><span class="lbl">'+lbl+'</span></div>'}
-    var wlab=P.w?(cfg.real?prettyDate(P.w):W[P.w].name):"Not chosen",wc=W[wid]?W[wid].cost:null;
+    var wlab=P.w?(cfg.real?prettyDate(P.w):W[P.w].name):"Not chosen",wc=W[wid]?wcost(W[wid]):null;
     h+='<div class="review anim"><section class="onesheet" style="--i:0"><span class="media wide">'+pic(stillUrl(g.id,"w1280"),g.name)+'</span><div class="os"><p class="lbl">'+esc(g.name)+' · '+esc(wlab)+'</p><h2>'+esc(plot.title)+'</h2><p class="by">'+(d?"A "+esc(d.name)+" film":"Director not chosen")+'</p>'+
       '<div class="billing">'+bill(L,cfg.roles?"Lead":"Starring")+bill(S,cfg.roles?"Supporting":"Starring")+bill(T,"Villain")+'</div></div></section>'+
       '<section class="panel" style="--i:1"><h3>Ready to greenlight?</h3><p class="note">Check the slate, then release it. You can come back and tweak it afterwards.</p><div class="scroll"><table><tbody>'+
-      row("dir","Director",d?esc(d.name):"Not chosen",d?d.fee:null)+
-      row("a1",cfg.roles?"Lead · "+esc(plot.lead.r):"Actor 1",L?esc(L.name):"Not chosen",L?L.fee:null)+
-      row("a2",cfg.roles?"Supporting · "+esc(plot.side.r):"Actor 2",S?esc(S.name):"Not chosen",S?S.fee:null)+
-      row("a3","Villain · "+esc(plot.anta.r),T?esc(T.name):"Not chosen",T?T.fee:null)+
+      row("dir","Director",d?esc(d.name):"Not chosen",d?fee(d):null)+
+      row("a1",cfg.roles?"Lead · "+esc(plot.lead.r):"Actor 1",L?esc(L.name):"Not chosen",L?fee(L):null)+
+      row("a2",cfg.roles?"Supporting · "+esc(plot.side.r):"Actor 2",S?esc(S.name):"Not chosen",S?fee(S):null)+
+      row("a3","Villain · "+esc(plot.anta.r),T?esc(T.name):"Not chosen",T?fee(T):null)+
       row("win",cfg.real?"Release date":"Release window",esc(wlab),wc)+
       '<tr><td><span class="lbl">Genre</span><div class="who">'+esc(g.name)+'</div></td><td class="n">$'+g.cost+'M</td><td></td></tr></tbody></table></div>'+
       '<div class="total"><span class="lbl">Total cost</span><b class="mono '+(ov>0?"neg":"")+'">'+money(cost)+'<span class="note"> / $'+env.budget+'M</span></b></div>'+
       (ov>0?'<p class="note neg">You are $'+ov+'M over budget. Change someone to a cheaper option.</p>':'');
-    if(show&&full){var p=curPick();h+='<div class="proj"><span class="lbl">Projected profit</span><b class="mono">'+money(evalFilm(env,p,cfg,0.92).profit)+' to '+money(evalFilm(env,p,cfg,1.08).profit)+'</b></div>'}
+    if(see.proj&&full){var p=curPick();h+='<div class="proj"><span class="lbl">'+(cfg.show?"Projected profit":"Test screenings say")+'</span><b class="mono">'+money(evalFilm(env,p,cfg,0.92).profit)+' to '+money(evalFilm(env,p,cfg,1.08).profit)+'</b></div>'}
     h+='</section></div>'+nav(ov>0?"Over budget":"Greenlight it",full&&ov<=0,"go");
   }
   return h;
@@ -1264,6 +1285,21 @@ function projEnv(pj){
 }
 function gateInfo(id){return ACH.gates.filter(function(x){return x.id===id})[0]||{name:id,text:""}}
 function ladderAt(life){var o={prev:CAMPCFG.ladder[0],next:null};CAMPCFG.ladder.forEach(function(s){if(s.at<=life)o.prev=s;else if(!o.next)o.next=s});return o}
+// Studio level from lifetime box office, and points left (the server re-checks every purchase).
+function campLevel(st){return CAMPCFG.levels.filter(function(x){return (st.lifetimeGross||0)>=x}).length}
+function campPoints(st){var u=st.upgrades||{};return campLevel(st)-1-CAMPCFG.upgrades.reduce(function(s,x){return s+(u[x.id]||0)*x.cost},0)}
+function levelHtml(st){
+  var lv=campLevel(st),L=CAMPCFG.levels,next=L[lv],prev=L[lv-1],g=st.lifetimeGross||0,pts=campPoints(st),u=st.upgrades||{},busy=CAMP.busy;
+  var pct=next===undefined?100:Math.max(0,Math.min(100,(g-prev)/(next-prev)*100));
+  var cards=CAMPCFG.upgrades.map(function(x){var have=u[x.id]||0,max=x.ranks.length,gate=x.minLevel&&lv<x.minLevel;
+    var btn=have>=max?tag("Maxed","ok"):gate?tag("Needs level "+x.minLevel,""):'<button class="btn sm'+(pts>=x.cost?" go":"")+'" data-act="campup" data-id="'+x.id+'"'+(pts<x.cost||busy?" disabled":"")+'>'+(have?"Upgrade":"Buy")+' · '+x.cost+' pt'+(x.cost>1?"s":"")+'</button>';
+    return '<div class="upg"><b>'+esc(x.name)+'</b><span class="pips" aria-label="Rank '+have+' of '+max+'">'+x.ranks.map(function(_,i){return '<i class="'+(i<have?"on":"")+'"></i>'}).join("")+'</span>'+
+      (have?'<small><em>Now:</em> '+esc(x.ranks[have-1])+'</small>':"")+(have<max?'<small><em>'+(have?"Next":"Gives")+':</em> '+esc(x.ranks[have])+'</small>':"")+btn+'</div>'}).join("");
+  return '<section class="panel"><div class="sech"><h3>Studio level '+lv+'</h3><span class="mono">'+money(g)+(next!==undefined?" / $"+next+"M":"")+' box office</span></div>'+
+    '<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(pct)+'" aria-label="Progress to the next studio level"><i style="width:'+pct+'%"></i></div>'+
+    '<p class="note">Experience comes from every film\'s box office, flops included. Each new level gives one upgrade point. '+(pts>0?'<b class="pos">'+pts+' point'+(pts>1?"s":"")+' to spend.</b>':'No points to spend right now.')+' Information upgrades show on projects with hidden numbers; discounts apply from your current project.</p>'+
+    '<div class="ugrid">'+cards+'</div></section>';
+}
 function ladderPct(life){var l=ladderAt(life);return l.next?Math.max(0,Math.min(100,(life-l.prev.at)/(l.next.at-l.prev.at)*100)):100}
 function campLoad(){
   if(!NET||!state.me){CAMP.st=null;CAMP.loaded=false;drawCamp();return}
@@ -1329,12 +1365,13 @@ function hqHtml(){
   var rules=pj.diff==="easy"?"Training wheels: every number on screen":pj.diff==="hard"?"Real calendar, numbers hidden":"Numbers hidden until release";
   var name='<div class="hq-name">'+(CAMP.renaming?'<form id="renameform"><input name="name" maxlength="30" value="'+esc(st.studioName)+'" aria-label="Studio name"><button class="btn sm go" type="submit"'+(busy?" disabled":"")+'>Save</button><button class="btn sm" type="button" data-act="camprenamex">Cancel</button></form><span class="note">You can rename your studio once.</span>':
     (!st.renamed?'<button class="btn sm" data-act="camprename">Rename (once)</button>':""))+'</div>';
-  var h='<div class="hq">'+hero({cls:"res",eyebrow:"Studio HQ · Film #"+(st.filmsMade+1)+" next",title:st.studioName,text:name+
+  var h='<div class="hq">'+hero({cls:"res",eyebrow:"Studio HQ · Level "+campLevel(st)+" · Film #"+(st.filmsMade+1)+" next",title:st.studioName,text:name+
     '<p>Next project: <b>$'+pj.budget+'M budget</b> · '+esc(rules)+'.</p>'+(CAMP.note?'<p class="bail">'+esc(CAMP.note)+'</p>':"")+(st.bailouts?'<p class="note">Bailed out '+st.bailouts+' time'+(st.bailouts>1?"s":"")+'.</p>':""),
     art:'<div class="figs"><div><span class="lbl">Bank</span><b class="big mono">'+money(st.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="big2 mono pos">'+money(life)+'</b></div></div>',artCls:"side"});
   h+='<section class="panel"><div class="sech"><h3>'+(l.next?"Next unlock: "+esc(gateInfo(l.next.id).name):"Everything unlocked")+'</h3><span class="mono">'+money(life)+(l.next?" / $"+l.next.at+"M":"")+'</span></div>'+
     '<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(pct)+'" aria-label="Progress to the next unlock"><i style="width:'+pct+'%"></i></div>'+
     '<p class="note">'+(l.next?esc(gateInfo(l.next.id).text)+" Only profitable films count toward it.":"Your studio has the whole roster, every genre and real release dates.")+'</p>'+ladderHtml(life)+'</section>';
+  h+=levelHtml(st);
   var shelf=ACH.badges.map(function(b,i){return badgeTile(b,st.badges[b.id],i)}).join("");
   h+='<div class="hqgrid"><section class="panel"><h3>Your talent</h3>'+tierChips(st)+'<dl class="kv"><dt class="lbl">Films made</dt><dd class="mono">'+st.filmsMade+'</dd><dt class="lbl">Passes</dt><dd class="mono">'+st.passesAvailable+'</dd></dl></section>'+
     '<section class="panel"><div class="sech"><h3>'+(CAMP.history?"All films":"Recent films")+'</h3>'+(st.filmsMade>(st.recent||[]).length||CAMP.history?'<button class="btn sm" data-act="camphistory">'+(CAMP.history?"Recent only":"All films")+'</button>':"")+'</div>'+
@@ -1362,6 +1399,7 @@ function campResultHtml(res){
     if(s.actors)what.push(tag(s.actors+"-list cast","ok"));if(s.directors)what.push(tag(s.directors+"-list directors","ok"));
     (s.genres||[]).forEach(function(g){what.push(tag(G[g].name,"ok"))});if(s.hard)what.push(tag("Real release dates","ok"));
     h+='<div class="unlock pop flash" style="--i:'+i+'"><span class="lbl">Unlocked!</span><h4>'+esc(gi.name)+'</h4><p class="note">'+esc(gi.text)+'</p><span class="chips">'+what.join("")+'</span></div>'});
+  if(ev.level)h+='<div class="unlock pop flash" style="--i:'+ev.gates.length+'"><span class="lbl">Level up!</span><h4>Studio level '+ev.level.to+'</h4><p class="note">Your studio learned from this release. You have '+ev.level.points+' upgrade point'+(ev.level.points===1?"":"s")+' to spend at HQ.</p></div>';
   if(ev.badges.length)h+='<div><p class="lbl" style="margin-bottom:8px">New badge'+(ev.badges.length>1?"s":"")+'</p><div class="shelf">'+ev.badges.map(function(id,i){return badgeTile(ACH.badges.filter(function(b){return b.id===id})[0],true,i+ev.gates.length)}).join("")+'</div></div>';
   ev.perks.forEach(function(g){h+='<p class="note"><b class="pos">Genre Master:</b> your '+esc(G[g].name)+' films earn +'+Math.round(b1.perks[g]*100)+'% at the box office from now on.</p>'});
   return h+btn+'</section>';
@@ -1433,6 +1471,7 @@ document.addEventListener("click",function(e){
       CAMP.note=o.events.bailout?"The development fee took the bank below $"+CAMPCFG.start.floor+"M, so the studio was bailed out back to $"+CAMPCFG.start.floor+"M.":"";
       if(wasPlay)campPlay();else newGame()});
   }
+  else if(a==="campup")campCall("campaignUpgrade",{id:id},"up",function(o){if(o)newGame()});
   else if(a==="camphistory"){
     if(CAMP.history){CAMP.history=null;drawHQ();return}
     CAMP.history="loading";drawHQ();NET.campaignFilms().then(function(fs){CAMP.history=fs;drawHQ()},function(e){CAMP.history=null;CAMP.err=NET.errorText(e,"campaign");drawHQ()});
