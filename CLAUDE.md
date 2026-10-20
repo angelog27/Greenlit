@@ -42,7 +42,7 @@ One studio per account, self-paced, separate from the daily modes. All state is 
 - `functions/`: Cloud Functions (`game.js` = server check, `index.js` = `release` and the campaign callables, `campaign.js` = pure campaign rules, `campaign_store.js` = their Firestore transactions). `firestore.rules`, `storage.rules` (studio images), `firestore.indexes.json` (campaign board index), `firebase.json` at the root.
 - `data/campaign.json`, `data/achievements.json`: campaign progression numbers and gates/badges (documented in `data/README.md`). Every campaign number lives there, not in code.
 - `tools/campaign_report.mjs`: roster coverage per campaign tier and unlock step. `tools/campaign_sim.mjs`: pacing simulation (random and fit-rule policies).
-- `tests/js/`: node tests (`node --test tests/js/*.test.mjs`). The parity test feeds the current model v1's own embedded data (model-code parity); `data_and_blends.test.mjs` checks the live data, blends and evalFast/evalFilm sync; `campaign.test.mjs` the campaign rules (about 2 minutes, mostly the 200-project feasibility check); `rules.test.mjs` the Firestore rules against the emulator (skipped when it isn't running).
+- `tests/js/`: node tests (`node --test tests/js/*.test.mjs`). The parity test feeds the current model v1's own embedded data (model-code parity); `data_and_blends.test.mjs` checks the live data, blends and evalFast/evalFilm sync; `campaign.test.mjs` the campaign rules (about 2 minutes, mostly the 200-project feasibility check); `rules.test.mjs` the Firestore and Storage rules, and `security.test.mjs` a hostile-client attack suite (both need the emulators and skip without them).
 
 ## Model
 gross = genre base × daily genre heat × window multiplier × rival/competition factor × director skill × star power × (1 + synergies) × seeded luck (0.92–1.08).
@@ -56,6 +56,7 @@ Stories: six per genre. Basic players can shuffle among the day's pitches for a 
 - Determinism: everything for a day derives from the date (plus roster version, once the backend exists). Never mutate a published puzzle.
 - Never reveal scoring before release on Medium/Hard: no heat, multipliers, tone tags, star ratings, synergies or projections. **Exception (user's choice, Oct 2026):** in the campaign, information upgrades the studio has bought reveal their part on hidden-number projects (`SEE()` in the page). Basic and Daily never change.
 - Never trust the client (from Phase 2): the server re-derives shortlists and budget and scores the film.
+- Security (Oct 2026 pass): every callable is rate-limited per player (`functions/limits.js`); daily boards never publish Google names or photos; uploads must be real JPEG/PNG/WebP bytes. Re-run `security.test.mjs` against the emulators after changing functions or rules.
 - Keep the paged flow and the shortlist system intact.
 - Small commits, tests for every phase. Flag any guessed formula to the user.
 - Campaign: server-authoritative. Every write goes through `campaignStart`, `campaignProject`, `campaignRelease` (idempotent per project index, in a transaction), `campaignPass`, `campaignReroll`, `campaignUpgrade`, `campaignStyle`, `campaignRename`. Rules let a player read only their own campaign and anyone read the board; clients never write either. Tune pacing in `data/campaign.json` only, never by changing the scoring model.

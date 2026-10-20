@@ -32,7 +32,7 @@ node --test tests/js/*.test.mjs
 - 900 random picks over 10 days and all three difficulties score identically
 - the best-possible search returns identical results
 
-The other test files check the live data and blends (`data_and_blends`), the `release` function's server check (`server_check`), the campaign rules (`campaign`: unlocks, bailouts, shortlists, feasibility over 200 projects, idempotent release, scoring parity with the page; takes about 2 minutes) and the Firestore rules (`rules`, emulator only).
+The other test files check the live data and blends (`data_and_blends`), the `release` function's server check (`server_check`), the campaign rules (`campaign`: unlocks, bailouts, shortlists, feasibility over 200 projects, idempotent release, scoring parity with the page; takes about 2 minutes) the Firestore and Storage rules (`rules`) and a hostile-client attack suite (`security`); those two need the emulators (`--only auth,functions,firestore,storage`) and skip without them.
 
 ## Data files
 
