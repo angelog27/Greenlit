@@ -1,4 +1,14 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "campaignBoard",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "filmsToATier", "order": "ASCENDING" },
+        { "fieldPath": "bailouts", "order": "ASCENDING" },
+        { "fieldPath": "lifetimeProfit", "order": "DESCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
