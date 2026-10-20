@@ -7,11 +7,11 @@
     "directorMinSkill": { "D": 0, "C": 1.15, "B": 1.2, "A": 1.25 }
   },
   "ladder": [
-    { "id": "open",   "at": 0,   "actors": "D", "directors": "D", "genres": ["horror", "comedy", "drama", "horrorcomedy"] },
-    { "id": "c_cast", "at": 25,  "actors": "C" },
-    { "id": "c_crew", "at": 50,  "directors": "C", "genres": ["thriller", "romance", "romcom"] },
-    { "id": "b_tier", "at": 75,  "actors": "B", "directors": "B", "genres": ["action", "scifi", "actioncomedy", "scifithriller", "scifihorror"] },
-    { "id": "a_tier", "at": 100, "actors": "A", "directors": "A", "genres": ["animation"], "hard": true }
+    { "id": "open",   "at": 0,    "actors": "D", "directors": "D", "genres": ["horror", "comedy", "drama", "horrorcomedy"] },
+    { "id": "c_cast", "at": 200,  "actors": "C" },
+    { "id": "c_crew", "at": 500,  "directors": "C", "genres": ["thriller", "romance", "romcom"] },
+    { "id": "b_tier", "at": 1000, "actors": "B", "directors": "B", "genres": ["action", "scifi", "actioncomedy", "scifithriller", "scifihorror"] },
+    { "id": "a_tier", "at": 2000, "actors": "A", "directors": "A", "genres": ["animation"], "hard": true }
   ],
   "boardGoal": "a_tier",
   "trainingFilms": 3,
