@@ -167,7 +167,7 @@ function newCampaign(C, uid, cid, name, date, now) {
     bank: s.bank, lifetimeProfit: 0, filmsMade: 0, bailouts: 0, lastProfit: null,
     unlocked: { actorTier: u.actorTier, directorTier: u.directorTier, genres: u.genres, hard: u.hard },
     gates: Object.fromEntries(u.gates.map((g) => [g, now])), badges: {}, perks: {}, genreHits: {},
-    passesAvailable: C.cfg.pass.start, aTierFilms: null, projectIndex: 0, roster: C.game.version,
+    passesAvailable: C.cfg.pass.start, aTierFilms: null, projectIndex: 0, roster: C.game.version, recent: [],
   };
   st.currentProject = makeProject(C, st, uid, date, false);
   return st;
@@ -225,6 +225,8 @@ function release(C, st, uid, input, date, now) {
     profit, gross: Math.round(r.gross), cost: r.cost, budget: pj.budget, badges: ev.badges, perks: ev.perks,
     gates: newGates, bailout: money.bailout, at: now,
   };
+  // The last few films ride along in the studio doc so the HQ needs no extra reads.
+  next.recent = [{ no: filmsMade, title: film.title, genre: g, profit, gross: film.gross, at: now }].concat(st.recent || []).slice(0, C.cfg.recentFilms || 5);
   const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges: ev.badges, perks: ev.perks, bailout: money.bailout };
   return { state: next, film, events, board };
 }
