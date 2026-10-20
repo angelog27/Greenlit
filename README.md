@@ -2,7 +2,7 @@
 
 A daily movie-studio game: same budget and market for everyone, greenlight one film, score is net profit.
 
-Status: Phase 1 of 4 (game data extracted to `data/*.json`). The backend, TMDB ingest and hardening come next. See `CLAUDE.md`.
+Status: daily modes (Basic, Daily Challenge) and the Campaign run on Firebase. See `CLAUDE.md` for the design and roadmap.
 
 ## Run it locally
 
@@ -15,7 +15,7 @@ python -m http.server 8000
 
 Then open http://localhost:8000/ (it redirects to `Frontend/greenlight.html`). Use `localhost`, not the `0.0.0.0` address Python prints.
 
-Without the Claude artifact runtime the leaderboard falls back to this browser's localStorage.
+Without Firebase configured (see below), Basic and Daily results stay in this browser's localStorage; the Campaign needs the server.
 
 ## Tests
 
@@ -32,6 +32,8 @@ node --test tests/js/*.test.mjs
 - 900 random picks over 10 days and all three difficulties score identically
 - the best-possible search returns identical results
 
+The other test files check the live data and blends (`data_and_blends`), the `release` function's server check (`server_check`), the campaign rules (`campaign`: unlocks, bailouts, shortlists, feasibility over 200 projects, idempotent release, scoring parity with the page; takes about 2 minutes) and the Firestore rules (`rules`, emulator only).
+
 ## Data files
 
 | File                  | Contents                                                                          |
@@ -45,6 +47,8 @@ node --test tests/js/*.test.mjs
 | `data/chem.json`      | actor + actor chemistry bonuses, with the films they shared                       |
 | `data/slate.json`     | real upcoming releases (Hard mode): date, title, our genre tag, our 1–10 strength |
 | `data/images.json`    | TMDB image paths for people, genre stills and slate posters (generated, optional) |
+| `data/campaign.json`  | Campaign progression: bank, floor, caps, tiers, unlock ladder, passes             |
+| `data/achievements.json` | Campaign gate names and badges                                                 |
 
 All fees, ratings and dollar amounts are invented game numbers.
 
@@ -73,3 +77,34 @@ Players sign in with Google or email/password (Firebase Auth). When they release
 5. Deploy: `firebase deploy --only functions,firestore` (Cloud Functions need the Blaze plan). `build_functions.mjs` runs automatically first.
 
 Without `firebase-config.js` the game still runs; results stay on the device.
+
+### Emulators and the rules test
+
+The emulators need JDK 21 or newer. If your default `java` is older, point `JAVA_HOME` (and `PATH`) at a JDK 21 for that shell before `firebase emulators:start`. With the Firestore emulator running, `node --test tests/js/*.test.mjs` also runs `tests/js/rules.test.mjs` (clients can't write campaigns or boards); without it that file is skipped.
+
+## Campaign
+
+A self-paced solo career, separate from the daily modes. Pick **Campaign** in the mode switch (you need to be signed in; the studio lives on your account, so you can continue on any device).
+
+- You run one studio over many films. Each film uses the same paged flow (genre, pitch, director, three parts, release), limited to what your studio has unlocked.
+- The budget comes from your **bank**: profit goes back in, and the next budget is the bank, clamped between a floor and a cap for your highest unlocked tier. Fall below the floor and the studio is bailed out (counted, never game over).
+- **Lifetime profit** (profitable films only, so it never drops) unlocks better cast and directors, new genres, bigger budgets and finally real release dates.
+- The first 3 films show every number (Easy); after that numbers stay hidden until release (Medium).
+- A pass skips the current pitches for a $5M development fee; you earn one every 3 films.
+- Badges for milestones; Genre Master (3 profitable films in one genre) adds +3% box office in that genre.
+- The campaign board ranks studios by how few films they needed to reach the A-list (then fewer bailouts, then more lifetime profit), shown by studio name.
+
+Everything is decided on the server: the `campaignStart`, `campaignProject`, `campaignRelease`, `campaignPass` and `campaignRename` callables (`functions/campaign.js` for the rules, `functions/campaign_store.js` for the transactions). The page reads your studio once per load and the film history only when you open it.
+
+### Tuning
+
+All campaign numbers are in `data/campaign.json` (bank, floor, caps, tier thresholds, unlock ladder, passes) and `data/achievements.json` (gate names, badges and their numbers). Every field is described in [`data/README.md`](data/README.md). After changing them:
+
+```sh
+node tools/campaign_report.mjs                 # how many actors/directors each tier has, loans needed per step
+node tools/campaign_sim.mjs --runs 50          # films to each unlock for random and decent play, bailouts
+node tools/campaign_sim.mjs --config my.json   # try numbers without editing the real file
+node --test tests/js/campaign.test.mjs
+```
+
+Then deploy as above (`build_functions.mjs` copies both files to the functions).
