@@ -489,18 +489,23 @@ var DIFFS={
  easy:{id:"easy",name:"Easy",show:true,roles:false,real:false},
  medium:{id:"medium",name:"Medium",show:false,roles:true,real:false},
  hard:{id:"hard",name:"Hard",show:false,roles:true,real:true}};
-function makeEnv(day){
-  var r=rng(hash("greenlight|"+day)),heat={},plots={};
+// key seeds everything except the release calendar and defaults to the day. A campaign project passes its own
+// key (env.day is then that key, which also seeds luck) and adds env.pools/env.dirs (its server-drawn
+// shortlists) and env.bonus (Genre Master perks); daily envs never have those.
+function makeEnv(day,key){
+  key=key||day;
+  var r=rng(hash("greenlight|"+key)),heat={},plots={};
   // Only plain genres draw from the seed (so adding blends never shifts a day's rival or budget); a blend's heat is its halves' average.
   GENRES.forEach(function(g){if(!g.mix)heat[g.id]=Math.round((0.85+r()*0.4)*100)/100});
   GENRES.forEach(function(g){if(g.mix){var s=0;g.mix.forEach(function(p){s+=heat[p]});heat[g.id]=Math.round(s/g.mix.length*100)/100}});
   var rival=WINDOWS.filter(function(w){return !w.hardOnly})[Math.floor(r()*6)].id,budget=110+5*Math.floor(r()*7);
-  GENRES.forEach(function(g){plots[g.id]=hash(day+"|plot|"+g.id)%PLOTS[g.id].length});
-  return {day:day,heat:heat,rival:rival,budget:budget,plots:plots,dates:buildDates(day),daily:GENRES[hash("daily|"+day)%GENRES.length].id};
+  GENRES.forEach(function(g){plots[g.id]=hash(key+"|plot|"+g.id)%PLOTS[g.id].length});
+  return {day:key,heat:heat,rival:rival,budget:budget,plots:plots,dates:buildDates(day),daily:GENRES[hash("daily|"+key)%GENRES.length].id};
 }
 function plotFor(env,gid){return PLOTS[gid][env.plots[gid]]}
 function winId(p,cfg){return cfg.real?(p.w?seasonOf(p.w):null):p.w}
 function luckOf(env,p,cfg){var ids=cfg.roles?p.a1+"|"+p.a2+"|"+p.a3:[p.a1,p.a2].sort().join("|")+"|"+p.a3;return 0.92+0.16*rng(hash(env.day+"|"+p.g+"|"+p.d+"|"+ids+"|"+p.w))()}
+function genreBonus(env,gid){return env.bonus&&env.bonus[gid]?Math.round((1+env.bonus[gid])*100)/100:1}
 function pairKey(a,b){return a<b?a+"|"+b:b+"|"+a}
 function costOf(p,cfg){var c=0,wid=winId(p,cfg);if(G[p.g])c+=G[p.g].cost;if(D[p.d])c+=D[p.d].fee;if(W[wid])c+=W[wid].cost;if(A[p.a1])c+=A[p.a1].fee;if(A[p.a2])c+=A[p.a2].fee;if(A[p.a3])c+=A[p.a3].fee;return c}
 // Competing real releases near a date: weight 1 same weekend, .4 a week away, .15 two weeks away.
@@ -545,6 +550,7 @@ function evalFilm(env,p,cfg,luck){
   push("Star power",cm,cast.map(function(a){return a.name+" ★"+a.star}).join(", "));m*=cm;steps[steps.length-1].run=m;
   var syn=synergies(env,p,cfg),sum=0;syn.forEach(function(s){sum+=s[1]});
   var sm=Math.round((1+sum)*100)/100;push("Synergies",sm,syn.length?"":"No synergies this time");m*=sm;steps[steps.length-1].run=m;
+  var gb=genreBonus(env,g.id);if(gb!==1){push("Genre Master",gb,"Your studio's track record in "+g.name);m*=gb;steps[steps.length-1].run=m}
   out.syn=syn.map(function(s){return s[0]+" +"+Math.round(s[1]*100)+"%"});
   var lk=luck===undefined?luckOf(env,p,cfg):luck;push("Hidden luck",Math.round(lk*100)/100,"Seeded by today's date and your slate");m*=lk;steps[steps.length-1].run=m;
   out.luck=lk;out.gross=m;out.share=m*SHARE;out.profit=out.share-out.cost;
@@ -555,6 +561,7 @@ function evalFilm(env,p,cfg,luck){
 function seedOf(tag,env,gid,id){return rng(hash(tag+"|"+env.day+"|"+gid+"|"+id))()}
 function byK(p,q){return p.k-q.k||(p.id<q.id?-1:1)}
 function poolsFor(env,gid){
+  if(env.pools)return env.pools[gid];
   var m=[],f=[];
   ACTORS.forEach(function(a){(a.s==="f"?f:m).push({a:a,id:a.id,k:seedOf("pool",env,gid,a.id)-(inGenre(a.g,gid)?0.5:0)})});
   function ord(x){x.sort(byK);return x.map(function(o){return o.a})}
@@ -565,6 +572,7 @@ function poolsFor(env,gid){
 // specialists like the cast pools, sorted by fee (per-person seeds, so file order doesn't matter). With DIR_SHORT or fewer it is every director in roster order.
 var DIR_SHORT=8;
 function dirsFor(env,gid){
+  if(env.dirs)return env.dirs[gid];
   if(DIRS.length<=DIR_SHORT)return DIRS.map(function(d){return d.id});
   return DIRS.map(function(d){return {d:d,id:d.id,k:seedOf("dirs",env,gid,d.id)-(inGenre(d.spec,gid)?0.35:0)}}).sort(byK).slice(0,DIR_SHORT)
     .map(function(o){return o.d}).sort(function(a,b){return b.fee-a.fee||(a.id<b.id?-1:1)}).map(function(d){return d.id});
@@ -582,6 +590,7 @@ function evalFast(env,p,cfg,pre){
   m*=Math.round((1+sp)*100)/100;
   var syn=synergies(env,p,cfg),sum=0;for(var q=0;q<syn.length;q++)sum+=syn[q][1];
   m*=Math.round((1+sum)*100)/100;
+  m*=genreBonus(env,g.id);
   m*=luckOf(env,p,cfg);
   var cost=costOf(p,cfg);
   return {gross:m,cost:cost,profit:m*SHARE-cost};
