@@ -78,6 +78,14 @@ Players sign in with Google or email/password (Firebase Auth). When they release
 
 Without `firebase-config.js` the game still runs; results stay on the device.
 
+### Hosting the website (Cloudflare Pages)
+
+The backend is Firebase (functions, database, sign-in, storage); only the static page needs hosting. `node tools/build_site.mjs` builds `dist/` with just the page, its scripts and `data/*.json`, plus a `_headers` file with security headers (CSP, HSTS, nosniff, no framing). Nothing else from the repo is published.
+
+- Cloudflare Pages settings: build command `node tools/build_site.mjs`, output directory `dist`, and an environment variable `FIREBASE_CONFIG` holding the web config as JSON (the object in `Frontend/firebase-config.js`; public by design).
+- Add the site's domain under Firebase Authentication, Settings, Authorized domains, or sign-in fails there.
+- Restrict the web API key to the site's domain (Google Cloud console, APIs & Services, Credentials).
+
 ### Emulators and the rules test
 
 The emulators need JDK 21 or newer. If your default `java` is older, point `JAVA_HOME` (and `PATH`) at a JDK 21 for that shell before `firebase emulators:start`. With the Firestore emulator running, `node --test tests/js/*.test.mjs` also runs `tests/js/rules.test.mjs` (clients can't write campaigns or boards); with the Storage emulator too (`--only auth,functions,firestore,storage`) it also checks the studio-image rules. Without them those tests are skipped.

@@ -34,3 +34,6 @@ Frontend/firebase-config.js
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+
+# website build (tools/build_site.mjs)
+dist/
