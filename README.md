@@ -91,14 +91,15 @@ A self-paced solo career, separate from the daily modes. Pick **Campaign** in th
 - **Lifetime profit** (profitable films only, so it never drops) unlocks better cast and directors, new genres, bigger budgets and finally real release dates.
 - The first 3 films show every number (Easy); after that numbers stay hidden until release (Medium).
 - A pass skips the current pitches for a $5M development fee; you earn one every 3 films.
+- A **studio level** grows with lifetime box office (every film teaches you something, flops included). Each level gives an upgrade point: scouting that shows who fits the genre and the part, reunions and chemistry, story notes, market research, test screenings, and Reputation and Marketing Deals discounts.
 - Badges for milestones; Genre Master (3 profitable films in one genre) adds +3% box office in that genre.
 - The campaign board ranks studios by how few films they needed to reach the A-list (then fewer bailouts, then more lifetime profit), shown by studio name.
 
-Everything is decided on the server: the `campaignStart`, `campaignProject`, `campaignRelease`, `campaignPass` and `campaignRename` callables (`functions/campaign.js` for the rules, `functions/campaign_store.js` for the transactions). The page reads your studio once per load and the film history only when you open it.
+Everything is decided on the server: the `campaignStart`, `campaignProject`, `campaignRelease`, `campaignPass`, `campaignUpgrade` and `campaignRename` callables (`functions/campaign.js` for the rules, `functions/campaign_store.js` for the transactions). The page reads your studio once per load and the film history only when you open it.
 
 ### Tuning
 
-All campaign numbers are in `data/campaign.json` (bank, floor, caps, tier thresholds, unlock ladder, passes) and `data/achievements.json` (gate names, badges and their numbers). Every field is described in [`data/README.md`](data/README.md). After changing them:
+All campaign numbers are in `data/campaign.json` (bank, floor, caps, tier thresholds, unlock ladder, passes, levels, upgrades) and `data/achievements.json` (gate names, badges and their numbers). Every field is described in [`data/README.md`](data/README.md). After changing them:
 
 ```sh
 node tools/campaign_report.mjs                 # how many actors/directors each tier has, loans needed per step

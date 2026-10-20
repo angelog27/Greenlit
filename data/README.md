@@ -114,6 +114,8 @@ The campaign (solo career mode) reads two files. The server enforces them; the p
 | `shortlist` | `perGender` per role (3 men, 3 women), `freshPerRole` from the newest unlocked tier when there are enough, `directors` on a shortlist, `freshDirectors` from the newest director tier |
 | `feasibility` | Every playable genre needs a film within budget that makes at least `margin` $M profit; otherwise it shows as too pricey. If no genre makes it, the project seed is salted again, up to `maxResalts` times |
 | `pass` | A pass skips the current pitches for `fee` $M. A studio starts with `start` passes and earns one every `every` films, holding at most `cap` |
+| `levels` | Lifetime box office ($M, every film counts) needed for each studio level, starting with level 1 at 0. Each level after the first gives one upgrade point. Keep at least as many levels as the upgrades cost in total |
+| `upgrades` | Bought with points: `id` (fixed; the page and server key their effect on it), `name`, `cost` in points per rank, `ranks` (one line of text per rank; the number of lines is the max rank), optional `minLevel`. `talent` and `windows` list the fee and marketing discount for each rank (Reputation, Marketing Deals); the other upgrades reveal information on hidden-number projects |
 
 Tuning tips: the ladder sets the pace (the simulation reports films to each step for random and decent play). Caps set how big films can get at each tier. `start.bank` and `start.floor` must cover the cheapest D-list film (about $54M to $62M) plus the margin, or the first projects have no playable genre.
 

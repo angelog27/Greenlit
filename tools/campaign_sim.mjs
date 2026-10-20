@@ -3,7 +3,8 @@
 //   random  a uniformly random valid film within budget
 //   decent  simple fit rules a player can see without hidden numbers: genre by potential minus cost, a
 //           director who specialises in the genre and gets the story's tone, actors who fit the genre and
-//           their part's tone (plus reunions and chemistry), a window the story suits; cheaper picks when over
+//           their part's tone (plus reunions and chemistry), a window the story suits; cheaper picks when over;
+//           it spends upgrade points on the discounts first (random buys random upgrades)
 // Reports how many films it takes to reach each unlock and how often studios get bailed out.
 //   node tools/campaign_sim.mjs [--runs 40] [--films 80] [--config data/campaign.json] [--workers 10]
 import { Worker, isMainThread, parentPort, workerData } from "node:worker_threads";
@@ -33,9 +34,17 @@ function simulate({ cfg, ach, policy, run, films }) {
     profits.push(out.film.profit);
     out.events.gates.forEach((g) => { reached[g.id] = n; });
     st = out.state;
+    // Spend upgrade points: random buys anything it can; decent buys the discounts first.
+    const order = policy === "decent" ? ["reputation", "marketing", "scout", "casting", "story", "market", "screenings"] : null;
+    for (let k = 0; k < 20; k++) {
+      const can = cfg.upgrades.filter((u) => (st.upgrades[u.id] || 0) < u.ranks.length && (!u.minLevel || camp.levelFor(C, st.lifetimeGross) >= u.minLevel) && camp.pointsLeft(C, st) >= u.cost);
+      if (!can.length) break;
+      const u = order ? can.slice().sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id))[0] : any(can);
+      st = plain(camp.upgrade(C, st, uid, { id: u.id }));
+    }
     if (reached[cfg.boardGoal]) break;
   }
-  return { policy, run, reached, bailouts: st.bailouts, films: profits.length, profits, lifetime: st.lifetimeProfit };
+  return { policy, run, reached, bailouts: st.bailouts, films: profits.length, profits, lifetime: st.lifetimeProfit, level: camp.levelFor(C, st.lifetimeGross) };
 }
 
 function windowsOf(m, pj, dcfg) { return dcfg.real ? pj.env.dates : m.WINDOWS.filter((w) => !w.hardOnly).map((w) => w.id); }
@@ -120,6 +129,7 @@ if (!isMainThread) {
       console.log(`  ${s.id.padEnd(7)} at $${String(s.at).padEnd(5)} films ${fmt(hit)}${hit.length < rs.length ? `  · ${rs.length - hit.length} never got there` : ""}`);
     }
     const b = rs.map((r) => r.bailouts), pf = rs.flatMap((r) => r.profits);
+    if (rs[0].level) console.log(`  studio level at the end: ${fmt(rs.map((r) => r.level))}`);
     console.log(`  bailouts per campaign: mean ${(b.reduce((a, x) => a + x, 0) / b.length).toFixed(2)}, ${b.filter((x) => x > 0).length} of ${rs.length} campaigns had one`);
     console.log(`  profit per film: median $${q(pf, 0.5).toFixed(1)}M (p10 ${q(pf, 0.1).toFixed(1)}, p90 ${q(pf, 0.9).toFixed(1)}), flops ${Math.round(pf.filter((x) => x < 0).length / pf.length * 100)}%`);
   }

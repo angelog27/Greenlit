@@ -21,9 +21,10 @@ One studio per account, self-paced, separate from the daily modes. All state is 
 - **Projects:** deterministic from hash(uid, campaignId, projectIndex) via `makeEnv(date, key)`. Shortlists (3 men + 3 women per role, no repeats, unlocked tiers only, at least 2 per role from the newest tier, loans from the next tier up when a gender runs short; directors 8 from unlocked tiers) are drawn on the server and stored in the project. Every playable genre must have a film within budget with profit >= `feasibility.margin` (checked with the model's own `bestPossible`, one director at a time); others show "Too pricey today".
 - **Visibility:** Easy for the first `trainingFilms` films, then Medium; Hard per project once the last gate is open.
 - **Passes:** skip the current pitches for a $5M fee, earned every 3 films. Nothing else rerolls.
+- **Levels and upgrades:** experience is lifetime box office (`lifetimeGross`, flops count); `levels` in `data/campaign.json` are the thresholds and each level after the first is one upgrade point, spent with `campaignUpgrade`. Upgrades (all numbers in `upgrades`): Talent Scout I-III (genre fit, tone fit, stars/skill), Casting Director (reunions, chemistry), Story Analyst (story tones/seasons), Market Research (heat, window fit, rival), Test Screenings (projected profit, min level 6), Reputation I-III (talent fees -5/10/15%), Marketing Deals I-II (marketing -15/30%). Discounts go through the model (`env.disc` → `talentFee`/`windowCost` in `costOf` and `bestPossible`) and apply to the current project at once.
 - **Badges:** `data/achievements.json`, evaluated on the server after each release. Genre Master adds +3% gross in that genre (`env.bonus`, a "Genre Master" step in evalFilm/evalFast).
 - **Board:** `campaignBoard/{uid}`, written once when the studio reaches `boardGoal`: fewest films, then fewer bailouts, then more lifetime profit. Shown by studio name (default "Studio XXXXX"), never the Google name.
-- **Pacing (Oct 2026 sim, 50 campaigns each):** random play reaches C-list cast in 4 films and the A-list in 43; decent play reaches the A-list in 15 with no bailouts. Re-run `tools/campaign_sim.mjs` after changing the ladder, caps, floor or roster.
+- **Pacing (Oct 2026 sim with upgrades, 50 campaigns each):** random play reaches C-list cast in 4 films and the A-list in 40 (level 10 by then); decent play reaches the A-list in 14 (level 8) with no bailouts. Re-run `tools/campaign_sim.mjs` after changing the ladder, caps, floor or roster.
 
 ## Layout
 - `Frontend/greenlight.html`: the game (vanilla HTML/CSS/JS, no build step). The model sits between `// ===== MODEL START =====` and `// ===== MODEL END =====`; the UI comes after it.
@@ -45,15 +46,16 @@ gross = genre base × daily genre heat × window multiplier × rival/competition
 Blended genres (`mix: [a, b]` in genres.json, e.g. Horror-Comedy) have their own base/cost and pitches; heat and window fit are the average of the halves, and a person, director specialty or rival film matches if it matches either half (`partsOf`, `inGenre`, `winG`). Only plain genres draw heat from the seed, so adding blends never moves a day's budget or rival.
 Deterministic: seeded by the date via FNV-1a `hash` and mulberry32 `rng` (uses `Math.imul` and `>>>0`). Any port must match bit-for-bit; note JS `Math.round` ≠ Python `round`.
 `bestPossible` exhaustively searches director × window/date × three shortlists within budget for one genre; `evalFast` is its lean twin of `evalFilm` and must stay in sync.
-Campaign hooks (absent in daily envs, so daily play is unchanged): `makeEnv(day, key)` seeds from `key`, `env.pools`/`env.dirs` replace `poolsFor`/`dirsFor`, `env.bonus[genre]` adds the Genre Master step. One scoring model serves Basic, Daily and Campaign; never fork it.
+Campaign hooks (absent in daily envs, so daily play is unchanged): `makeEnv(day, key)` seeds from `key`, `env.pools`/`env.dirs` replace `poolsFor`/`dirsFor`, `env.bonus[genre]` adds the Genre Master step, `env.disc` discounts fees (`talentFee`) and marketing (`windowCost`), rounded to whole $M.
+Stories: six per genre. A pitch with `from` (a date) only joins the draw from that UTC day, so adding pitches never changes a day already played. Append new ones with a `from` date at least a day ahead and deploy the functions before it. One scoring model serves Basic, Daily and Campaign; never fork it.
 
 ## Rules
 - Determinism: everything for a day derives from the date (plus roster version, once the backend exists). Never mutate a published puzzle.
-- Never reveal scoring before release on Medium/Hard: no heat, multipliers, tone tags, star ratings, synergies or projections.
+- Never reveal scoring before release on Medium/Hard: no heat, multipliers, tone tags, star ratings, synergies or projections. **Exception (user's choice, Oct 2026):** in the campaign, information upgrades the studio has bought reveal their part on hidden-number projects (`SEE()` in the page). Basic and Daily never change.
 - Never trust the client (from Phase 2): the server re-derives shortlists and budget and scores the film.
 - Keep the paged flow and the shortlist system intact.
 - Small commits, tests for every phase. Flag any guessed formula to the user.
-- Campaign: server-authoritative. Every write goes through `campaignStart`, `campaignProject`, `campaignRelease` (idempotent per project index, in a transaction), `campaignPass`, `campaignRename`. Rules let a player read only their own campaign and anyone read the board; clients never write either. Tune pacing in `data/campaign.json` only, never by changing the scoring model.
+- Campaign: server-authoritative. Every write goes through `campaignStart`, `campaignProject`, `campaignRelease` (idempotent per project index, in a transaction), `campaignPass`, `campaignUpgrade`, `campaignRename`. Rules let a player read only their own campaign and anyone read the board; clients never write either. Tune pacing in `data/campaign.json` only, never by changing the scoring model.
 
 ## Roadmap (stop after each phase for approval)
 1. **Extract data** to `data/*.json`. ✅
