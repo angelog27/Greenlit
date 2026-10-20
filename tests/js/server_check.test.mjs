@@ -123,3 +123,31 @@ test("a shuffled Basic story is scored with that story; it must be one of the ge
   const dp = honest(env.daily, "hard");
   rejects({ type: "daily", diff: "hard", day: DAY, pick: { ...dp, s: m.plotChoices(DAY, env.daily).find((i) => i !== env.plots[env.daily]) } }, /shared story/);
 });
+
+test("daily board names: only a name typed at email sign-up, cleaned; Google names never published", () => {
+  const { boardName } = createRequire(import.meta.url)("../../functions/game.js");
+  assert.equal(boardName("abcdef123", { name: "Jane Q. Public", firebase: { sign_in_provider: "google.com" } }), "Studio ABCDE");
+  assert.equal(boardName("abcdef123", { name: "Night Owl <b>Films</b>", firebase: { sign_in_provider: "password" } }), "Night Owl bFilms/b");
+  assert.equal(boardName("abcdef123", { name: "x".repeat(500), firebase: { sign_in_provider: "password" } }).length, 30);
+  assert.equal(boardName("abcdef123", { firebase: { sign_in_provider: "password" } }), "Studio ABCDE");
+  assert.equal(boardName("abcdef123", undefined), "Studio ABCDE");
+});
+
+test("rate limits and the image byte check", () => {
+  const { makeLimiter, isImageBytes } = createRequire(import.meta.url)("../../functions/limits.js");
+  let now = 0;
+  const allow = makeLimiter({ default: { max: 3, windowMs: 1000 }, hard: { max: 1, windowMs: 1000 } }, () => now);
+  assert.deepEqual([1, 2, 3, 4].map(() => allow("u", "default")), [true, true, true, false]);
+  assert.equal(allow("v", "default"), true, "limits are per player");
+  assert.equal(allow("u", "hard"), true);
+  assert.equal(allow("u", "hard"), false);
+  now = 1001;
+  assert.equal(allow("u", "default"), true, "the window slides");
+  const b = (a) => Uint8Array.from(a.concat(Array(16).fill(0)));
+  assert.ok(isImageBytes(b([0xff, 0xd8, 0xff, 0xe0])));
+  assert.ok(isImageBytes(b([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])));
+  assert.ok(isImageBytes(b([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x45, 0x42, 0x50])));
+  assert.ok(!isImageBytes(Buffer.from("<svg xmlns='http://www.w3.org/2000/svg' onload='alert(1)'/>")));
+  assert.ok(!isImageBytes(Buffer.from("GIF89a...........")));
+  assert.ok(!isImageBytes(null));
+});

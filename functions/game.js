@@ -59,4 +59,12 @@ function check(game, input, now = Date.now()) {
   };
 }
 
-module.exports = { loadGame, check, Reject, utcDay };
+// The public name on the daily boards: only a name the player typed as their studio name at email sign-up.
+// Google accounts carry the person's real name, so they show as "Studio XXXXX" instead. Photos are never kept.
+function boardName(uid, tok) {
+  const t = tok || {}, typed = (t.firebase || {}).sign_in_provider === "password" && typeof t.name === "string"
+    ? t.name.replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 30) : "";
+  return typed || "Studio " + uid.slice(0, 5).toUpperCase();
+}
+
+module.exports = { loadGame, check, Reject, utcDay, boardName };

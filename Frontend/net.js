@@ -121,6 +121,7 @@ async function start() {
         "auth/network-request-failed": "Can't reach the sign-in service. Check your connection.",
         "functions/unauthenticated": "Sign in to post to the leaderboard.",
         "functions/deadline-exceeded": "The server took too long. Try again.",
+        "functions/resource-exhausted": "Too many requests. Wait a minute and try again.",
         "storage/unauthorized": "That image couldn't be uploaded. Use a JPEG, PNG or WebP picture under the size limit.",
         "storage/retry-limit-exceeded": "The upload kept failing. Check your connection and try again.",
         "functions/unavailable": "The leaderboard server can't be reached right now.",

@@ -460,8 +460,10 @@ test("discounted campaign films score exactly like the page's model", () => {
 });
 
 // ---- studio look
+const PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0, 0, 0, 0];
 function fakeFiles(objects) {
-  return { removed: [], async meta(path) { return objects[path] || null; }, async remove(path) { this.removed.push(path); delete objects[path]; } };
+  return { removed: [], async meta(path) { return objects[path] || null; }, async head(path) { return Uint8Array.from((objects[path] || {}).bytes || PNG); },
+    async remove(path) { this.removed.push(path); delete objects[path]; } };
 }
 
 test("studio style: palette colour, cleaned tagline and city, images checked in Storage", async () => {
@@ -479,13 +481,16 @@ test("studio style: palette colour, cleaned tagline and city, images checked in 
   await assert.rejects(store.style("s1", { logo: true }, NOW), /JPEG, PNG or WebP/);
   objects["studios/s1/logo"] = { contentType: "image/png", size: P.logoKB * 1024 + 1, generation: "2" };
   await assert.rejects(store.style("s1", { logo: true }, NOW), /too big/);
+  objects["studios/s1/logo"] = { contentType: "image/png", size: 5000, generation: "2b", bytes: [...Buffer.from("<html><script>alert(1)</script></html>")] };
+  await assert.rejects(store.style("s1", { logo: true }, NOW), /isn't a real image/);
+  assert.ok(!objects["studios/s1/logo"] && files.removed.includes("studios/s1/logo"), "a fake image is deleted");
   objects["studios/s1/logo"] = { contentType: "image/webp", size: 50000, generation: "3" };
   objects["studios/s1/backdrop"] = { contentType: "image/jpeg", size: 900000, generation: "4" };
   st = (await store.style("s1", { logo: true, backdrop: true }, NOW)).state;
   assert.deepEqual([st.profile.logo, st.profile.backdrop], ["3", "4"]);
   st = (await store.style("s1", { backdrop: false }, NOW)).state;
   assert.equal(st.profile.backdrop, null);
-  assert.deepEqual(files.removed, ["studios/s1/backdrop"]);
+  assert.deepEqual(files.removed, ["studios/s1/logo", "studios/s1/backdrop"]);
   assert.equal(st.profile.logo, "3", "untouched fields stay");
   assert.equal(st.profile.color, "violet");
 });

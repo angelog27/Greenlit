@@ -4,11 +4,12 @@
 //   campaignBoard/{uid}           public row once the studio reaches the board goal (A-tier)
 // Callables: start, project, release, pass, reroll, upgrade, style, rename.
 // Takes `db` (the Admin Firestore, or a stand-in with doc() and runTransaction() in tests) and `files` (Storage:
-// meta(path) -> { contentType, size, generation } or null, remove(path)).
+// meta(path) -> { contentType, size, generation } or null, head(path) -> first bytes, remove(path)).
 //   studios/{uid}/logo, studios/{uid}/backdrop   the studio's images in Storage, uploaded by the owner
 const crypto = require("crypto");
 const camp = require("./campaign");
 const { Reject } = require("./game");
+const { isImageBytes } = require("./limits");
 
 const utcDay = (t) => new Date(t).toISOString().slice(0, 10);
 const filmId = (i) => String(i).padStart(5, "0");
@@ -86,6 +87,8 @@ function makeStore(db, C, files) {
           if (!meta) throw new Reject("The image didn't finish uploading. Try again.");
           if (!IMAGE.test(meta.contentType || "")) throw new Reject("Images must be JPEG, PNG or WebP.");
           if (meta.size > P[k + "KB"] * 1024) throw new Reject(`That image is too big (max ${P[k + "KB"]} KB).`);
+          // The type is whatever the browser declared; the file itself must start like a JPEG, PNG or WebP.
+          if (!isImageBytes(await files.head(path))) { await files.remove(path); throw new Reject("That file isn't a real image."); }
           images[k] = String(meta.generation || now);
         } else if (x[k] === false) {
           if (files) await files.remove(path);
