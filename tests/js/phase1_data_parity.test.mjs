@@ -1,20 +1,23 @@
-// Phase 1: the page loading data/*.json must behave exactly like the original single file.
-// Run: node --test tests/js
+// Model-code parity: fed the original data, the current model must behave exactly like the frozen v1 file.
+// The live game data (data/*.json) has since grown (new people, new stories, blended genres), so the data
+// comes from v1 itself; tests/js/data_and_blends.test.mjs covers the live data.
+// Run: node --test tests/js/*.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { loadModel } from "../../tools/model_loader.mjs";
 
 const root = new URL("../../", import.meta.url);
-const FILES = ["genres", "directors", "actors", "plots", "windows", "loyal", "chem", "slate"];
-const data = Object.fromEntries(FILES.map((n) => [n, JSON.parse(readFileSync(new URL(`data/${n}.json`, root), "utf8"))]));
-
 const ref = loadModel(new URL("reference/greenlight.v1.html", root));
 const cur = loadModel(new URL("Frontend/greenlight.html", root));
-cur.initModel(data);
 
 // vm contexts have their own Array/Object prototypes, so compare through JSON.
 const plain = (v) => JSON.parse(JSON.stringify(v));
+cur.initModel(plain({
+  genres: ref.GENRES, directors: ref.DIRS, actors: ref.ACTORS, plots: ref.PLOTS, windows: ref.WINDOWS,
+  loyal: ref.LOYAL.map(([director, actor, bonus, films]) => ({ director, actor, bonus, films })),
+  chem: ref.CHEM.map(([a, b, bonus, films]) => ({ a, b, bonus, films })),
+  slate: ref.SLATE_RAW.map(([date, title, genre, strength]) => ({ date, title, genre, strength })),
+}));
 const DIFFS = ["easy", "medium", "hard"];
 const DAYS = ["2026-10-17", "2026-10-31", "2026-11-14", "2026-12-24", "2027-01-01", "2027-02-14", "2027-03-03", "2027-04-20", "2027-05-05", "2027-06-01"];
 

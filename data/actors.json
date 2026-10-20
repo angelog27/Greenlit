@@ -576,5 +576,547 @@
       "stylish"
     ],
     "known": "Avatar, Guardians of the Galaxy, Star Trek"
+  },
+  {
+    "id": "dicaprio",
+    "s": "m",
+    "name": "Leonardo DiCaprio",
+    "fee": 30,
+    "star": 10,
+    "g": [
+      "action",
+      "scifi",
+      "thriller",
+      "drama",
+      "romance"
+    ],
+    "tone": [
+      "epic",
+      "stylish",
+      "gritty"
+    ],
+    "known": "Titanic, Inception, The Wolf of Wallstreet, Once Upon a Time in Hollywood"
+  },
+  {
+    "id": "yeoh",
+    "s": "f",
+    "name": "Michelle Yeoh",
+    "fee": 18,
+    "star": 8,
+    "g": [
+      "action",
+      "drama",
+      "scifi"
+    ],
+    "tone": [
+      "epic",
+      "heartfelt"
+    ],
+    "known": "Everything Everywhere All at Once, Crouching Tiger, Hidden Dragon, Wicked"
+  },
+  {
+    "id": "erivo",
+    "s": "f",
+    "name": "Cynthia Erivo",
+    "fee": 16,
+    "star": 7,
+    "g": [
+      "drama",
+      "romance",
+      "thriller"
+    ],
+    "tone": [
+      "heartfelt",
+      "epic"
+    ],
+    "known": "Wicked, Harriet, Widows"
+  },
+  {
+    "id": "grande",
+    "s": "f",
+    "name": "Ariana Grande",
+    "fee": 18,
+    "star": 7,
+    "g": [
+      "comedy",
+      "romance",
+      "animation"
+    ],
+    "tone": [
+      "funny",
+      "heartfelt"
+    ],
+    "known": "Wicked, Wicked: For Good, Don't Look Up"
+  },
+  {
+    "id": "ferguson",
+    "s": "f",
+    "name": "Rebecca Ferguson",
+    "fee": 18,
+    "star": 8,
+    "g": [
+      "action",
+      "scifi",
+      "thriller"
+    ],
+    "tone": [
+      "stylish",
+      "gritty"
+    ],
+    "known": "Mission: Impossible – Fallout, Dune, Doctor Sleep"
+  },
+  {
+    "id": "collette",
+    "s": "f",
+    "name": "Toni Collette",
+    "fee": 12,
+    "star": 7,
+    "g": [
+      "horror",
+      "drama",
+      "comedy"
+    ],
+    "tone": [
+      "eerie",
+      "heartfelt"
+    ],
+    "known": "Hereditary, Little Miss Sunshine, Knives Out"
+  },
+  {
+    "id": "chastain",
+    "s": "f",
+    "name": "Jessica Chastain",
+    "fee": 16,
+    "star": 7,
+    "g": [
+      "drama",
+      "thriller",
+      "scifi"
+    ],
+    "tone": [
+      "gritty",
+      "stylish"
+    ],
+    "known": "Zero Dark Thirty, Interstellar, Molly's Game"
+  },
+  {
+    "id": "comer",
+    "s": "f",
+    "name": "Jodie Comer",
+    "fee": 14,
+    "star": 7,
+    "g": [
+      "thriller",
+      "drama",
+      "comedy"
+    ],
+    "tone": [
+      "stylish",
+      "funny"
+    ],
+    "known": "Free Guy, The Last Duel, 28 Years Later"
+  },
+  {
+    "id": "goth",
+    "s": "f",
+    "name": "Mia Goth",
+    "fee": 8,
+    "star": 6,
+    "g": [
+      "horror",
+      "thriller"
+    ],
+    "tone": [
+      "eerie",
+      "stylish"
+    ],
+    "known": "Pearl, X, Frankenstein"
+  },
+  {
+    "id": "ackie",
+    "s": "f",
+    "name": "Naomi Ackie",
+    "fee": 8,
+    "star": 6,
+    "g": [
+      "scifi",
+      "drama",
+      "thriller"
+    ],
+    "tone": [
+      "heartfelt",
+      "gritty"
+    ],
+    "known": "Mickey 17, Blink Twice, I Wanna Dance with Somebody"
+  },
+  {
+    "id": "johansson",
+    "s": "f",
+    "name": "Scarlett Johansson",
+    "fee": 28,
+    "star": 9,
+    "g": [
+      "action",
+      "scifi",
+      "comedy"
+    ],
+    "tone": [
+      "stylish",
+      "heartfelt"
+    ],
+    "known": "Black Widow, Jojo Rabbit, Jurassic World Rebirth"
+  },
+  {
+    "id": "thompson",
+    "s": "f",
+    "name": "Tessa Thompson",
+    "fee": 14,
+    "star": 7,
+    "g": [
+      "action",
+      "scifi",
+      "drama"
+    ],
+    "tone": [
+      "stylish",
+      "heartfelt"
+    ],
+    "known": "Thor: Ragnarok, Creed, Annihilation"
+  },
+  {
+    "id": "olsen",
+    "s": "f",
+    "name": "Elizabeth Olsen",
+    "fee": 16,
+    "star": 7,
+    "g": [
+      "action",
+      "thriller",
+      "horror"
+    ],
+    "tone": [
+      "eerie",
+      "heartfelt"
+    ],
+    "known": "Avengers: Endgame, Wind River, Godzilla"
+  },
+  {
+    "id": "taylorjoy",
+    "s": "f",
+    "name": "Anya Taylor-Joy",
+    "fee": 18,
+    "star": 8,
+    "g": [
+      "thriller",
+      "horror",
+      "action"
+    ],
+    "tone": [
+      "eerie",
+      "stylish"
+    ],
+    "known": "Furiosa, The Menu, Last Night in Soho"
+  },
+  {
+    "id": "hall",
+    "s": "f",
+    "name": "Regina Hall",
+    "fee": 10,
+    "star": 6,
+    "g": [
+      "comedy",
+      "romance"
+    ],
+    "tone": [
+      "funny",
+      "heartfelt"
+    ],
+    "known": "Girls Trip, One Battle After Another, Support the Girls"
+  },
+  {
+    "id": "wu",
+    "s": "f",
+    "name": "Constance Wu",
+    "fee": 8,
+    "star": 6,
+    "g": [
+      "romance",
+      "comedy"
+    ],
+    "tone": [
+      "heartfelt",
+      "funny"
+    ],
+    "known": "Crazy Rich Asians, Hustlers"
+  },
+  {
+    "id": "rodriguez",
+    "s": "f",
+    "name": "Michelle Rodriguez",
+    "fee": 14,
+    "star": 7,
+    "g": [
+      "action",
+      "thriller"
+    ],
+    "tone": [
+      "gritty",
+      "epic"
+    ],
+    "known": "Fast & Furious 6, Avatar, Dungeons & Dragons: Honor Among Thieves"
+  },
+  {
+    "id": "davis",
+    "s": "f",
+    "name": "Viola Davis",
+    "fee": 16,
+    "star": 8,
+    "g": [
+      "drama",
+      "thriller",
+      "action"
+    ],
+    "tone": [
+      "gritty",
+      "heartfelt"
+    ],
+    "known": "Fences, Widows, The Woman King"
+  },
+  {
+    "id": "hemsworth",
+    "s": "m",
+    "name": "Chris Hemsworth",
+    "fee": 26,
+    "star": 8,
+    "g": [
+      "action",
+      "comedy",
+      "scifi"
+    ],
+    "tone": [
+      "epic",
+      "funny"
+    ],
+    "known": "Thor: Ragnarok, Extraction, Furiosa"
+  },
+  {
+    "id": "jordan",
+    "s": "m",
+    "name": "Michael B. Jordan",
+    "fee": 22,
+    "star": 8,
+    "g": [
+      "action",
+      "drama",
+      "horror"
+    ],
+    "tone": [
+      "gritty",
+      "heartfelt"
+    ],
+    "known": "Creed, Black Panther, Sinners"
+  },
+  {
+    "id": "mescal",
+    "s": "m",
+    "name": "Paul Mescal",
+    "fee": 14,
+    "star": 7,
+    "g": [
+      "drama",
+      "romance",
+      "action"
+    ],
+    "tone": [
+      "heartfelt",
+      "gritty"
+    ],
+    "known": "Aftersun, Gladiator II, All of Us Strangers"
+  },
+  {
+    "id": "elordi",
+    "s": "m",
+    "name": "Jacob Elordi",
+    "fee": 14,
+    "star": 7,
+    "g": [
+      "drama",
+      "romance",
+      "horror"
+    ],
+    "tone": [
+      "stylish",
+      "eerie"
+    ],
+    "known": "Saltburn, Priscilla, Frankenstein"
+  },
+  {
+    "id": "plemons",
+    "s": "m",
+    "name": "Jesse Plemons",
+    "fee": 12,
+    "star": 7,
+    "g": [
+      "thriller",
+      "drama",
+      "comedy"
+    ],
+    "tone": [
+      "gritty",
+      "eerie"
+    ],
+    "known": "Civil War, Kinds of Kindness, Bugonia"
+  },
+  {
+    "id": "butler",
+    "s": "m",
+    "name": "Austin Butler",
+    "fee": 18,
+    "star": 8,
+    "g": [
+      "drama",
+      "action",
+      "thriller"
+    ],
+    "tone": [
+      "stylish",
+      "gritty"
+    ],
+    "known": "Elvis, Dune: Part Two, The Bikeriders"
+  },
+  {
+    "id": "yeun",
+    "s": "m",
+    "name": "Steven Yeun",
+    "fee": 10,
+    "star": 6,
+    "g": [
+      "drama",
+      "horror",
+      "scifi"
+    ],
+    "tone": [
+      "heartfelt",
+      "eerie"
+    ],
+    "known": "Minari, Nope, Mickey 17"
+  },
+  {
+    "id": "ruffalo",
+    "s": "m",
+    "name": "Mark Ruffalo",
+    "fee": 18,
+    "star": 8,
+    "g": [
+      "drama",
+      "comedy",
+      "scifi"
+    ],
+    "tone": [
+      "heartfelt",
+      "funny"
+    ],
+    "known": "Poor Things, Spotlight, Mickey 17"
+  },
+  {
+    "id": "dafoe",
+    "s": "m",
+    "name": "Willem Dafoe",
+    "fee": 14,
+    "star": 8,
+    "g": [
+      "horror",
+      "drama",
+      "thriller"
+    ],
+    "tone": [
+      "eerie",
+      "stylish"
+    ],
+    "known": "The Lighthouse, Poor Things, Nosferatu"
+  },
+  {
+    "id": "washington",
+    "s": "m",
+    "name": "Denzel Washington",
+    "fee": 28,
+    "star": 9,
+    "g": [
+      "action",
+      "thriller",
+      "drama"
+    ],
+    "tone": [
+      "gritty",
+      "stylish"
+    ],
+    "known": "Training Day, The Equalizer, Gladiator II"
+  },
+  {
+    "id": "damon",
+    "s": "m",
+    "name": "Matt Damon",
+    "fee": 24,
+    "star": 8,
+    "g": [
+      "action",
+      "scifi",
+      "drama"
+    ],
+    "tone": [
+      "gritty",
+      "heartfelt"
+    ],
+    "known": "The Martian, The Bourne Identity, Oppenheimer"
+  },
+  {
+    "id": "pitt",
+    "s": "m",
+    "name": "Brad Pitt",
+    "fee": 28,
+    "star": 9,
+    "g": [
+      "action",
+      "drama",
+      "comedy"
+    ],
+    "tone": [
+      "stylish",
+      "epic"
+    ],
+    "known": "F1, Once Upon a Time in Hollywood, Bullet Train"
+  },
+  {
+    "id": "phoenix",
+    "s": "m",
+    "name": "Joaquin Phoenix",
+    "fee": 22,
+    "star": 8,
+    "g": [
+      "drama",
+      "thriller"
+    ],
+    "tone": [
+      "gritty",
+      "eerie"
+    ],
+    "known": "Joker, Her, Eddington"
+  },
+  {
+    "id": "hiddleston",
+    "s": "m",
+    "name": "Tom Hiddleston",
+    "fee": 14,
+    "star": 7,
+    "g": [
+      "action",
+      "horror",
+      "drama"
+    ],
+    "tone": [
+      "stylish",
+      "heartfelt"
+    ],
+    "known": "Thor: Ragnarok, Crimson Peak, The Life of Chuck"
   }
 ]

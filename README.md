@@ -44,5 +44,30 @@ node --test tests/js/*.test.mjs
 | `data/loyal.json`     | director + actor reunion bonuses, with the films they made together               |
 | `data/chem.json`      | actor + actor chemistry bonuses, with the films they shared                       |
 | `data/slate.json`     | real upcoming releases (Hard mode): date, title, our genre tag, our 1–10 strength |
+| `data/images.json`    | TMDB image paths for people, genre stills and slate posters (generated, optional) |
 
 All fees, ratings and dollar amounts are invented game numbers.
+
+## Images (TMDB)
+
+Portraits, genre stills and slate posters come from `data/images.json`, which holds only public `image.tmdb.org` paths. The page never sees the API key. To (re)build it after adding people or slate films:
+
+```sh
+node tools/fetch_images.mjs            # fills in anything missing
+node tools/fetch_images.mjs --refresh  # re-looks up everything
+```
+
+The key is read from `TMDB_API_KEY` in the environment, `.env` or `Frontend/.env`. Entries can be edited by hand (for example to fix a wrong match). Anything without an image shows initials.
+
+
+## Accounts and leaderboards (Firebase)
+
+Players sign in with Google or email/password (Firebase Auth). When they release a film, the `release` Cloud Function rebuilds that day from the date, checks every pick was really on the day's shortlists and within budget, scores it with the same model code as the page, and keeps the player's best film of the day on the board. Boards: the Daily Challenge, plus one per Basic difficulty, reset every day at midnight UTC.
+
+1. Put the Firebase **web** config in `.env` (`apiKey`, `authDomain`, `projectId`, `appId`, ...) and run `node tools/firebase_setup.mjs`. It writes `Frontend/firebase-config.js` (git-ignored) and `.firebaserc`.
+2. In the Firebase console, enable the Google and Email/Password sign-in providers.
+3. `npm --prefix functions install`
+4. Local: `node tools/build_functions.mjs && firebase emulators:start` (needs JDK 21+), then serve the page as above. Add `?emu` to the page URL to use the emulators instead of the real project.
+5. Deploy: `firebase deploy --only functions,firestore` (Cloud Functions need the Blaze plan). `build_functions.mjs` runs automatically first.
+
+Without `firebase-config.js` the game still runs; results stay on the device.

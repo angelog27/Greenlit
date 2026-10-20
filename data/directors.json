@@ -126,5 +126,245 @@
     ],
     "note": "Franchise scare-maker",
     "known": "Saw, The Conjuring, Furious 7"
+  },
+  {
+    "id": "scorsese",
+    "name": "Martin Scorsese",
+    "fee": 30,
+    "skill": 1.1,
+    "spec": [
+      "drama",
+      "thriller"
+    ],
+    "tone": [
+      "gritty",
+      "epic"
+    ],
+    "note": "Master of cinema",
+    "known": "The Departed, Goodfellas, The Irishman, The Wolf of Wall Street, Killers of the Flower Moon"
+  },
+  {
+    "id": "coogler",
+    "name": "Ryan Coogler",
+    "fee": 26,
+    "skill": 1.2,
+    "spec": [
+      "action",
+      "drama"
+    ],
+    "tone": [
+      "epic",
+      "gritty"
+    ],
+    "note": "Crowd-pleasing auteur",
+    "known": "Black Panther, Creed, Sinners"
+  },
+  {
+    "id": "wright",
+    "name": "Edgar Wright",
+    "fee": 16,
+    "skill": 1.1,
+    "spec": [
+      "comedy",
+      "action"
+    ],
+    "tone": [
+      "funny",
+      "stylish"
+    ],
+    "note": "Kinetic genre mash-ups",
+    "known": "Baby Driver, Shaun of the Dead, Hot Fuzz"
+  },
+  {
+    "id": "waititi",
+    "name": "Taika Waititi",
+    "fee": 20,
+    "skill": 1.1,
+    "spec": [
+      "comedy",
+      "action"
+    ],
+    "tone": [
+      "funny",
+      "heartfelt"
+    ],
+    "note": "Big-hearted irreverence",
+    "known": "Thor: Ragnarok, Jojo Rabbit, What We Do in the Shadows"
+  },
+  {
+    "id": "deltoro",
+    "name": "Guillermo del Toro",
+    "fee": 24,
+    "skill": 1.2,
+    "spec": [
+      "horror",
+      "drama"
+    ],
+    "tone": [
+      "eerie",
+      "stylish"
+    ],
+    "note": "Monster-loving craftsman",
+    "known": "The Shape of Water, Pan's Labyrinth, Frankenstein"
+  },
+  {
+    "id": "rscott",
+    "name": "Ridley Scott",
+    "fee": 30,
+    "skill": 1.15,
+    "spec": [
+      "scifi",
+      "action"
+    ],
+    "tone": [
+      "epic",
+      "gritty"
+    ],
+    "note": "Epic-scale veteran",
+    "known": "Alien, Gladiator, The Martian"
+  },
+  {
+    "id": "spielberg",
+    "name": "Steven Spielberg",
+    "fee": 36,
+    "skill": 1.25,
+    "spec": [
+      "scifi",
+      "action"
+    ],
+    "tone": [
+      "epic",
+      "heartfelt"
+    ],
+    "note": "The original blockbuster",
+    "known": "Jaws, Jurassic Park, E.T. the Extra-Terrestrial"
+  },
+  {
+    "id": "tarantino",
+    "name": "Quentin Tarantino",
+    "fee": 32,
+    "skill": 1.2,
+    "spec": [
+      "thriller",
+      "action"
+    ],
+    "tone": [
+      "stylish",
+      "gritty"
+    ],
+    "note": "Dialogue and bloodshed",
+    "known": "Pulp Fiction, Django Unchained, Once Upon a Time in Hollywood"
+  },
+  {
+    "id": "bong",
+    "name": "Bong Joon Ho",
+    "fee": 22,
+    "skill": 1.2,
+    "spec": [
+      "thriller",
+      "scifi"
+    ],
+    "tone": [
+      "eerie",
+      "funny"
+    ],
+    "note": "Genre-bending satirist",
+    "known": "Parasite, Snowpiercer, Mickey 17"
+  },
+  {
+    "id": "flanagan",
+    "name": "Mike Flanagan",
+    "fee": 14,
+    "skill": 1.1,
+    "spec": [
+      "horror",
+      "drama"
+    ],
+    "tone": [
+      "eerie",
+      "heartfelt"
+    ],
+    "note": "Heartfelt horror",
+    "known": "Doctor Sleep, Oculus, The Life of Chuck"
+  },
+  {
+    "id": "aster",
+    "name": "Ari Aster",
+    "fee": 15,
+    "skill": 1.1,
+    "spec": [
+      "horror",
+      "drama"
+    ],
+    "tone": [
+      "eerie",
+      "stylish"
+    ],
+    "note": "Slow-dread provocateur",
+    "known": "Hereditary, Midsommar, Eddington"
+  },
+  {
+    "id": "chu",
+    "name": "Jon M. Chu",
+    "fee": 18,
+    "skill": 1.1,
+    "spec": [
+      "romance",
+      "comedy"
+    ],
+    "tone": [
+      "stylish",
+      "heartfelt"
+    ],
+    "note": "Musical spectacle",
+    "known": "Wicked, Crazy Rich Asians, In the Heights"
+  },
+  {
+    "id": "lanthimos",
+    "name": "Yorgos Lanthimos",
+    "fee": 18,
+    "skill": 1.15,
+    "spec": [
+      "comedy",
+      "drama"
+    ],
+    "tone": [
+      "stylish",
+      "eerie"
+    ],
+    "note": "Deadpan absurdist",
+    "known": "Poor Things, The Favourite, Bugonia"
+  },
+  {
+    "id": "bigelow",
+    "name": "Kathryn Bigelow",
+    "fee": 22,
+    "skill": 1.15,
+    "spec": [
+      "thriller",
+      "action"
+    ],
+    "tone": [
+      "gritty",
+      "epic"
+    ],
+    "note": "Pressure-cooker realism",
+    "known": "The Hurt Locker, Zero Dark Thirty, A House of Dynamite"
+  },
+  {
+    "id": "chazelle",
+    "name": "Damien Chazelle",
+    "fee": 20,
+    "skill": 1.15,
+    "spec": [
+      "drama",
+      "romance"
+    ],
+    "tone": [
+      "heartfelt",
+      "stylish"
+    ],
+    "note": "Rhythm and obsession",
+    "known": "La La Land, Whiplash, Babylon"
   }
 ]

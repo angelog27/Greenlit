@@ -3,19 +3,19 @@
     "director": "nolan",
     "actor": "pattinson",
     "bonus": 0.1,
-    "films": "Tenet"
+    "films": "Tenet, The Odyssey"
   },
   {
     "director": "nolan",
     "actor": "hathaway",
     "bonus": 0.1,
-    "films": "Interstellar, The Dark Knight Rises"
+    "films": "Interstellar, The Dark Knight Rises, The Odyssey"
   },
   {
     "director": "villeneuve",
     "actor": "isaac",
     "bonus": 0.1,
-    "films": "Dune, Dune: Part Two"
+    "films": "Dune"
   },
   {
     "director": "villeneuve",
@@ -109,6 +109,18 @@
   },
   {
     "director": "nolan",
+    "actor": "dicaprio",
+    "bonus": 0.1,
+    "films": "Inception"
+  },
+  {
+    "director": "scorsese",
+    "actor": "dicaprio",
+    "bonus": 0.4,
+    "films": "The Wolf of Wall Street, The Aviator, Gangs of New York, Shutter Island, The Departed, killers of the Flower Moon"
+  },
+  {
+    "director": "nolan",
     "actor": "blunt",
     "bonus": 0.1,
     "films": "Oppenheimer"
@@ -184,5 +196,359 @@
     "actor": "johnson",
     "bonus": 0.08,
     "films": "Furious 7"
+  },
+  {
+    "director": "coogler",
+    "actor": "jordan",
+    "bonus": 0.12,
+    "films": "Fruitvale Station, Creed, Black Panther, Sinners"
+  },
+  {
+    "director": "coogler",
+    "actor": "lupita",
+    "bonus": 0.1,
+    "films": "Black Panther, Black Panther: Wakanda Forever"
+  },
+  {
+    "director": "coogler",
+    "actor": "duke",
+    "bonus": 0.1,
+    "films": "Black Panther, Black Panther: Wakanda Forever"
+  },
+  {
+    "director": "coogler",
+    "actor": "thompson",
+    "bonus": 0.1,
+    "films": "Creed"
+  },
+  {
+    "director": "wright",
+    "actor": "powell",
+    "bonus": 0.1,
+    "films": "The Running Man"
+  },
+  {
+    "director": "wright",
+    "actor": "taylorjoy",
+    "bonus": 0.1,
+    "films": "Last Night in Soho"
+  },
+  {
+    "director": "waititi",
+    "actor": "hemsworth",
+    "bonus": 0.12,
+    "films": "Thor: Ragnarok, Thor: Love and Thunder"
+  },
+  {
+    "director": "waititi",
+    "actor": "thompson",
+    "bonus": 0.12,
+    "films": "Thor: Ragnarok, Thor: Love and Thunder"
+  },
+  {
+    "director": "waititi",
+    "actor": "johansson",
+    "bonus": 0.1,
+    "films": "Jojo Rabbit"
+  },
+  {
+    "director": "waititi",
+    "actor": "hiddleston",
+    "bonus": 0.1,
+    "films": "Thor: Ragnarok"
+  },
+  {
+    "director": "deltoro",
+    "actor": "isaac",
+    "bonus": 0.1,
+    "films": "Frankenstein"
+  },
+  {
+    "director": "deltoro",
+    "actor": "elordi",
+    "bonus": 0.1,
+    "films": "Frankenstein"
+  },
+  {
+    "director": "deltoro",
+    "actor": "goth",
+    "bonus": 0.1,
+    "films": "Frankenstein"
+  },
+  {
+    "director": "deltoro",
+    "actor": "hiddleston",
+    "bonus": 0.1,
+    "films": "Crimson Peak"
+  },
+  {
+    "director": "deltoro",
+    "actor": "chastain",
+    "bonus": 0.1,
+    "films": "Crimson Peak"
+  },
+  {
+    "director": "rscott",
+    "actor": "pascal",
+    "bonus": 0.1,
+    "films": "Gladiator II"
+  },
+  {
+    "director": "rscott",
+    "actor": "mescal",
+    "bonus": 0.1,
+    "films": "Gladiator II"
+  },
+  {
+    "director": "rscott",
+    "actor": "washington",
+    "bonus": 0.12,
+    "films": "American Gangster, Gladiator II"
+  },
+  {
+    "director": "rscott",
+    "actor": "damon",
+    "bonus": 0.12,
+    "films": "The Martian, The Last Duel"
+  },
+  {
+    "director": "rscott",
+    "actor": "comer",
+    "bonus": 0.1,
+    "films": "The Last Duel"
+  },
+  {
+    "director": "rscott",
+    "actor": "chastain",
+    "bonus": 0.1,
+    "films": "The Martian"
+  },
+  {
+    "director": "spielberg",
+    "actor": "cruise",
+    "bonus": 0.12,
+    "films": "Minority Report, War of the Worlds"
+  },
+  {
+    "director": "tarantino",
+    "actor": "dicaprio",
+    "bonus": 0.12,
+    "films": "Django Unchained, Once Upon a Time in Hollywood"
+  },
+  {
+    "director": "tarantino",
+    "actor": "pitt",
+    "bonus": 0.12,
+    "films": "Inglourious Basterds, Once Upon a Time in Hollywood"
+  },
+  {
+    "director": "tarantino",
+    "actor": "robbie",
+    "bonus": 0.1,
+    "films": "Once Upon a Time in Hollywood"
+  },
+  {
+    "director": "bong",
+    "actor": "pattinson",
+    "bonus": 0.1,
+    "films": "Mickey 17"
+  },
+  {
+    "director": "bong",
+    "actor": "ackie",
+    "bonus": 0.1,
+    "films": "Mickey 17"
+  },
+  {
+    "director": "bong",
+    "actor": "ruffalo",
+    "bonus": 0.1,
+    "films": "Mickey 17"
+  },
+  {
+    "director": "bong",
+    "actor": "collette",
+    "bonus": 0.1,
+    "films": "Mickey 17"
+  },
+  {
+    "director": "bong",
+    "actor": "yeun",
+    "bonus": 0.12,
+    "films": "Okja, Mickey 17"
+  },
+  {
+    "director": "flanagan",
+    "actor": "ferguson",
+    "bonus": 0.1,
+    "films": "Doctor Sleep"
+  },
+  {
+    "director": "flanagan",
+    "actor": "hiddleston",
+    "bonus": 0.1,
+    "films": "The Life of Chuck"
+  },
+  {
+    "director": "aster",
+    "actor": "pugh",
+    "bonus": 0.1,
+    "films": "Midsommar"
+  },
+  {
+    "director": "aster",
+    "actor": "collette",
+    "bonus": 0.1,
+    "films": "Hereditary"
+  },
+  {
+    "director": "aster",
+    "actor": "phoenix",
+    "bonus": 0.12,
+    "films": "Beau Is Afraid, Eddington"
+  },
+  {
+    "director": "aster",
+    "actor": "pascal",
+    "bonus": 0.1,
+    "films": "Eddington"
+  },
+  {
+    "director": "aster",
+    "actor": "stone",
+    "bonus": 0.1,
+    "films": "Eddington"
+  },
+  {
+    "director": "aster",
+    "actor": "butler",
+    "bonus": 0.1,
+    "films": "Eddington"
+  },
+  {
+    "director": "chu",
+    "actor": "erivo",
+    "bonus": 0.12,
+    "films": "Wicked, Wicked: For Good"
+  },
+  {
+    "director": "chu",
+    "actor": "grande",
+    "bonus": 0.12,
+    "films": "Wicked, Wicked: For Good"
+  },
+  {
+    "director": "chu",
+    "actor": "yeoh",
+    "bonus": 0.12,
+    "films": "Crazy Rich Asians, Wicked"
+  },
+  {
+    "director": "chu",
+    "actor": "wu",
+    "bonus": 0.1,
+    "films": "Crazy Rich Asians"
+  },
+  {
+    "director": "chu",
+    "actor": "awkwafina",
+    "bonus": 0.1,
+    "films": "Crazy Rich Asians"
+  },
+  {
+    "director": "lanthimos",
+    "actor": "stone",
+    "bonus": 0.15,
+    "films": "The Favourite, Poor Things, Kinds of Kindness, Bugonia"
+  },
+  {
+    "director": "lanthimos",
+    "actor": "plemons",
+    "bonus": 0.12,
+    "films": "Kinds of Kindness, Bugonia"
+  },
+  {
+    "director": "lanthimos",
+    "actor": "dafoe",
+    "bonus": 0.12,
+    "films": "Poor Things, Kinds of Kindness"
+  },
+  {
+    "director": "lanthimos",
+    "actor": "ruffalo",
+    "bonus": 0.1,
+    "films": "Poor Things"
+  },
+  {
+    "director": "bigelow",
+    "actor": "chastain",
+    "bonus": 0.1,
+    "films": "Zero Dark Thirty"
+  },
+  {
+    "director": "bigelow",
+    "actor": "ferguson",
+    "bonus": 0.1,
+    "films": "A House of Dynamite"
+  },
+  {
+    "director": "chazelle",
+    "actor": "gosling",
+    "bonus": 0.12,
+    "films": "La La Land, First Man"
+  },
+  {
+    "director": "chazelle",
+    "actor": "stone",
+    "bonus": 0.1,
+    "films": "La La Land"
+  },
+  {
+    "director": "chazelle",
+    "actor": "robbie",
+    "bonus": 0.1,
+    "films": "Babylon"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "butler",
+    "bonus": 0.1,
+    "films": "Dune: Part Two"
+  },
+  {
+    "director": "villeneuve",
+    "actor": "ferguson",
+    "bonus": 0.12,
+    "films": "Dune, Dune: Part Two"
+  },
+  {
+    "director": "nolan",
+    "actor": "damon",
+    "bonus": 0.12,
+    "films": "Interstellar, Oppenheimer"
+  },
+  {
+    "director": "nolan",
+    "actor": "chastain",
+    "bonus": 0.1,
+    "films": "Interstellar"
+  },
+  {
+    "director": "nolan",
+    "actor": "pugh",
+    "bonus": 0.1,
+    "films": "Oppenheimer"
+  },
+  {
+    "director": "peele",
+    "actor": "yeun",
+    "bonus": 0.1,
+    "films": "Nope"
+  },
+  {
+    "director": "scorsese",
+    "actor": "plemons",
+    "bonus": 0.1,
+    "films": "Killers of the Flower Moon"
   }
 ]

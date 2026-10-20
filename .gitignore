@@ -27,3 +27,10 @@ ingest_cache/
 .idea/
 .DS_Store
 Thumbs.db
+
+# firebase
+Frontend/firebase-config.js
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

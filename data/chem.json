@@ -66,6 +66,12 @@
     "films": "Inception, Dunkirk"
   },
   {
+    "a": "dicaprio",
+    "b": "hardy",
+    "bonus": 0.15,
+    "films": "Inception, The Revenant"
+  },
+  {
     "a": "murphy",
     "b": "blunt",
     "bonus": 0.1,
@@ -94,5 +100,173 @@
     "b": "awkwafina",
     "bonus": 0.1,
     "films": "Jumanji: The Next Level"
+  },
+  {
+    "a": "erivo",
+    "b": "grande",
+    "bonus": 0.12,
+    "films": "Wicked, Wicked: For Good"
+  },
+  {
+    "a": "erivo",
+    "b": "davis",
+    "bonus": 0.08,
+    "films": "Widows"
+  },
+  {
+    "a": "hemsworth",
+    "b": "thompson",
+    "bonus": 0.1,
+    "films": "Thor: Ragnarok, Men in Black: International"
+  },
+  {
+    "a": "hemsworth",
+    "b": "hiddleston",
+    "bonus": 0.1,
+    "films": "Thor, Thor: Ragnarok"
+  },
+  {
+    "a": "jordan",
+    "b": "thompson",
+    "bonus": 0.12,
+    "films": "Creed, Creed II, Creed III"
+  },
+  {
+    "a": "jordan",
+    "b": "lupita",
+    "bonus": 0.08,
+    "films": "Black Panther"
+  },
+  {
+    "a": "mescal",
+    "b": "pascal",
+    "bonus": 0.08,
+    "films": "Gladiator II"
+  },
+  {
+    "a": "pitt",
+    "b": "dicaprio",
+    "bonus": 0.12,
+    "films": "Once Upon a Time in Hollywood"
+  },
+  {
+    "a": "robbie",
+    "b": "pitt",
+    "bonus": 0.1,
+    "films": "Once Upon a Time in Hollywood, Babylon"
+  },
+  {
+    "a": "robbie",
+    "b": "dicaprio",
+    "bonus": 0.12,
+    "films": "The Wolf of Wall Street, Once Upon a Time in Hollywood"
+  },
+  {
+    "a": "stone",
+    "b": "plemons",
+    "bonus": 0.1,
+    "films": "Kinds of Kindness, Bugonia"
+  },
+  {
+    "a": "stone",
+    "b": "dafoe",
+    "bonus": 0.08,
+    "films": "Poor Things, Kinds of Kindness"
+  },
+  {
+    "a": "stone",
+    "b": "ruffalo",
+    "bonus": 0.08,
+    "films": "Poor Things"
+  },
+  {
+    "a": "pattinson",
+    "b": "dafoe",
+    "bonus": 0.1,
+    "films": "The Lighthouse"
+  },
+  {
+    "a": "pattinson",
+    "b": "ackie",
+    "bonus": 0.08,
+    "films": "Mickey 17"
+  },
+  {
+    "a": "damon",
+    "b": "chastain",
+    "bonus": 0.1,
+    "films": "Interstellar, The Martian"
+  },
+  {
+    "a": "phoenix",
+    "b": "stone",
+    "bonus": 0.08,
+    "films": "Irrational Man, Eddington"
+  },
+  {
+    "a": "hiddleston",
+    "b": "chastain",
+    "bonus": 0.08,
+    "films": "Crimson Peak"
+  },
+  {
+    "a": "johansson",
+    "b": "hemsworth",
+    "bonus": 0.08,
+    "films": "The Avengers, Avengers: Endgame"
+  },
+  {
+    "a": "johansson",
+    "b": "ruffalo",
+    "bonus": 0.08,
+    "films": "The Avengers, Avengers: Endgame"
+  },
+  {
+    "a": "johansson",
+    "b": "olsen",
+    "bonus": 0.08,
+    "films": "Avengers: Age of Ultron, Avengers: Endgame"
+  },
+  {
+    "a": "rodriguez",
+    "b": "johnson",
+    "bonus": 0.08,
+    "films": "Fast & Furious 6, Furious 7, The Fate of the Furious"
+  },
+  {
+    "a": "yeoh",
+    "b": "awkwafina",
+    "bonus": 0.1,
+    "films": "Crazy Rich Asians"
+  },
+  {
+    "a": "wu",
+    "b": "awkwafina",
+    "bonus": 0.08,
+    "films": "Crazy Rich Asians"
+  },
+  {
+    "a": "yeoh",
+    "b": "wu",
+    "bonus": 0.08,
+    "films": "Crazy Rich Asians"
+  },
+  {
+    "a": "ferguson",
+    "b": "cruise",
+    "bonus": 0.12,
+    "films": "Mission: Impossible – Rogue Nation, Fallout, Dead Reckoning"
+  },
+  {
+    "a": "taylorjoy",
+    "b": "hemsworth",
+    "bonus": 0.08,
+    "films": "Furiosa"
+  },
+  {
+    "a": "comer",
+    "b": "butler",
+    "bonus": 0.08,
+    "films": "The Bikeriders"
   }
 ]

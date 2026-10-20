@@ -1,585 +1,379 @@
 {
   "action": [
     {
-      "title": "Ironclad",
-      "text": "A bomb-disposal veteran must escort a stolen armored prototype train across a mountain range before its buyer's private army catches up.",
-      "tones": [
-        "epic",
-        "gritty"
-      ],
-      "win": [
-        "summer"
-      ],
-      "lead": {
-        "r": "the bomb-disposal veteran",
-        "t": "gritty"
-      },
-      "side": {
-        "r": "the train's reluctant engineer",
-        "t": "funny"
-      },
-      "anta": {
-        "r": "the arms dealer who wants it back",
-        "t": "stylish"
-      }
+      "title": "Breakwater",
+      "text": "A disgraced harbor pilot has to steer a hijacked container ship through a typhoon while the crew below plots a mutiny.",
+      "tones": ["epic", "gritty"],
+      "win": ["summer"],
+      "lead": { "r": "the disgraced harbor pilot", "t": "gritty" },
+      "side": { "r": "the ship's cook who knows every crawlspace", "t": "funny" },
+      "anta": { "r": "the hijacker in a tailored suit", "t": "stylish" }
     },
     {
-      "title": "Dead Reckoning at Sea",
-      "text": "A getaway driver on her last job learns the vault she's robbing sits under a cruise ship that someone else is already hijacking.",
-      "tones": [
-        "stylish",
-        "funny"
-      ],
-      "win": [
-        "summer",
-        "holiday"
-      ],
-      "lead": {
-        "r": "the getaway driver",
-        "t": "stylish"
-      },
-      "side": {
-        "r": "the safecracker who never stops talking",
-        "t": "funny"
-      },
-      "anta": {
-        "r": "the pirate captain running the hijack",
-        "t": "epic"
-      }
+      "title": "Overpass",
+      "text": "A motorbike courier has ninety minutes to cross a gridlocked city with the only copy of a witness statement strapped to her back.",
+      "tones": ["stylish", "epic"],
+      "win": ["summer", "spring"],
+      "lead": { "r": "the courier who never misses a drop", "t": "stylish" },
+      "side": { "r": "the dispatcher talking her through every turn", "t": "funny" },
+      "anta": { "r": "the fixer who controls the traffic lights", "t": "gritty" }
     },
     {
-      "title": "Canyon Fire",
-      "text": "A former smuggler turned park ranger races a wildfire and a rogue militia to evacuate a canyon town through the only road left.",
-      "tones": [
-        "gritty",
-        "heartfelt"
-      ],
-      "win": [
-        "summer",
-        "awards"
-      ],
-      "lead": {
-        "r": "the park ranger",
-        "t": "gritty"
-      },
-      "side": {
-        "r": "the town's teenage mechanic",
-        "t": "heartfelt"
-      },
-      "anta": {
-        "r": "the militia leader who wants the road closed",
-        "t": "gritty"
-      }
+      "title": "Iron Season",
+      "text": "Retired stunt performers reunite to rob the film studio that cheated them, using nothing but practical effects.",
+      "tones": ["epic", "funny"],
+      "win": ["summer", "holiday"],
+      "lead": { "r": "the stuntman with one jump left in him", "t": "epic" },
+      "side": { "r": "the pyrotechnician with a grudge", "t": "funny" },
+      "anta": { "r": "the studio head guarding the vault", "t": "stylish" }
     }
   ],
   "scifi": [
     {
-      "title": "Tidal Lock",
-      "text": "When the Earth stops spinning, a climatologist leads a convoy along the one thin strip of twilight that's still livable.",
-      "tones": [
-        "epic",
-        "heartfelt"
-      ],
-      "win": [
-        "summer",
-        "holiday"
-      ],
-      "lead": {
-        "r": "the climatologist",
-        "t": "heartfelt"
-      },
-      "side": {
-        "r": "the convoy's pilot",
-        "t": "gritty"
-      },
-      "anta": {
-        "r": "the billionaire hoarding the last greenhouse",
-        "t": "stylish"
-      }
+      "title": "Lowlight",
+      "text": "On a tidally locked colony world, the night-side mapping crew finds fresh footprints leading out of the dark.",
+      "tones": ["eerie", "epic"],
+      "win": ["summer"],
+      "lead": { "r": "the mapping crew's chief", "t": "gritty" },
+      "side": { "r": "the rookie cartographer", "t": "heartfelt" },
+      "anta": { "r": "the colony governor who already knew", "t": "stylish" }
     },
     {
-      "title": "The Understudy",
-      "text": "A cloned stage actor learns the original has been missing for years, and that he was grown to take his place.",
-      "tones": [
-        "stylish",
-        "eerie"
-      ],
-      "win": [
-        "awards",
-        "hallow"
-      ],
-      "lead": {
-        "r": "the clone",
-        "t": "stylish"
-      },
-      "side": {
-        "r": "the theater director who knows",
-        "t": "gritty"
-      },
-      "anta": {
-        "r": "the original, who comes back",
-        "t": "eerie"
-      }
+      "title": "Second Draft",
+      "text": "A novelist discovers her edits are quietly rewriting the city around her, and someone else owns the same pen.",
+      "tones": ["stylish", "heartfelt"],
+      "win": ["spring", "awards"],
+      "lead": { "r": "the novelist", "t": "heartfelt" },
+      "side": { "r": "the editor who notices the changes", "t": "funny" },
+      "anta": { "r": "the rival author with the other pen", "t": "stylish" }
     },
     {
-      "title": "Signal Fire",
-      "text": "A forest lookout starts hearing a transmission in her radio static that predicts disasters one day before they happen.",
-      "tones": [
-        "eerie",
-        "heartfelt"
-      ],
-      "win": [
-        "hallow",
-        "awards"
-      ],
-      "lead": {
-        "r": "the lookout",
-        "t": "heartfelt"
-      },
-      "side": {
-        "r": "the voice on the radio",
-        "t": "eerie"
-      },
-      "anta": {
-        "r": "the agency that buried similar reports",
-        "t": "gritty"
-      }
+      "title": "Halfway Station",
+      "text": "A relay-station engineer wakes from cryosleep forty years late and must decide whether to signal the ship that left her behind.",
+      "tones": ["epic", "heartfelt"],
+      "win": ["holiday", "summer"],
+      "lead": { "r": "the engineer left behind", "t": "gritty" },
+      "side": { "r": "the station's half-broken AI", "t": "funny" },
+      "anta": { "r": "the captain who made the call", "t": "epic" }
     }
   ],
   "animation": [
     {
-      "title": "Pepper and the Tide",
-      "text": "A timid lighthouse apprentice crab must keep a very sleepy sea monster from wrecking the village's summer fair.",
-      "tones": [
-        "funny",
-        "heartfelt"
-      ],
-      "win": [
-        "summer",
-        "spring"
-      ],
-      "lead": {
-        "r": "the apprentice crab",
-        "t": "heartfelt"
-      },
-      "side": {
-        "r": "the sleepy sea monster",
-        "t": "funny"
-      },
-      "anta": {
-        "r": "the fair's snobbish mayor",
-        "t": "stylish"
-      }
+      "title": "Pip and the Lamps",
+      "text": "A lighthouse mouse sets sail in a teacup to relight every lamp on the coast before the winter storms arrive.",
+      "tones": ["heartfelt", "epic"],
+      "win": ["holiday"],
+      "lead": { "r": "the lighthouse mouse", "t": "heartfelt" },
+      "side": { "r": "a seagull who is scared of water", "t": "funny" },
+      "anta": { "r": "the storm spirit", "t": "epic" }
     },
     {
-      "title": "Cloud Nine Express",
-      "text": "A dreamy mail pigeon and a cranky station-master tortoise race to deliver one last letter before storm season shuts down the sky-train.",
-      "tones": [
-        "epic",
-        "funny"
-      ],
-      "win": [
-        "holiday",
-        "summer"
-      ],
-      "lead": {
-        "r": "the dreamy mail pigeon",
-        "t": "funny"
-      },
-      "side": {
-        "r": "the cranky station-master tortoise",
-        "t": "heartfelt"
-      },
-      "anta": {
-        "r": "the thundercloud that hates deliveries",
-        "t": "epic"
-      }
+      "title": "Spare Parts",
+      "text": "A junkyard robot builds itself a family out of scrap, until the scrap baron comes to collect.",
+      "tones": ["funny", "heartfelt"],
+      "win": ["spring", "summer"],
+      "lead": { "r": "the junkyard robot", "t": "heartfelt" },
+      "side": { "r": "a toaster with big opinions", "t": "funny" },
+      "anta": { "r": "the scrap baron", "t": "stylish" }
     },
     {
-      "title": "Grandma's Robot",
-      "text": "A retired robot vacuum teaches a lonely kid how to save his grandmother's bakery from a gleaming robot franchise.",
-      "tones": [
-        "heartfelt",
-        "stylish"
-      ],
-      "win": [
-        "holiday"
-      ],
-      "lead": {
-        "r": "the lonely kid",
-        "t": "heartfelt"
-      },
-      "side": {
-        "r": "the retired robot vacuum",
-        "t": "funny"
-      },
-      "anta": {
-        "r": "the franchise's slick CEO",
-        "t": "stylish"
-      }
+      "title": "The Night Bakery",
+      "text": "Two kids discover the bakery downstairs makes everyone's dreams, and a rival across town has started baking nightmares.",
+      "tones": ["heartfelt", "eerie"],
+      "win": ["hallow", "holiday"],
+      "lead": { "r": "the girl who can't sleep", "t": "heartfelt" },
+      "side": { "r": "the head baker, a very sleepy bear", "t": "funny" },
+      "anta": { "r": "the nightmare confectioner", "t": "eerie" }
     }
   ],
   "comedy": [
     {
-      "title": "Family Style",
-      "text": "Three siblings must run their late father's disastrous restaurant for one weekend to win a food critic's blessing and their inheritance.",
-      "tones": [
-        "funny",
-        "heartfelt"
-      ],
-      "win": [
-        "spring",
-        "holiday"
-      ],
-      "lead": {
-        "r": "the eldest sibling",
-        "t": "funny"
-      },
-      "side": {
-        "r": "the sous-chef who knows the secret recipe",
-        "t": "heartfelt"
-      },
-      "anta": {
-        "r": "the food critic who never smiles",
-        "t": "stylish"
-      }
+      "title": "Best Man Down",
+      "text": "Forty-eight hours before a wedding on a Greek island, the best man loses the groom, the rings and the boat.",
+      "tones": ["funny", "heartfelt"],
+      "win": ["summer", "spring"],
+      "lead": { "r": "the best man", "t": "funny" },
+      "side": { "r": "the bride's unimpressed sister", "t": "heartfelt" },
+      "anta": { "r": "the wedding planner from hell", "t": "stylish" }
     },
     {
-      "title": "Escape Room Reunion",
-      "text": "Old college friends get locked in an escape room for their reunion, and every puzzle is built from their secrets.",
-      "tones": [
-        "funny",
-        "eerie"
-      ],
-      "win": [
-        "hallow"
-      ],
-      "lead": {
-        "r": "the friend who organized it",
-        "t": "funny"
-      },
-      "side": {
-        "r": "the friend with the biggest secret",
-        "t": "stylish"
-      },
-      "anta": {
-        "r": "the unseen game master",
-        "t": "eerie"
-      }
+      "title": "Open House",
+      "text": "Two estate agents compete to sell the same crumbling mansion, and its owner flatly refuses to leave.",
+      "tones": ["funny", "stylish"],
+      "win": ["spring"],
+      "lead": { "r": "the agent who has never lost a sale", "t": "stylish" },
+      "side": { "r": "her chaotic rival", "t": "funny" },
+      "anta": { "r": "the owner who won't move out", "t": "eerie" }
     },
     {
-      "title": "Wrong Wedding",
-      "text": "A wedding crasher is mistaken for the officiant and can't find a way to back out before the vows.",
-      "tones": [
-        "funny",
-        "stylish"
-      ],
-      "win": [
-        "summer",
-        "spring"
-      ],
-      "lead": {
-        "r": "the crasher",
-        "t": "funny"
-      },
-      "side": {
-        "r": "the bride's skeptical sister",
-        "t": "heartfelt"
-      },
-      "anta": {
-        "r": "the wedding planner who runs everything",
-        "t": "stylish"
-      }
+      "title": "Team Building",
+      "text": "A corporate retreat goes wrong on a mountain and turns a sales team into reluctant survivalists.",
+      "tones": ["funny", "gritty"],
+      "win": ["summer", "spring"],
+      "lead": { "r": "the manager who planned the retreat", "t": "funny" },
+      "side": { "r": "the intern who actually knows survival", "t": "gritty" },
+      "anta": { "r": "the CEO arriving by helicopter", "t": "stylish" }
     }
   ],
   "horror": [
     {
-      "title": "Static Hours",
-      "text": "A late-night radio host starts taking calls from listeners who describe the inside of her own house.",
-      "tones": [
-        "eerie",
-        "stylish"
-      ],
-      "win": [
-        "hallow"
-      ],
-      "lead": {
-        "r": "the radio host",
-        "t": "stylish"
-      },
-      "side": {
-        "r": "the caller who keeps ringing back",
-        "t": "eerie"
-      },
-      "anta": {
-        "r": "the voice that answers from inside the house",
-        "t": "eerie"
-      }
+      "title": "Low Tide",
+      "text": "Every night the tide goes out a little further, and the town's drowned come walking back up the beach.",
+      "tones": ["eerie", "gritty"],
+      "win": ["hallow"],
+      "lead": { "r": "the lifeguard who stayed", "t": "gritty" },
+      "side": { "r": "the oyster farmer's daughter", "t": "heartfelt" },
+      "anta": { "r": "the first one to come back", "t": "eerie" }
     },
     {
-      "title": "Salt House",
-      "text": "A family buys a flooded village's old hotel where the guests never actually checked out.",
-      "tones": [
-        "eerie",
-        "gritty"
-      ],
-      "win": [
-        "hallow"
-      ],
-      "lead": {
-        "r": "the mother holding the family together",
-        "t": "gritty"
-      },
-      "side": {
-        "r": "the longest-staying guest",
-        "t": "eerie"
-      },
-      "anta": {
-        "r": "the proprietor who never leaves the lobby",
-        "t": "stylish"
-      }
+      "title": "Bed Nine",
+      "text": "A night nurse on a hospital ward that's about to close realizes one of her patients isn't on any chart.",
+      "tones": ["eerie", "heartfelt"],
+      "win": ["hallow"],
+      "lead": { "r": "the night nurse", "t": "heartfelt" },
+      "side": { "r": "the porter who has seen it before", "t": "gritty" },
+      "anta": { "r": "the patient in bed nine", "t": "eerie" }
     },
     {
-      "title": "Floor 13",
-      "text": "New hires in an office tower notice one floor is never lit, and nobody remembers hiring its tenant.",
-      "tones": [
-        "eerie",
-        "funny"
-      ],
-      "win": [
-        "hallow"
-      ],
-      "lead": {
-        "r": "the new hire who asks too many questions",
-        "t": "funny"
-      },
-      "side": {
-        "r": "the night security guard",
-        "t": "gritty"
-      },
-      "anta": {
-        "r": "the tenant on thirteen",
-        "t": "eerie"
-      }
+      "title": "The Quiet Room",
+      "text": "An influencer family livestreams a week inside the soundproofed house they won in a contest, and nobody can find the contest's sponsor.",
+      "tones": ["stylish", "eerie"],
+      "win": ["hallow", "spring"],
+      "lead": { "r": "the teen running the stream", "t": "stylish" },
+      "side": { "r": "the dad who finally reads the contract", "t": "funny" },
+      "anta": { "r": "the host on the other side of the glass", "t": "stylish" }
     }
   ],
   "thriller": [
     {
-      "title": "Blind Spot",
-      "text": "A security-camera analyst realizes the same stranger has stood in the background of every incident for five years.",
-      "tones": [
-        "gritty",
-        "stylish"
-      ],
-      "win": [
-        "awards"
-      ],
-      "lead": {
-        "r": "the camera analyst",
-        "t": "stylish"
-      },
-      "side": {
-        "r": "the detective who doubts her",
-        "t": "gritty"
-      },
-      "anta": {
-        "r": "the stranger in the background",
-        "t": "eerie"
-      }
+      "title": "Glass Jaw",
+      "text": "A boxing commissioner finds out the title fight is fixed by the same people who pay her salary.",
+      "tones": ["gritty", "stylish"],
+      "win": ["awards"],
+      "lead": { "r": "the boxing commissioner", "t": "gritty" },
+      "side": { "r": "the fighter told to go down", "t": "heartfelt" },
+      "anta": { "r": "the promoter in the front row", "t": "stylish" }
     },
     {
-      "title": "Last Ferry",
-      "text": "Passengers on the final night ferry learn that one of them holds a ticket for a crime that hasn't happened yet.",
-      "tones": [
-        "stylish",
-        "eerie"
-      ],
-      "win": [
-        "hallow",
-        "awards"
-      ],
-      "lead": {
-        "r": "the deckhand who spots the ticket",
-        "t": "gritty"
-      },
-      "side": {
-        "r": "the passenger holding it",
-        "t": "eerie"
-      },
-      "anta": {
-        "r": "the detective aboard who wants it unsolved",
-        "t": "stylish"
-      }
+      "title": "Proxy",
+      "text": "A hostage negotiator realizes the voice on the line is reading from her own old training script.",
+      "tones": ["gritty", "eerie"],
+      "win": ["spring", "hallow"],
+      "lead": { "r": "the negotiator", "t": "gritty" },
+      "side": { "r": "her ex-partner on the tactical team", "t": "heartfelt" },
+      "anta": { "r": "the voice on the line", "t": "eerie" }
     },
     {
-      "title": "Deposition",
-      "text": "A junior lawyer gets the case of the decade and finds her own signature on evidence dated before she was hired.",
-      "tones": [
-        "stylish",
-        "gritty"
-      ],
-      "win": [
-        "awards",
-        "holiday"
-      ],
-      "lead": {
-        "r": "the junior lawyer",
-        "t": "stylish"
-      },
-      "side": {
-        "r": "the retired judge who helps her",
-        "t": "heartfelt"
-      },
-      "anta": {
-        "r": "the senior partner running the firm",
-        "t": "gritty"
-      }
+      "title": "Clean Books",
+      "text": "A junior auditor flags one missing euro at a Swiss private bank and sets off a seventy-two-hour chase across the Alps.",
+      "tones": ["stylish", "epic"],
+      "win": ["summer", "awards"],
+      "lead": { "r": "the junior auditor", "t": "stylish" },
+      "side": { "r": "the bank's head of security", "t": "gritty" },
+      "anta": { "r": "the chairman's charming son", "t": "stylish" }
     }
   ],
   "drama": [
     {
-      "title": "Harbor Light",
-      "text": "A fishing family fights to keep their boat, and each other, after the industry collapses around them.",
-      "tones": [
-        "heartfelt",
-        "gritty"
-      ],
-      "win": [
-        "awards"
-      ],
-      "lead": {
-        "r": "the family matriarch",
-        "t": "heartfelt"
-      },
-      "side": {
-        "r": "the son tempted to leave",
-        "t": "gritty"
-      },
-      "anta": {
-        "r": "the cannery owner buying up the harbor",
-        "t": "stylish"
-      }
+      "title": "The Long Shift",
+      "text": "A miner's widow takes his place underground to keep the family house, in a town that thinks she won't last a week.",
+      "tones": ["gritty", "heartfelt"],
+      "win": ["awards"],
+      "lead": { "r": "the widow", "t": "gritty" },
+      "side": { "r": "the foreman who doubts her", "t": "heartfelt" },
+      "anta": { "r": "the company man from the city", "t": "stylish" }
     },
     {
-      "title": "Second Violin",
-      "text": "An aging orchestra's second violinist gets one chance to lead the final concert, and must face the prodigy who is replacing her.",
-      "tones": [
-        "stylish",
-        "heartfelt"
-      ],
-      "win": [
-        "awards",
-        "holiday"
-      ],
-      "lead": {
-        "r": "the second violinist",
-        "t": "heartfelt"
-      },
-      "side": {
-        "r": "the prodigy",
-        "t": "stylish"
-      },
-      "anta": {
-        "r": "the donor threatening to pull the funding",
-        "t": "gritty"
-      }
+      "title": "Last Bow",
+      "text": "A seventy-year-old understudy finally gets the lead on the night the star walks out mid-run.",
+      "tones": ["heartfelt", "stylish"],
+      "win": ["awards", "holiday"],
+      "lead": { "r": "the old understudy", "t": "heartfelt" },
+      "side": { "r": "the stage manager who believes in him", "t": "funny" },
+      "anta": { "r": "the star who wants the part back", "t": "stylish" }
     },
     {
-      "title": "The Ferryman's Letters",
-      "text": "A son returns to his late father's island to deliver the last letters, and learns the secret his father kept.",
-      "tones": [
-        "heartfelt",
-        "epic"
-      ],
-      "win": [
-        "awards",
-        "holiday"
-      ],
-      "lead": {
-        "r": "the grieving son",
-        "t": "heartfelt"
-      },
-      "side": {
-        "r": "the island postmistress",
-        "t": "funny"
-      },
-      "anta": {
-        "r": "the landowner who wants the island's history buried",
-        "t": "gritty"
-      }
+      "title": "Ninety Acres",
+      "text": "Three estranged siblings have one harvest to save their late father's vineyard before the bank auctions it.",
+      "tones": ["heartfelt", "epic"],
+      "win": ["awards"],
+      "lead": { "r": "the eldest, who never left", "t": "gritty" },
+      "side": { "r": "the youngest, back from the city", "t": "heartfelt" },
+      "anta": { "r": "the neighbor bidding on the land", "t": "stylish" }
     }
   ],
   "romance": [
     {
-      "title": "Layover",
-      "text": "Two strangers stuck in a Reykjavik airport for 24 hours keep missing their flights on purpose.",
-      "tones": [
-        "heartfelt",
-        "funny"
-      ],
-      "win": [
-        "val"
-      ],
-      "lead": {
-        "r": "the stranded architect",
-        "t": "heartfelt"
-      },
-      "side": {
-        "r": "the stranger carrying a tuba",
-        "t": "funny"
-      },
-      "anta": {
-        "r": "the ex waiting at the destination",
-        "t": "stylish"
-      }
+      "title": "Lost and Found",
+      "text": "A train announcer and a commuter fall for each other through notes left in the station's lost-and-found box.",
+      "tones": ["heartfelt", "funny"],
+      "win": ["val"],
+      "lead": { "r": "the station announcer", "t": "heartfelt" },
+      "side": { "r": "the commuter leaving the notes", "t": "funny" },
+      "anta": { "r": "the station manager clearing out the box", "t": "stylish" }
     },
     {
-      "title": "Tuesday Night Club",
-      "text": "A widowed baker and her new neighbor start a weekly dinner club that matchmakes everyone except themselves.",
-      "tones": [
-        "heartfelt",
-        "stylish"
-      ],
-      "win": [
-        "val",
-        "spring"
-      ],
-      "lead": {
-        "r": "the widowed baker",
-        "t": "heartfelt"
-      },
-      "side": {
-        "r": "the new neighbor",
-        "t": "funny"
-      },
-      "anta": {
-        "r": "the rival matchmaker",
-        "t": "funny"
-      }
+      "title": "Eleven Summers",
+      "text": "Two people meet at the same lakeside wedding every summer, and every year one of them brings someone else.",
+      "tones": ["heartfelt", "stylish"],
+      "win": ["summer", "val"],
+      "lead": { "r": "the one who always comes alone", "t": "heartfelt" },
+      "side": { "r": "the one who always brings a date", "t": "stylish" },
+      "anta": { "r": "this year's fiancé", "t": "funny" }
     },
     {
-      "title": "Letters to August",
-      "text": "Two pen pals fall for each other across two cities, then discover they work for rival companies.",
-      "tones": [
-        "funny",
-        "stylish"
-      ],
-      "win": [
-        "val",
-        "summer"
-      ],
-      "lead": {
-        "r": "the pen pal in the city",
-        "t": "stylish"
-      },
-      "side": {
-        "r": "the pen pal across the bay",
-        "t": "funny"
-      },
-      "anta": {
-        "r": "the CEO who wants both fired",
-        "t": "gritty"
-      }
+      "title": "Salt and Sugar",
+      "text": "A pastry chef and a fishmonger are forced to share one market stall for a whole season.",
+      "tones": ["funny", "heartfelt"],
+      "win": ["spring", "val"],
+      "lead": { "r": "the pastry chef", "t": "stylish" },
+      "side": { "r": "the fishmonger", "t": "funny" },
+      "anta": { "r": "the landlord doubling the rent", "t": "gritty" }
+    }
+  ],
+  "horrorcomedy": [
+    {
+      "title": "Last Orders",
+      "text": "A failing village pub discovers its new regulars are vampires, and they tip extremely well.",
+      "tones": ["funny", "eerie"],
+      "win": ["hallow"],
+      "lead": { "r": "the landlady keeping the lights on", "t": "funny" },
+      "side": { "r": "the barman who has worked it out", "t": "heartfelt" },
+      "anta": { "r": "the vampire who wants to buy the pub", "t": "stylish" }
+    },
+    {
+      "title": "Nine Tenths",
+      "text": "A divorce lawyer has to split custody of a house between two ghosts who were never married to each other.",
+      "tones": ["funny", "stylish"],
+      "win": ["hallow", "spring"],
+      "lead": { "r": "the divorce lawyer", "t": "stylish" },
+      "side": { "r": "the junior partner who is terrified", "t": "funny" },
+      "anta": { "r": "the jealous ghost in the attic", "t": "eerie" }
+    },
+    {
+      "title": "Scout's Honor",
+      "text": "A troop leader and six useless scouts must survive a camping weekend against a swamp creature only she can see.",
+      "tones": ["funny", "gritty"],
+      "win": ["summer", "hallow"],
+      "lead": { "r": "the troop leader", "t": "gritty" },
+      "side": { "r": "the scout who won't stop vlogging", "t": "funny" },
+      "anta": { "r": "the thing in the swamp", "t": "eerie" }
+    }
+  ],
+  "actioncomedy": [
+    {
+      "title": "Getaway Dad",
+      "text": "After a car-pool mix-up, a minivan dad becomes the getaway driver for a bank crew and turns out to be very good at it.",
+      "tones": ["funny", "stylish"],
+      "win": ["summer"],
+      "lead": { "r": "the minivan dad", "t": "funny" },
+      "side": { "r": "the crew's safecracker", "t": "stylish" },
+      "anta": { "r": "the detective sure he's the mastermind", "t": "gritty" }
+    },
+    {
+      "title": "Double Detail",
+      "text": "Rival bodyguards hired for the same pop star have to stop fighting each other long enough to stop her kidnapping.",
+      "tones": ["funny", "epic"],
+      "win": ["summer", "holiday"],
+      "lead": { "r": "the by-the-book bodyguard", "t": "gritty" },
+      "side": { "r": "the freelancer who breaks every rule", "t": "funny" },
+      "anta": { "r": "the manager staging the kidnapping", "t": "stylish" }
+    },
+    {
+      "title": "Silver Squad",
+      "text": "Four residents of a care home pull off one last heist to win back the pensions their landlord stole.",
+      "tones": ["funny", "heartfelt"],
+      "win": ["holiday", "spring"],
+      "lead": { "r": "the ex-safecracker in slippers", "t": "heartfelt" },
+      "side": { "r": "the night nurse who joins in", "t": "funny" },
+      "anta": { "r": "the care home's owner", "t": "stylish" }
+    }
+  ],
+  "romcom": [
+    {
+      "title": "Fake It Till June",
+      "text": "A wedding photographer and a jilted groom pretend to be a couple through a whole season of other people's weddings.",
+      "tones": ["funny", "heartfelt"],
+      "win": ["val", "summer"],
+      "lead": { "r": "the wedding photographer", "t": "funny" },
+      "side": { "r": "the jilted groom", "t": "heartfelt" },
+      "anta": { "r": "his ex, getting married in June", "t": "stylish" }
+    },
+    {
+      "title": "Dead Air",
+      "text": "Two rival radio hosts fall for each other through their call-in shows without knowing who is on the other end.",
+      "tones": ["funny", "stylish"],
+      "win": ["val"],
+      "lead": { "r": "the late-night advice host", "t": "stylish" },
+      "side": { "r": "the sports host across the hall", "t": "funny" },
+      "anta": { "r": "the station boss merging the shows", "t": "gritty" }
+    },
+    {
+      "title": "Snowed Under",
+      "text": "A burnt-out city planner falls for the stubborn innkeeper fighting her resort plans during one snowed-in Christmas week.",
+      "tones": ["heartfelt", "funny"],
+      "win": ["holiday"],
+      "lead": { "r": "the city planner", "t": "stylish" },
+      "side": { "r": "the stubborn innkeeper", "t": "heartfelt" },
+      "anta": { "r": "the developer funding the resort", "t": "stylish" }
+    }
+  ],
+  "scifithriller": [
+    {
+      "title": "Rerun",
+      "text": "Every Tuesday resets for a stock-exchange analyst, and someone else is getting rich off the loop.",
+      "tones": ["stylish", "gritty"],
+      "win": ["spring", "awards"],
+      "lead": { "r": "the analyst stuck in the loop", "t": "stylish" },
+      "side": { "r": "the security guard who remembers", "t": "funny" },
+      "anta": { "r": "the trader who built the loop", "t": "stylish" }
+    },
+    {
+      "title": "Signal Loss",
+      "text": "A drone pilot finds footage of herself flying a mission she has no memory of.",
+      "tones": ["gritty", "eerie"],
+      "win": ["summer", "hallow"],
+      "lead": { "r": "the drone pilot", "t": "gritty" },
+      "side": { "r": "the technician who pulls the logs", "t": "heartfelt" },
+      "anta": { "r": "the colonel who signs the orders", "t": "stylish" }
+    },
+    {
+      "title": "Blank Face",
+      "text": "When every camera in the city starts editing out one man, a detective has to catch someone who officially doesn't exist.",
+      "tones": ["stylish", "eerie"],
+      "win": ["awards"],
+      "lead": { "r": "the detective", "t": "gritty" },
+      "side": { "r": "the hacker who can see the edits", "t": "funny" },
+      "anta": { "r": "the man no camera can see", "t": "eerie" }
+    }
+  ],
+  "scifihorror": [
+    {
+      "title": "Deep Core",
+      "text": "A drilling crew two miles under the Antarctic ice pulls up something that is still warm.",
+      "tones": ["eerie", "gritty"],
+      "win": ["hallow", "summer"],
+      "lead": { "r": "the drill chief", "t": "gritty" },
+      "side": { "r": "the station medic", "t": "heartfelt" },
+      "anta": { "r": "what came up the shaft", "t": "eerie" }
+    },
+    {
+      "title": "Holding Pattern",
+      "text": "A space-tourism cruise is quarantined in orbit when one of the passengers starts to change.",
+      "tones": ["eerie", "stylish"],
+      "win": ["hallow"],
+      "lead": { "r": "the cruise director", "t": "stylish" },
+      "side": { "r": "the passenger's teenage son", "t": "heartfelt" },
+      "anta": { "r": "the passenger who is changing", "t": "eerie" }
+    },
+    {
+      "title": "The Seventh Probe",
+      "text": "A deep-space probe comes home forty years late, carrying a recording of mission control saying goodbye.",
+      "tones": ["eerie", "epic"],
+      "win": ["summer", "awards"],
+      "lead": { "r": "the retired flight director", "t": "heartfelt" },
+      "side": { "r": "the young engineer decoding it", "t": "gritty" },
+      "anta": { "r": "the voice on the recording", "t": "eerie" }
     }
   ]
 }

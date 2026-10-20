@@ -54,5 +54,60 @@
     "base": 105,
     "cost": 16,
     "blurb": "The date-night crowd"
+  },
+  {
+    "id": "horrorcomedy",
+    "name": "Horror-Comedy",
+    "base": 140,
+    "cost": 18,
+    "blurb": "Screams and laughs, cheap to shoot",
+    "mix": [
+      "horror",
+      "comedy"
+    ]
+  },
+  {
+    "id": "actioncomedy",
+    "name": "Action-Comedy",
+    "base": 180,
+    "cost": 34,
+    "blurb": "Buddy chaos with big set pieces",
+    "mix": [
+      "action",
+      "comedy"
+    ]
+  },
+  {
+    "id": "romcom",
+    "name": "Rom-Com",
+    "base": 118,
+    "cost": 19,
+    "blurb": "Meet-cutes and misunderstandings",
+    "mix": [
+      "romance",
+      "comedy"
+    ]
+  },
+  {
+    "id": "scifithriller",
+    "name": "Sci-Fi Thriller",
+    "base": 172,
+    "cost": 37,
+    "blurb": "Paranoia with a premise",
+    "mix": [
+      "scifi",
+      "thriller"
+    ]
+  },
+  {
+    "id": "scifihorror",
+    "name": "Sci-Fi Horror",
+    "base": 185,
+    "cost": 32,
+    "blurb": "Something is on board",
+    "mix": [
+      "scifi",
+      "horror"
+    ]
   }
 ]
