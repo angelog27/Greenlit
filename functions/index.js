@@ -72,3 +72,4 @@ exports.campaignProject = campaignCall(store.project);
 exports.campaignRelease = campaignCall(store.release);
 exports.campaignPass = campaignCall(store.pass);
 exports.campaignRename = campaignCall(store.rename);
+exports.campaignUpgrade = campaignCall(store.upgrade);

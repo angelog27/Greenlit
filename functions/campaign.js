@@ -141,7 +141,7 @@ function makeProject(C, st, uid, date, hard, proofs) {
   for (let salt = 0; salt <= f.maxResalts; salt++) {
     const key = projectKey(uid, st.campaignId, st.projectIndex, salt);
     const e = m.makeEnv(date, key);
-    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: Object.assign({}, st.perks) };
+    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: Object.assign({}, st.perks), disc: discounts(C, st) };
     const genres = {}, loans = new Set();
     m.GENRES.forEach((g) => {
       if (!u.genres.includes(g.id)) { genres[g.id] = { state: "locked", at: genreUnlockAt(C, g.id) }; return; }
@@ -168,6 +168,7 @@ function newCampaign(C, uid, cid, name, date, now) {
     unlocked: { actorTier: u.actorTier, directorTier: u.directorTier, genres: u.genres, hard: u.hard },
     gates: Object.fromEntries(u.gates.map((g) => [g, now])), badges: {}, perks: {}, genreHits: {},
     passesAvailable: C.cfg.pass.start, aTierFilms: null, projectIndex: 0, roster: C.game.version, recent: [],
+    lifetimeGross: 0, upgrades: {},
   };
   st.currentProject = makeProject(C, st, uid, date, false);
   return st;
@@ -181,7 +182,46 @@ function checkIndex(st, index) {
 }
 
 // Validate and score a film for the current project; returns the next state, the film record and events.
+// ---- levels and upgrades. Experience is lifetime box office (every film counts, flops too); each level
+// after the first gives one upgrade point. Upgrades reveal information (the page reads st.upgrades) or
+// discount fees and marketing (env.disc, applied by the model's costOf).
+function levelFor(C, gross) { return C.cfg.levels.filter((x) => gross >= x).length; }
+function upgradeDef(C, id) { return C.cfg.upgrades.find((u) => u.id === id) || null; }
+function pointsLeft(C, st) {
+  const spent = C.cfg.upgrades.reduce((s, u) => s + (st.upgrades[u.id] || 0) * u.cost, 0);
+  return levelFor(C, st.lifetimeGross) - 1 - spent;
+}
+function discounts(C, st) {
+  const out = {};
+  C.cfg.upgrades.forEach((u) => {
+    const r = (st.upgrades || {})[u.id] || 0;
+    if (r && u.talent) out.talent = u.talent[r - 1];
+    if (r && u.windows) out.windows = u.windows[r - 1];
+  });
+  return out;
+}
+// Studios founded before levels existed get the new fields.
+function normalize(st) {
+  return Object.assign({ lifetimeGross: 0, upgrades: {} }, st);
+}
+
+// Buy the next rank of an upgrade with points. A discount takes effect on the current project at once
+// (same seed, same pitches and shortlists; only the fees change).
+function upgrade(C, st, uid, input) {
+  st = normalize(st);
+  const u = upgradeDef(C, input && input.id);
+  if (!u) throw new Reject("Unknown upgrade.");
+  const have = st.upgrades[u.id] || 0, level = levelFor(C, st.lifetimeGross);
+  if (have >= u.ranks.length) throw new Reject("That upgrade is already maxed out.");
+  if (u.minLevel && level < u.minLevel) throw new Reject(`${u.name} needs studio level ${u.minLevel}.`);
+  if (pointsLeft(C, st) < u.cost) throw new Reject("Not enough upgrade points. You earn one per studio level.");
+  const next = Object.assign({}, st, { upgrades: Object.assign({}, st.upgrades, { [u.id]: have + 1 }) });
+  if (u.talent || u.windows) next.currentProject = makeProject(C, next, uid, st.currentProject.date, st.currentProject.diff === "hard");
+  return next;
+}
+
 function release(C, st, uid, input, date, now) {
+  st = normalize(st);
   const m = C.m, pj = st.currentProject, { pick } = input || {};
   checkIndex(st, input && input.index);
   if (!pick || typeof pick !== "object") throw new Reject("No film in the request.");
@@ -194,7 +234,7 @@ function release(C, st, uid, input, date, now) {
   const cfg = m.DIFFS[pj.diff];
   if (cfg.real ? !pj.env.dates.includes(w) : !(own(m.W, w) && !m.W[w].hardOnly)) throw new Reject("That release slot isn't available.");
   const p = { g, d, a1, a2, a3, w }, env = projectEnv(pj);
-  if (m.costOf(p, cfg) > pj.budget) throw new Reject("That film is over this project's budget.");
+  if (m.costOf(p, cfg, env) > pj.budget) throw new Reject("That film is over this project's budget.");
   const r = m.evalFilm(env, p, cfg), profit = round1(r.profit);
 
   const before = st, lifetime = round1(st.lifetimeProfit + Math.max(0, profit));
@@ -207,7 +247,9 @@ function release(C, st, uid, input, date, now) {
     unlocked: { actorTier: u.actorTier, directorTier: u.directorTier, genres: u.genres, hard: u.hard },
     gates: Object.assign({}, st.gates), badges: Object.assign({}, st.badges), perks: Object.assign({}, st.perks),
     genreHits: Object.assign({}, st.genreHits), projectIndex: st.projectIndex + 1,
+    lifetimeGross: Math.round(st.lifetimeGross + r.gross),
   });
+  const lv0 = levelFor(C, st.lifetimeGross), lv1 = levelFor(C, next.lifetimeGross);
   newGates.forEach((x) => { next.gates[x] = now; });
   if (filmsMade % C.cfg.pass.every === 0) next.passesAvailable = Math.min(C.cfg.pass.cap, st.passesAvailable + 1);
   if (profit > 0) next.genreHits[g] = (st.genreHits[g] || 0) + 1;
@@ -227,7 +269,8 @@ function release(C, st, uid, input, date, now) {
   };
   // The last few films ride along in the studio doc so the HQ needs no extra reads.
   next.recent = [{ no: filmsMade, title: film.title, genre: g, profit, gross: film.gross, at: now }].concat(st.recent || []).slice(0, C.cfg.recentFilms || 5);
-  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges: ev.badges, perks: ev.perks, bailout: money.bailout };
+  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges: ev.badges, perks: ev.perks, bailout: money.bailout,
+    level: lv1 > lv0 ? { from: lv0, to: lv1, points: pointsLeft(C, next) } : null };
   return { state: next, film, events, board };
 }
 
@@ -253,6 +296,7 @@ function badgeEvents(C, before, next, f) {
 
 // Skip the current pitches: costs the development fee, uses a pass, moves to the next project index.
 function pass(C, st, uid, input, date) {
+  st = normalize(st);
   checkIndex(st, input && input.index);
   if (st.passesAvailable < 1) throw new Reject("No passes left. You earn one every " + C.cfg.pass.every + " films.");
   const money = settle(C, st.bank - C.cfg.pass.fee);
@@ -266,12 +310,13 @@ function pass(C, st, uid, input, date) {
 
 // Switch the current project to real release dates (once the hard gate is open) or back. Same seed, so the
 // market and pitches stay; only the release step changes.
-function setHard(C, st, uid, input, date) {
+function setHard(C, st, uid, input) {
+  st = normalize(st);
   checkIndex(st, input && input.index);
   const hard = !!input.hard;
   if (hard && !st.unlocked.hard) throw new Reject("Real release dates unlock with the A-list.");
   if ((st.currentProject.diff === "hard") === hard) return st;
-  return Object.assign({}, st, { currentProject: makeProject(C, st, uid, date, hard) });
+  return Object.assign({}, st, { currentProject: makeProject(C, st, uid, st.currentProject.date, hard) });
 }
 
 function rename(st, name) {
@@ -284,4 +329,5 @@ function rename(st, name) {
 module.exports = {
   loadCampaign, makeCampaign, unlocksFor, nextGate, budgetFor, settle, castPools, crewList, projectEnv,
   makeProject, feasible, badgeEvents, newCampaign, release, pass, setHard, rename, defaultName, cleanName, projectKey,
+  levelFor, pointsLeft, discounts, upgrade, normalize,
 };

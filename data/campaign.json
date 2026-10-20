@@ -18,5 +18,15 @@
   "recentFilms": 5,
   "shortlist": { "perGender": 3, "freshPerRole": 2, "directors": 8, "freshDirectors": 2 },
   "feasibility": { "margin": 5, "maxResalts": 12 },
-  "pass": { "fee": 5, "every": 3, "start": 1, "cap": 2 }
+  "pass": { "fee": 5, "every": 3, "start": 1, "cap": 2 },
+  "levels": [0, 400, 1000, 1800, 2800, 4000, 5500, 7500, 10000, 13000, 17000, 22000, 28000, 35000],
+  "upgrades": [
+    { "id": "scout",      "name": "Talent Scout",     "cost": 1, "ranks": ["See which actors and directors fit the genre.", "See who suits each part's tone, and which directors get the story's tone.", "See star ratings and director skill."] },
+    { "id": "casting",    "name": "Casting Director", "cost": 1, "ranks": ["See reunions and cast chemistry before you hire."] },
+    { "id": "story",      "name": "Story Analyst",    "cost": 1, "ranks": ["See the tones and seasons each pitch wants, and the presence each part needs."] },
+    { "id": "market",     "name": "Market Research",  "cost": 1, "ranks": ["See which genres audiences want, how each window suits your genre, and where the rival opens."] },
+    { "id": "screenings", "name": "Test Screenings",  "cost": 2, "minLevel": 6, "ranks": ["See a projected profit range before you greenlight."] },
+    { "id": "reputation", "name": "Reputation",       "cost": 1, "talent": [0.05, 0.1, 0.15], "ranks": ["Talent wants to work with you: actor and director fees 5% lower.", "Fees 10% lower.", "Fees 15% lower."] },
+    { "id": "marketing",  "name": "Marketing Deals",  "cost": 1, "windows": [0.15, 0.3], "ranks": ["Release-window marketing costs 15% less.", "Marketing costs 30% less."] }
+  ]
 }

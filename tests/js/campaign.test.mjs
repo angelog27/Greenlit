@@ -354,3 +354,84 @@ test("rename: once, cleaned, 2 to 30 characters", async () => {
   assert.equal((await store.rename("r1", { name: "Paper Moon Pictures" })).state.studioName, "Paper Moon Pictures");
   await assert.rejects(store.rename("r1", { name: "Again" }), /already been renamed/);
 });
+
+// ---- levels and upgrades
+test("levels come from lifetime box office; each level after the first is one upgrade point", () => {
+  const L = cfg.levels;
+  assert.equal(camp.levelFor(C, 0), 1);
+  assert.equal(camp.levelFor(C, L[1] - 1), 1);
+  assert.equal(camp.levelFor(C, L[1]), 2);
+  assert.equal(camp.levelFor(C, L[L.length - 1] * 10), L.length);
+  const st = { lifetimeGross: L[3], upgrades: {} };
+  assert.equal(camp.pointsLeft(C, st), 3);
+  assert.equal(camp.pointsLeft(C, { ...st, upgrades: { scout: 2 } }), 1);
+  const total = cfg.upgrades.reduce((s, u) => s + u.cost * u.ranks.length, 0);
+  assert.ok(L.length - 1 >= total, `the last level pays for every upgrade (${L.length - 1} points, ${total} needed)`);
+});
+
+test("upgrades: bought with points, rank by rank, with level gates and caps", () => {
+  const base = studio(0);
+  rejects(() => camp.upgrade(C, base, "u1", { id: "scout" }), /Not enough upgrade points/);
+  rejects(() => camp.upgrade(C, base, "u1", { id: "teleport" }), /Unknown upgrade/);
+  rejects(() => camp.upgrade(C, base, "u1", { id: "__proto__" }), /Unknown upgrade/);
+  let st = { ...base, lifetimeGross: cfg.levels[cfg.levels.length - 1] };
+  const ranks = cfg.upgrades.find((u) => u.id === "scout").ranks.length;
+  for (let i = 1; i <= ranks; i++) { st = camp.upgrade(C, st, "u1", { id: "scout" }); assert.equal(st.upgrades.scout, i); }
+  rejects(() => camp.upgrade(C, st, "u1", { id: "scout" }), /maxed out/);
+  const sc = cfg.upgrades.find((u) => u.id === "screenings");
+  const low = { ...base, lifetimeGross: cfg.levels[sc.minLevel - 2] + 1 };
+  if (camp.pointsLeft(C, low) >= sc.cost) rejects(() => camp.upgrade(C, low, "u1", { id: "screenings" }), /needs studio level/);
+  assert.equal(camp.upgrade(C, { ...base, lifetimeGross: cfg.levels[sc.minLevel - 1] }, "u1", { id: "screenings" }).upgrades.screenings, 1);
+});
+
+test("Reputation and Marketing Deals discount the current project's costs through the model", () => {
+  let st = { ...studio(0, { index: 3 }), lifetimeGross: cfg.levels[6] };
+  const pj0 = st.currentProject;
+  st = plain(camp.upgrade(C, st, "u1", { id: "reputation" }));
+  st = plain(camp.upgrade(C, st, "u1", { id: "marketing" }));
+  const pj = st.currentProject, rep = cfg.upgrades.find((u) => u.id === "reputation"), mk = cfg.upgrades.find((u) => u.id === "marketing");
+  assert.equal(pj.key, pj0.key, "same project, same seed");
+  assert.deepEqual(pj.env.plots, pj0.env.plots, "same pitches");
+  assert.deepEqual(pj.env.disc, { talent: rep.talent[0], windows: mk.windows[0] });
+  const g = playable(st)[0], p = cheapest(st, g), dcfg = m.DIFFS[pj.diff], env = camp.projectEnv(pj);
+  const full = m.costOf(p, dcfg), cut = m.costOf(p, dcfg, env);
+  const want = m.G[g].cost + [p.d].map((id) => Math.round(m.D[id].fee * (1 - rep.talent[0])))[0] +
+    [p.a1, p.a2, p.a3].reduce((s, id) => s + Math.round(m.A[id].fee * (1 - rep.talent[0])), 0) + Math.round(m.W[p.w].cost * (1 - mk.windows[0]));
+  assert.equal(cut, want);
+  assert.ok(cut < full, `discounted ${cut} < listed ${full}`);
+  const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+  assert.equal(out.film.cost, cut, "the server charges the discounted cost");
+  assert.deepEqual(out.state.currentProject.env.disc, pj.env.disc, "discounts carry to the next project");
+  // Daily envs never get a discount.
+  assert.equal(m.costOf(p, dcfg, m.makeEnv(DATE)), full);
+});
+
+test("release adds the gross to experience and reports level-ups; old studios get the new fields", () => {
+  const st = { ...studio(0, { films: 0 }), lifetimeGross: cfg.levels[1] - 1 };
+  const g = playable(st)[0], out = camp.release(C, st, "u1", { index: st.currentProject.index, pick: bestFilm(st, g) }, DATE, NOW);
+  assert.ok(Math.abs(out.state.lifetimeGross - (st.lifetimeGross + out.film.gross)) <= 1, "gross added (rounding aside)");
+  assert.ok(out.events.level && out.events.level.from === 1 && out.events.level.to >= 2);
+  assert.equal(out.events.level.points, camp.pointsLeft(C, out.state));
+  const old = studio(0);
+  delete old.lifetimeGross; delete old.upgrades;
+  const n = camp.normalize(old);
+  assert.equal(n.lifetimeGross, 0);
+  assert.deepEqual(n.upgrades, {});
+  assert.ok(camp.release(C, old, "u1", { index: old.currentProject.index, pick: cheapest(old, playable(old)[0]) }, DATE, NOW).state.lifetimeGross > 0);
+});
+
+test("discounted campaign films score exactly like the page's model", () => {
+  const page = loadModel(new URL("Frontend/greenlight.html", root));
+  page.initModel(plain({ genres: m.GENRES, directors: m.DIRS, actors: m.ACTORS, plots: m.PLOTS, windows: m.WINDOWS,
+    loyal: m.LOYAL.map(([director, actor, bonus, films]) => ({ director, actor, bonus, films })), chem: m.CHEM.map(([a, b, bonus, films]) => ({ a, b, bonus, films })),
+    slate: m.SLATE_RAW.map(([date, title, genre, strength]) => ({ date, title, genre, strength })) }));
+  let st = { ...studio(cfg.ladder[2].at, { index: 9 }), lifetimeGross: cfg.levels[8] };
+  for (const id of ["reputation", "reputation", "marketing"]) st = plain(camp.upgrade(C, st, "u1", { id }));
+  for (const g of playable(st)) {
+    const p = bestFilm(st, g), pj = st.currentProject;
+    const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+    const want = page.evalFilm(plain(camp.projectEnv(pj)), p, page.DIFFS[pj.diff]);
+    assert.equal(out.film.profit, Math.round(want.profit * 10) / 10);
+    assert.equal(out.film.cost, want.cost);
+  }
+});

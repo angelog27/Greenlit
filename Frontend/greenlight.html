@@ -580,7 +580,11 @@ function winId(p,cfg){return cfg.real?(p.w?seasonOf(p.w):null):p.w}
 function luckOf(env,p,cfg){var ids=cfg.roles?p.a1+"|"+p.a2+"|"+p.a3:[p.a1,p.a2].sort().join("|")+"|"+p.a3;return 0.92+0.16*rng(hash(env.day+"|"+p.g+"|"+p.d+"|"+ids+"|"+p.w))()}
 function genreBonus(env,gid){return env.bonus&&env.bonus[gid]?Math.round((1+env.bonus[gid])*100)/100:1}
 function pairKey(a,b){return a<b?a+"|"+b:b+"|"+a}
-function costOf(p,cfg){var c=0,wid=winId(p,cfg);if(G[p.g])c+=G[p.g].cost;if(D[p.d])c+=D[p.d].fee;if(W[wid])c+=W[wid].cost;if(A[p.a1])c+=A[p.a1].fee;if(A[p.a2])c+=A[p.a2].fee;if(A[p.a3])c+=A[p.a3].fee;return c}
+// Campaign upgrades can discount fees (env.disc.talent) and marketing (env.disc.windows), rounded to whole $M.
+// Daily envs have no env.disc, so every cost there is the plain listed fee.
+function talentFee(env,x){var d=env&&env.disc&&env.disc.talent;return d?Math.round(x.fee*(1-d)):x.fee}
+function windowCost(env,w){var d=env&&env.disc&&env.disc.windows;return d?Math.round(w.cost*(1-d)):w.cost}
+function costOf(p,cfg,env){var c=0,wid=winId(p,cfg);if(G[p.g])c+=G[p.g].cost;if(D[p.d])c+=talentFee(env,D[p.d]);if(W[wid])c+=windowCost(env,W[wid]);if(A[p.a1])c+=talentFee(env,A[p.a1]);if(A[p.a2])c+=talentFee(env,A[p.a2]);if(A[p.a3])c+=talentFee(env,A[p.a3]);return c}
 // Competing real releases near a date: weight 1 same weekend, .4 a week away, .15 two weeks away.
 function rivalsFor(date,gid){
   var out=[],pen=0;
@@ -608,7 +612,7 @@ function synergies(env,p,cfg){
 }
 function evalFilm(env,p,cfg,luck){
   var g=G[p.g],d=D[p.d],cast=[A[p.a1],A[p.a2],A[p.a3]],wid=winId(p,cfg),w=W[wid],steps=[],m;
-  var out={steps:steps,cost:costOf(p,cfg),syn:[],rivals:[]};
+  var out={steps:steps,cost:costOf(p,cfg,env),syn:[],rivals:[]};
   function push(k,x,note){steps.push({k:k,x:x,note:note||"",run:null})}
   m=g.base;steps.push({k:"Genre potential",abs:g.base,note:g.name+" at full strength",run:m});
   m*=env.heat[g.id];push("Today's heat",env.heat[g.id],"Audience mood for "+g.name);steps[steps.length-1].run=m;
@@ -665,7 +669,7 @@ function evalFast(env,p,cfg,pre){
   m*=Math.round((1+sum)*100)/100;
   m*=genreBonus(env,g.id);
   m*=luckOf(env,p,cfg);
-  var cost=costOf(p,cfg);
+  var cost=costOf(p,cfg,env);
   return {gross:m,cost:cost,profit:m*SHARE-cost};
 }
 // Best possible film for one genre. Pass a subset of directors and the running best to work in chunks.
@@ -674,10 +678,10 @@ function bestPossible(env,gid,cfg,dirs,best){
   var pl=poolsFor(env,gid).map(function(ids){return ids.map(function(id){return A[id]})});
   best=best||null;var pre={};
   (dirs||dirsFor(env,gid).map(function(id){return D[id]})).forEach(function(d){wins.forEach(function(w){
-    var wid=cfg.real?seasonOf(w):w,base=g.cost+d.fee+W[wid].cost;if(base>env.budget)return;
-    pl[0].forEach(function(x){var b1=base+x.fee;if(b1>env.budget)return;
-      pl[1].forEach(function(y){var b2=b1+y.fee;if(b2>env.budget)return;
-        pl[2].forEach(function(z){if(b2+z.fee>env.budget)return;
+    var wid=cfg.real?seasonOf(w):w,base=g.cost+talentFee(env,d)+windowCost(env,W[wid]);if(base>env.budget)return;
+    pl[0].forEach(function(x){var b1=base+talentFee(env,x);if(b1>env.budget)return;
+      pl[1].forEach(function(y){var b2=b1+talentFee(env,y);if(b2>env.budget)return;
+        pl[2].forEach(function(z){if(b2+talentFee(env,z)>env.budget)return;
           var p={g:gid,d:d.id,a1:x.id,a2:y.id,a3:z.id,w:w},r=evalFast(env,p,cfg,pre);
           if(!best||r.profit>best.profit)best={p:p,profit:r.profit,gross:r.gross,cost:r.cost};
         })})})})});

@@ -2,6 +2,7 @@
 //   campaigns/{uid}               the player's studio (bank, unlocks, badges, current project); owner reads only
 //   campaigns/{uid}/films/{index} one released film, keyed by project index (also the idempotency record)
 //   campaignBoard/{uid}           public row once the studio reaches the board goal (A-tier)
+// Callables: start, project, release, pass, upgrade, rename.
 // Takes `db` (the Admin Firestore, or a stand-in with doc() and runTransaction() in tests).
 const crypto = require("crypto");
 const camp = require("./campaign");
@@ -17,13 +18,13 @@ function makeStore(db, C) {
   const load = async (tx, uid) => {
     const s = await tx.get(ref(uid));
     if (!s.exists) throw new Reject("Start your studio first.");
-    return s.data();
+    return camp.normalize(s.data());
   };
   return {
     // Creates the studio, or returns the existing one unchanged.
     start: (uid, data, now) => db.runTransaction(async (tx) => {
       const s = await tx.get(ref(uid));
-      if (s.exists) return { state: s.data(), created: false };
+      if (s.exists) return { state: camp.normalize(s.data()), created: false };
       const cid = crypto.randomBytes(6).toString("hex");
       const st = plain(camp.newCampaign(C, uid, cid, data && data.studioName, utcDay(now), now));
       tx.set(ref(uid), st);
@@ -33,7 +34,7 @@ function makeStore(db, C) {
     project: (uid, data, now) => db.runTransaction(async (tx) => {
       const st = await load(tx, uid);
       if (!data || data.hard === undefined) return { state: st };
-      const next = plain(camp.setHard(C, st, uid, data, utcDay(now)));
+      const next = plain(camp.setHard(C, st, uid, data));
       if (next.currentProject.diff !== st.currentProject.diff) tx.set(ref(uid), next);
       return { state: next };
     }),
@@ -56,6 +57,13 @@ function makeStore(db, C) {
       const out = plain(camp.pass(C, st, uid, data, utcDay(now)));
       tx.set(ref(uid), out.state);
       return out;
+    }),
+    // Spend upgrade points (one per studio level).
+    upgrade: (uid, data) => db.runTransaction(async (tx) => {
+      const st = await load(tx, uid);
+      const next = plain(camp.upgrade(C, st, uid, data));
+      tx.set(ref(uid), next);
+      return { state: next };
     }),
     // Once only. Also renames the board row if the studio is already on it.
     rename: (uid, data) => db.runTransaction(async (tx) => {
