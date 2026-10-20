@@ -1078,16 +1078,37 @@ function lbModeKey(){return "r3-"+state.lb.type+"-"+state.lb.diff}
 function watchBoard(){
   var lb=state.lb;if(lb.unsub){lb.unsub();lb.unsub=null}
   lb.rows=null;lb.err=null;
-  if(NET)lb.unsub=NET.watchBoard(boardId(lb.type,lb.diff,TODAY),function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e);drawBoard()});
+  if(NET&&lb.type==="campaign")lb.unsub=NET.watchCampaignBoard(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e);drawBoard()});
+  else if(NET)lb.unsub=NET.watchBoard(boardId(lb.type,lb.diff,TODAY),function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e);drawBoard()});
   drawBoard();
+}
+// Campaign board: the race to the A-list. Fewest films wins; ties go to fewer bailouts, then more lifetime profit.
+function campBoardHtml(ctl){
+  var lb=state.lb,me=state.me,st=CAMP.st,body;
+  function row(e,rank,isMe){
+    return '<tr class="'+(isMe?"me":"")+'"><td class="r">'+rank+'</td><td>'+esc(e.displayName)+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+(e.bailouts?e.bailouts+" bailout"+(e.bailouts>1?"s":""):"No bailouts")+' · '+money(e.lifetimeProfit)+' lifetime</div></td><td class="n">'+e.filmsToATier+'</td></tr>';
+  }
+  var head='<thead><tr><th>#</th><th>Studio</th><th class="n">Films</th></tr></thead>';
+  if(!NET)body='<p class="note">The online board isn\'t set up in this build.</p>';
+  else if(lb.err)body='<p class="note neg">'+esc(lb.err)+'</p>';
+  else if(!lb.rows)body='<p class="note">Connecting to the campaign board…</p>';
+  else if(!lb.rows.length)body='<p class="note">No studio has reached the A-list yet. Be the first.</p>';
+  else body='<div class="scroll"><table class="lb">'+head+'<tbody>'+lb.rows.map(function(e,i){return row(e,i+1,me&&e.uid===me.uid)}).join("")+'</tbody></table></div>';
+  if(NET&&!me)body+='<p class="note" style="margin-top:10px"><button class="link" data-act="signin">Sign in</button> to run a studio.</p>';
+  var mine="";
+  if(st&&CAMPCFG){var l=ladderAt(st.lifetimeProfit);
+    mine='<section><h3 class="mh" style="margin-top:0">Your studio · '+esc(st.studioName)+'</h3><div class="stats"><div><span class="lbl">Films</span><b class="mono">'+st.filmsMade+'</b></div><div><span class="lbl">Lifetime</span><b class="mono">'+money(st.lifetimeProfit)+'</b></div><div><span class="lbl">Bailouts</span><b class="mono">'+st.bailouts+'</b></div></div>'+
+      '<p class="note">'+(st.aTierFilms?"You reached the A-list in "+st.aTierFilms+" films.":l.next?money(l.next.at-st.lifetimeProfit)+" more lifetime profit to "+esc(gateInfo(l.next.id).name)+".":"")+'</p></section>'}
+  return '<section style="display:grid;gap:14px">'+ctl+'<p class="note">The race to the A-list: fewest films to get there wins. Ties go to fewer bailouts, then more lifetime profit. Studios are listed by their studio name.</p>'+body+'</section>'+mine;
 }
 function drawBoard(){
   var lb=state.lb,mk=lbModeKey(),me=state.me,mine=state.days[mk+"|"+TODAY];
-  var ctl='<div class="lbctl"><div class="seg" role="group" aria-label="Board"><button data-act="lbtype" data-m="daily" aria-pressed="'+(lb.type==="daily")+'">Daily Challenge</button><button data-act="lbtype" data-m="basic" aria-pressed="'+(lb.type==="basic")+'">Basic</button></div>'+
+  var ctl='<div class="lbctl"><div class="seg" role="group" aria-label="Board"><button data-act="lbtype" data-m="daily" aria-pressed="'+(lb.type==="daily")+'">Daily Challenge</button><button data-act="lbtype" data-m="basic" aria-pressed="'+(lb.type==="basic")+'">Basic</button><button data-act="lbtype" data-m="campaign" aria-pressed="'+(lb.type==="campaign")+'">Campaign</button></div>'+
     (lb.type==="basic"?'<div class="seg" role="group" aria-label="Difficulty">'+["easy","medium","hard"].map(function(k){return '<button data-act="lbdiff" data-m="'+k+'" aria-pressed="'+(lb.diff===k)+'">'+DIFFS[k].name+'</button>'}).join("")+'</div>':'')+'</div>';
   function row(e,rank,isMe){
     return '<tr class="'+(isMe?"me":"")+'"><td class="r">'+rank+'</td><td>'+esc(e.name||"You")+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+esc(e.title||"")+(e.genre&&G[e.genre]?" · "+G[e.genre].name:"")+'</div></td><td class="n gr">'+money(e.gross||0)+'</td><td class="n '+(e.profit>=0?"pos":"neg")+'">'+money(e.profit)+'</td></tr>';
   }
+  if(lb.type==="campaign"){$("#lb-mode").textContent="Campaign · all time";$("#boards").innerHTML=campBoardHtml(ctl);return}
   var head='<thead><tr><th>#</th><th>Studio</th><th class="n">Box office</th><th class="n">Profit</th></tr></thead>',body;
   if(!NET)body='<p class="note">The online leaderboard isn\'t set up in this build, so results stay on this device.</p>'+(mine?'<div class="scroll"><table class="lb">'+head+'<tbody>'+row(mine,"—",true)+'</tbody></table></div>':'');
   else if(lb.err)body='<p class="note neg">'+esc(lb.err)+'</p>';
@@ -1111,7 +1132,7 @@ function drawBoard(){
 }
 var lbReturn=null;
 function openBoard(){
-  lbReturn=document.activeElement;state.lb.type=state.type;state.lb.diff=state.type==="daily"?"hard":state.diff;
+  lbReturn=document.activeElement;state.lb.type=state.type;state.lb.diff=state.type==="basic"?state.diff:state.type==="daily"?"hard":state.lb.diff;
   document.body.classList.add("lb-open");$("#drawer").inert=false;watchBoard();setTimeout(function(){$("#lbx").focus()},60);
 }
 function closeBoard(){
@@ -1243,7 +1264,7 @@ function campLoad(){
   if(!NET||!state.me){CAMP.st=null;CAMP.loaded=false;drawCamp();return}
   CAMP.loading=true;CAMP.err="";drawCamp();
   var who=state.me.uid;
-  NET.campaignLoad().then(function(st){if(!state.me||state.me.uid!==who)return;CAMP.st=st;CAMP.loaded=true;CAMP.loading=false;drawCamp()},
+  NET.campaignLoad().then(function(st){if(!state.me||state.me.uid!==who)return;CAMP.st=st;CAMP.loaded=true;CAMP.loading=false;drawCamp();if(document.body.classList.contains("lb-open"))drawBoard()},
     function(e){CAMP.loading=false;CAMP.err=NET.errorText(e);drawCamp()});
 }
 function campCall(name,payload,busy,then){
@@ -1428,7 +1449,8 @@ document.addEventListener("click",function(e){
   else if(a==="reel"){var tr=t.closest(".reel").querySelector(".track");tr.scrollBy({left:(+t.dataset.dir)*tr.clientWidth*0.8,behavior:REDUCED?"auto":"smooth"})}
   else if(a==="lb")openBoard();
   else if(a==="lbclose")closeBoard();
-  else if(a==="lbtype"){state.lb.type=t.dataset.m;state.lb.diff=t.dataset.m==="daily"?"hard":(state.type==="basic"?state.diff:"medium");watchBoard()}
+  else if(a==="lbtype"){state.lb.type=t.dataset.m;state.lb.diff=t.dataset.m==="daily"?"hard":(state.type==="basic"?state.diff:"medium");
+    if(t.dataset.m==="campaign"&&state.me&&!CAMP.loaded&&!CAMP.loading)campLoad();watchBoard()}
   else if(a==="lbdiff"){state.lb.diff=t.dataset.m;watchBoard()}
   else if(a==="intro")openIntro();
   else if(a==="introclose")closeIntro();
