@@ -460,8 +460,10 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 .imgf .pv img{width:100%;height:100%;object-fit:cover}
 .imgf input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
 .imgf .row{align-items:center}
+.shuf{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:-8px 0 20px}
+.shuf .note svg{vertical-align:-5px;margin-right:6px}
 .mform .imgf .btn{width:auto}
-.studio .side .lbl{display:block;margin-bottom:6px}
+.studio .side .lbl{display:block;margin-bottom:12px}
 .ugrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin-top:12px}
 .upg{display:grid;gap:6px;align-content:start;padding:12px 14px;border:1px solid var(--line);background:var(--panel2)}
 .upg b{font-family:var(--display);font-weight:800;font-size:19px;line-height:1;text-transform:uppercase}
@@ -781,7 +783,8 @@ function bestPossibleAsync(env,gid,cfg,done){
 var $=function(s){return document.querySelector(s)};
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function fmtDay(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
-function money(n){var v=Math.round(n);return (v<0?"-":"")+"$"+Math.abs(v)+"M"}
+// $M under a thousand, billions above it ($1.5B, $1.96B, $2B).
+function money(n){var v=Math.round(n),a=Math.abs(v);return (v<0?"-":"")+"$"+(a>=1000?String(Math.round(a/10)/100)+"B":a+"M")}
 function x2(n){return "×"+n.toFixed(2)}
 var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"],MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],DN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 function prettyDate(s){return DN[dow(s)]+", "+MS[+s.slice(5,7)-1]+" "+(+s.slice(8,10))+(s.slice(0,4)!==TODAY.slice(0,4)?", "+s.slice(0,4):"")}
@@ -1004,6 +1007,19 @@ function minCost(gid){
   function lo(ids,M){return Math.min.apply(null,ids.map(function(i){return talentFee(env,M[i])}))}
   return G[gid].cost+lo(dirsFor(env,gid),D)+Math.min.apply(null,wins.map(function(w){return windowCost(env,W[w])}))+poolsFor(env,gid).reduce(function(s,p){return s+lo(p,A)},0);
 }
+// Basic: shuffle to any of the genre's stories for the day, as often as you like (the server checks the one you
+// release). Campaign: a few server-side rerolls per project once the studio level allows. Daily: one shared story.
+function campRerolls(st){var lv=campLevel(st);return (CAMPCFG.rerolls||[]).reduce(function(n,r){return lv>=r.level?r.count:n},0)}
+function shuffleBar(gid){
+  if(state.type==="daily")return "";
+  if(state.type==="campaign"){
+    var allowed=campRerolls(CAMP.st),left=allowed-(campProject().rerolls||0),err=CAMP.err?' <span class="neg">'+esc(CAMP.err)+'</span>':"";
+    if(!allowed)return '<div class="shuf"><span class="note">'+icon("dice")+'Story rerolls unlock at studio level '+CAMPCFG.rerolls[0].level+'.</span></div>';
+    return '<div class="shuf"><button class="btn" data-act="reroll"'+(left<1||CAMP.busy?" disabled":"")+'>'+icon("dice")+(CAMP.busy==="reroll"?"Rerolling…":"Reroll story")+'</button><span class="note">'+left+' of '+allowed+' rerolls left on this project.'+err+'</span></div>';
+  }
+  var n=plotChoices(state.day,gid).length;
+  return n>1?'<div class="shuf"><button class="btn" data-act="shuffle">'+icon("dice")+'Shuffle story</button><span class="note">'+n+' stories in '+esc(G[gid].name)+' today. Shuffle as often as you like.</span></div>':"";
+}
 function nav(label,ok,act){
   var l=stepList(),i=l.indexOf(state.step);
   return '<div class="nav">'+(i>0?'<button class="btn" data-act="back">Back</button>':"<span></span>")+
@@ -1023,7 +1039,7 @@ function stepHtml(){
       // Campaign: locked genres show what unlocks them; the server marks genres with no profitable film in budget.
       var gs=pj?pj.genres[x.id]:null;
       if(gs&&gs.state!=="ok")return card({act:"g",id:x.id,sel:false,off:true,title:x.name,cost:x.cost,img:stillUrl(x.id),wide:true,i:i,sub:esc(x.blurb),
-        chips:gs.state==="locked"?tag("Unlocks at $"+gs.at+"M",""):ch+tag("Too pricey today","no")});
+        chips:gs.state==="locked"?tag("Unlocks at "+money(gs.at),""):ch+tag("Too pricey today","no")});
       return card({act:"g",id:x.id,sel:P.g===x.id,title:x.name,cost:x.cost,img:stillUrl(x.id),wide:true,i:i,sub:(show?"Potential $"+x.base+"M · ":"")+esc(x.blurb),
         chips:ch+(env.bonus&&env.bonus[x.id]?tag("Genre Master","ok"):"")+(minCost(x.id)>env.budget?tag("Too pricey today","no"):P.g!==x.id?over(x.cost,g?g.cost:0):"")});
     }
@@ -1032,6 +1048,7 @@ function stepHtml(){
   }else if(id==="story"){
     var daily=state.type==="daily";
     h+=hero({cls:"pitch",eyebrow:(daily?"Today's challenge · ":"Your pitch · ")+esc(g.name),title:plot.title,text:'<p class="log">'+esc(plot.text)+'</p>',art:photoArt(g.id)});
+    h+=shuffleBar(g.id);
     var rl=[[cfg.roles?"Lead":"Hero",plot.lead],[cfg.roles?"Supporting":"Partner",plot.side],["Villain",plot.anta]];
     h+='<div class="roles3 anim">'+rl.map(function(r,i){var tone=see.story&&(cfg.roles||i===2)?tag(r[1].t+" presence","ok"):"";
       return '<div class="role" style="--i:'+i+'"><span class="lbl">0'+(i+1)+' · '+r[0]+'</span><p>'+esc(r[1].r)+'</p>'+(tone?'<span class="chips">'+tone+'</span>':"")+'</div>'}).join("")+'</div>';
@@ -1390,7 +1407,7 @@ function levelHtml(st){
     var btn=have>=max?tag("Maxed","ok"):gate?tag("Needs level "+x.minLevel,""):'<button class="btn sm'+(pts>=x.cost?" go":"")+'" data-act="campup" data-id="'+x.id+'"'+(pts<x.cost||busy?" disabled":"")+'>'+(have?"Upgrade":"Buy")+' · '+x.cost+' pt'+(x.cost>1?"s":"")+'</button>';
     return '<div class="upg"><b>'+esc(x.name)+'</b><span class="pips" aria-label="Rank '+have+' of '+max+'">'+x.ranks.map(function(_,i){return '<i class="'+(i<have?"on":"")+'"></i>'}).join("")+'</span>'+
       (have?'<small><em>Now:</em> '+esc(x.ranks[have-1])+'</small>':"")+(have<max?'<small><em>'+(have?"Next":"Gives")+':</em> '+esc(x.ranks[have])+'</small>':"")+btn+'</div>'}).join("");
-  return '<section class="panel"><div class="sech"><h3>Studio level '+lv+'</h3><span class="mono">'+money(g)+(next!==undefined?" / $"+next+"M":"")+' box office</span></div>'+
+  return '<section class="panel"><div class="sech"><h3>Studio level '+lv+'</h3><span class="mono">'+money(g)+(next!==undefined?" / "+money(next):"")+' box office</span></div>'+
     '<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(pct)+'" aria-label="Progress to the next studio level"><i style="width:'+pct+'%"></i></div>'+
     '<p class="note">Experience comes from every film\'s box office, flops included. Each new level gives one upgrade point. '+(pts>0?'<b class="pos">'+pts+' point'+(pts>1?"s":"")+' to spend.</b>':'No points to spend right now.')+' Information upgrades show on projects with hidden numbers; discounts apply from your current project.</p>'+
     '<div class="ugrid">'+cards+'</div></section>';
@@ -1433,8 +1450,7 @@ function tierCount(b){return (b.tiers||[1]).length}
 // Bronze/Silver/Gold for tiered badges; a one-step badge is gold once earned.
 function medalCls(b,tier){return !tier?"off":b.tiers?"t"+tier:"t3"}
 function tierName(b,tier){return b.tiers?ACH.tierNames[tier-1]:"Earned"}
-function bigMoney(v){return v>=1000?"$"+(v/1000)+"B":"$"+v+"M"}
-function badgeN(b,i){var v=(b.tiers||[1])[i];return b.unit==="money"?bigMoney(v):b.unit==="percent"?"+"+Math.round(v*100)+"%":String(v)}
+function badgeN(b,i){var v=(b.tiers||[1])[i];return b.unit==="money"?money(v):b.unit==="percent"?"+"+Math.round(v*100)+"%":String(v)}
 // "{n}" is the tier's number; "(s)" is dropped when that number is 1 ("1 film", "3 films").
 function badgeText(b,i){var k=Math.min(i,tierCount(b)-1),v=(b.tiers||[1])[k];return b.text.replace("{n}",badgeN(b,k)).replace(/\(s\)/g,v===1?"":"s")}
 // Running progress for badges that build up over the studio's life (the server decides; this only shows it).
@@ -1456,7 +1472,7 @@ function badgeStrip(st){
 function achHtml(st){
   var cards=ACH.badges.map(function(b){
     var t=badgeTier(st,b.id),max=tierCount(b),at=badgeAt(st,b.id),pv=badgeProgress(st,b.id),goal=t<max&&b.tiers&&!b.atMost?b.tiers[t]:null;
-    var bar=pv!==null&&goal!==null?'<span class="pbar" aria-hidden="true"><i style="width:'+Math.min(100,pv/goal*100)+'%;background:var(--tc,var(--accent))"></i></span><small>'+(b.unit==="money"?bigMoney(pv)+" of "+bigMoney(goal):pv+" of "+goal)+'</small>':"";
+    var bar=pv!==null&&goal!==null?'<span class="pbar" aria-hidden="true"><i style="width:'+Math.min(100,pv/goal*100)+'%;background:var(--tc,var(--accent))"></i></span><small>'+(b.unit==="money"?money(pv)+" of "+money(goal):pv+" of "+goal)+'</small>':"";
     var tn=t?tierName(b,t)+(b.tiers&&t<max?" · next: "+ACH.tierNames[t]:""):(b.tiers?"Bronze, silver, gold":"Locked");
     return '<div class="achc'+(t?"":" off")+'" id="ach-'+b.id+'" style="--tc:var(--'+(t?(b.tiers?["","bronze","silver","gold"][t]:"gold"):"line2")+')">'+medal(b,t," lg")+'<div><b>'+esc(b.name)+'</b><span class="tn">'+esc(tn)+'</span>'+
       '<small>'+esc(badgeText(b,t<max?t:max-1))+'</small>'+bar+(at?'<small>Earned '+new Date(at).toISOString().slice(0,10)+'</small>':"")+'</div></div>'}).join("");
@@ -1564,7 +1580,7 @@ function tierChips(st){
 function ladderHtml(life){
   var l=ladderAt(life);
   return '<ol class="ladder">'+CAMPCFG.ladder.map(function(s){var on=life>=s.at,gi=gateInfo(s.id);
-    return '<li class="'+(on?"on":"")+(l.next===s?" next":"")+'"><span class="ck">'+(on?icon("check"):"")+'</span><span class="mono">$'+s.at+'M</span><span><b>'+esc(gi.name)+'</b><br>'+esc(gi.text)+'</span></li>'}).join("")+'</ol>';
+    return '<li class="'+(on?"on":"")+(l.next===s?" next":"")+'"><span class="ck">'+(on?icon("check"):"")+'</span><span class="mono">'+money(s.at)+'</span><span><b>'+esc(gi.name)+'</b><br>'+esc(gi.text)+'</span></li>'}).join("")+'</ol>';
 }
 function filmRows(list){
   if(!list.length)return '<p class="note">No films yet. Your first project is waiting.</p>';
@@ -1585,7 +1601,7 @@ function hqHtml(){
   var pj=st.currentProject,life=st.lifetimeProfit,l=ladderAt(life),pct=ladderPct(life);
   var rules=pj.diff==="easy"?"Training wheels: every number on screen":pj.diff==="hard"?"Real calendar, numbers hidden":"Numbers hidden until release";
   var h='<div class="hq">'+studioHead(st,rules);
-  h+='<section class="panel"><div class="sech"><h3>'+(l.next?"Next unlock: "+esc(gateInfo(l.next.id).name):"Everything unlocked")+'</h3><span class="mono">'+money(life)+(l.next?" / $"+l.next.at+"M":"")+'</span></div>'+
+  h+='<section class="panel"><div class="sech"><h3>'+(l.next?"Next unlock: "+esc(gateInfo(l.next.id).name):"Everything unlocked")+'</h3><span class="mono">'+money(life)+(l.next?" / "+money(l.next.at):"")+'</span></div>'+
     '<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(pct)+'" aria-label="Progress to the next unlock"><i style="width:'+pct+'%"></i></div>'+
     '<p class="note">'+(l.next?esc(gateInfo(l.next.id).text)+" Only profitable films count toward it.":"Your studio has the whole roster, every genre and real release dates.")+'</p>'+ladderHtml(life)+'</section>';
   h+=levelHtml(st);
@@ -1639,7 +1655,7 @@ function campSend(res){
 function release(){
   if(state.type==="campaign"){campRelease();return}
   var cfg=CFG(),p=curPick(),r=evalFilm(state.env,p,cfg),title=plotFor(state.env,p.g).title,k=dkey();
-  var ck=modeKey()+"|"+state.day+"|"+p.g;
+  var ck=modeKey()+"|"+state.day+"|"+p.g+"|"+state.env.plots[p.g];
   var post=NET&&state.me?{status:"pending"}:{status:NET?"signedout":"offline"};
   var res=state.result={p:p,r:r,title:title,cfg:cfg,ck:ck,post:post};
   var prev=state.days[k],att=(prev?prev.attempts||1:0)+1;state.attempt=att;
@@ -1648,7 +1664,7 @@ function release(){
   state.days[k]=entry;saveLocal();
   swap(function(){state.stage="result";drawAll();window.scrollTo(0,0)});
   // The server re-checks and re-scores the film; its answer is what goes on the board.
-  if(post.status==="pending")NET.release({type:state.type,diff:state.diff,day:state.day,pick:p}).then(function(o){
+  if(post.status==="pending")NET.release({type:state.type,diff:state.diff,day:state.day,pick:Object.assign({s:state.env.plots[p.g]},p)}).then(function(o){
     res.post={status:"ok",rank:o.rank,total:o.total,better:o.better};
     state.days[k]=Object.assign({},o.best,{attempts:o.attempts});state.attempt=o.attempts;saveLocal();
     if(state.result===res)drawResult();
@@ -1674,6 +1690,9 @@ document.addEventListener("click",function(e){
   var t=e.target.closest("[data-act]");if(!t||t.disabled)return;
   var a=t.dataset.act,id=t.dataset.id,P=state.pick;
   if(a==="type"){if(state.type!==t.dataset.m){swap(function(){state.type=t.dataset.m;if(state.type==="daily")state.diff="hard";newGame();window.scrollTo(0,0)})}}
+  else if(a==="shuffle"){var sg=P.g,others=plotChoices(state.day,sg).filter(function(i){return i!==state.env.plots[sg]});
+    if(others.length){var pickS=others[Math.floor(Math.random()*others.length)];swap(function(){state.env=envWithPlot(state.env,sg,pickS);state.enter=true;drawStage()})}}
+  else if(a==="reroll")campCall("campaignReroll",{index:campProject().index,g:P.g},"reroll",function(o){if(o){state.env=projEnv(campProject());state.enter=true}});
   else if(a==="campnext")campPlay();
   else if(a==="camphq")campHQ();
   else if(a==="campretry")campLoad();

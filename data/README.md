@@ -114,6 +114,7 @@ The campaign (solo career mode) reads two files. The server enforces them; the p
 | `shortlist` | `perGender` per role (3 men, 3 women), `freshPerRole` from the newest unlocked tier when there are enough, `directors` on a shortlist, `freshDirectors` from the newest director tier |
 | `feasibility` | Every playable genre needs a film within budget that makes at least `margin` $M profit; otherwise it shows as too pricey. If no genre makes it, the project seed is salted again, up to `maxResalts` times |
 | `pass` | A pass skips the current pitches for `fee` $M. A studio starts with `start` passes and earns one every `every` films, holding at most `cap` |
+| `rerolls` | Story rerolls per project by studio level: `{ level, count }`, the highest level reached wins |
 | `levels` | Lifetime box office ($M, every film counts) needed for each studio level, starting with level 1 at 0. Each level after the first gives one upgrade point. Keep at least as many levels as the upgrades cost in total |
 | `profile` | Limits for the studio look: `taglineMax`, `cityMax` (characters), `logoKB`, `backdropKB` (upload caps; keep `storage.rules` in step, it can't read this file) |
 | `studioColors` | The palette players pick their studio colour from: `id`, `name`, and a shade for each theme (`dark`, `light`; at least 3:1 contrast on that theme's panels) |
