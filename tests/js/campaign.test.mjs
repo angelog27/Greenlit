@@ -358,7 +358,7 @@ test("badges and gates: first hit, genre master perk, comeback, unlock events an
   const near = studio(cfg.ladder[4].at - 0.1, { films: 20, bank: 120 });
   const g = playable(near)[0], out = camp.release(C, near, "u1", { index: near.currentProject.index, pick: bestFilm(near, g) }, DATE, NOW);
   assert.ok(out.events.gates.some((x) => x.id === cfg.boardGoal));
-  assert.deepEqual(plain(out.board), { displayName: near.studioName, filmsToATier: 21, bailouts: near.bailouts, lifetimeProfit: out.state.lifetimeProfit, reachedAt: NOW });
+  assert.deepEqual(plain(out.board), { displayName: near.studioName, filmsToATier: 21, bailouts: near.bailouts, lifetimeProfit: out.state.lifetimeProfit, reachedAt: NOW, logo: null, color: null });
   assert.equal(out.state.aTierFilms, 21);
 });
 
@@ -457,4 +457,48 @@ test("discounted campaign films score exactly like the page's model", () => {
     assert.equal(out.film.profit, Math.round(want.profit * 10) / 10);
     assert.equal(out.film.cost, want.cost);
   }
+});
+
+// ---- studio look
+function fakeFiles(objects) {
+  return { removed: [], async meta(path) { return objects[path] || null; }, async remove(path) { this.removed.push(path); delete objects[path]; } };
+}
+
+test("studio style: palette colour, cleaned tagline and city, images checked in Storage", async () => {
+  const objects = {}, files = fakeFiles(objects), db = fakeDb(), store = makeStore(db, C, files);
+  await store.start("s1", {}, NOW);
+  const P = cfg.profile;
+  let st = (await store.style("s1", { color: "violet", tagline: "  Small budgets,\n big   screams <script> " + "x".repeat(200), city: "Lisbon" }, NOW)).state;
+  assert.equal(st.profile.color, "violet");
+  assert.ok(st.profile.tagline.startsWith("Small budgets, big screams script"));
+  assert.equal(st.profile.tagline.length, P.taglineMax);
+  assert.equal(st.profile.city, "Lisbon");
+  await assert.rejects(store.style("s1", { color: "#ff0000" }, NOW), /Unknown studio colour/);
+  await assert.rejects(store.style("s1", { logo: true }, NOW), /didn't finish uploading/);
+  objects["studios/s1/logo"] = { contentType: "image/gif", size: 1000, generation: "1" };
+  await assert.rejects(store.style("s1", { logo: true }, NOW), /JPEG, PNG or WebP/);
+  objects["studios/s1/logo"] = { contentType: "image/png", size: P.logoKB * 1024 + 1, generation: "2" };
+  await assert.rejects(store.style("s1", { logo: true }, NOW), /too big/);
+  objects["studios/s1/logo"] = { contentType: "image/webp", size: 50000, generation: "3" };
+  objects["studios/s1/backdrop"] = { contentType: "image/jpeg", size: 900000, generation: "4" };
+  st = (await store.style("s1", { logo: true, backdrop: true }, NOW)).state;
+  assert.deepEqual([st.profile.logo, st.profile.backdrop], ["3", "4"]);
+  st = (await store.style("s1", { backdrop: false }, NOW)).state;
+  assert.equal(st.profile.backdrop, null);
+  assert.deepEqual(files.removed, ["studios/s1/backdrop"]);
+  assert.equal(st.profile.logo, "3", "untouched fields stay");
+  assert.equal(st.profile.color, "violet");
+});
+
+test("studio style reaches the campaign board row once the studio is on it", async () => {
+  const objects = { "studios/s2/logo": { contentType: "image/png", size: 1000, generation: "9" } };
+  const db = fakeDb(), store = makeStore(db, C, fakeFiles(objects));
+  const st = (await store.start("s2", {}, NOW)).state;
+  db.docs.set("campaigns/s2", { ...st, aTierFilms: 15 });
+  db.docs.set("campaignBoard/s2", { displayName: st.studioName, filmsToATier: 15, bailouts: 0, lifetimeProfit: 2100, reachedAt: NOW, logo: null, color: null });
+  await store.style("s2", { color: "teal", logo: true }, NOW);
+  const row = db.docs.get("campaignBoard/s2");
+  assert.equal(row.color, "teal");
+  assert.equal(row.logo, "9");
+  assert.equal(row.filmsToATier, 15);
 });

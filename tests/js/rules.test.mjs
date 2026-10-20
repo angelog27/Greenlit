@@ -1,6 +1,6 @@
 // Firestore rules (firestore.rules): clients can read their own campaign and the public boards, and can never
 // write a campaign, its films or the campaign board. Needs the Firestore emulator; skipped when it isn't running:
-//   firebase emulators:start --only firestore      (JDK 21+), then node --test tests/js/*.test.mjs
+//   firebase emulators:start --only firestore,storage   (JDK 21+), then node --test tests/js/*.test.mjs
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -15,6 +15,13 @@ const up = await new Promise((done) => {
   s.setTimeout(500, () => { s.destroy(); done(false); });
 });
 const skip = up ? false : `Firestore emulator not running on ${host}:${port}`;
+const [sHost, sPort] = (process.env.FIREBASE_STORAGE_EMULATOR_HOST || "127.0.0.1:9199").split(":");
+const storageUp = await new Promise((done) => {
+  const s = net.connect({ host: sHost, port: +sPort }, () => { s.destroy(); done(true); });
+  s.on("error", () => done(false));
+  s.setTimeout(500, () => { s.destroy(); done(false); });
+});
+const skipStorage = up && storageUp ? false : "Firestore and Storage emulators not both running";
 
 let env, T;
 before(async () => {
@@ -23,6 +30,7 @@ before(async () => {
   env = await T.initializeTestEnvironment({
     projectId: "demo-greenlight-rules",
     firestore: { host, port: +port, rules: readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8") },
+    ...(storageUp ? { storage: { host: sHost, port: +sPort, rules: readFileSync(new URL("../../storage.rules", import.meta.url), "utf8") } } : {}),
   });
   await env.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore();
@@ -64,4 +72,23 @@ test("daily boards keep their rules", { skip }, async () => {
   const alice = env.authenticatedContext("alice").firestore();
   await T.assertSucceeds(alice.collection("boards/r3-basic-easy_2026-10-20/entries").get());
   await T.assertFails(alice.doc("boards/r3-basic-easy_2026-10-20/entries/alice").set({ profit: 1 }));
+});
+
+// Studio images: owner-only uploads of small images, public reads, nothing else in the bucket.
+test("storage: only the owner uploads their studio's logo and backdrop, images only, size-capped", { skip: skipStorage }, async () => {
+  const img = (kb) => new Uint8Array(kb * 1024);
+  const meta = (type) => ({ contentType: type });
+  const alice = env.authenticatedContext("alice").storage(), bob = env.authenticatedContext("bob").storage(), anon = env.unauthenticatedContext().storage();
+  await T.assertSucceeds(alice.ref("studios/alice/logo").put(img(100), meta("image/png")));
+  await T.assertSucceeds(alice.ref("studios/alice/backdrop").put(img(1200), meta("image/jpeg")));
+  await T.assertFails(alice.ref("studios/alice/logo").put(img(401), meta("image/png")));
+  await T.assertFails(alice.ref("studios/alice/backdrop").put(img(1501), meta("image/jpeg")));
+  await T.assertFails(alice.ref("studios/alice/logo").put(img(10), meta("text/html")));
+  await T.assertFails(alice.ref("studios/alice/other").put(img(10), meta("image/png")));
+  await T.assertFails(bob.ref("studios/alice/logo").put(img(10), meta("image/png")));
+  await T.assertFails(anon.ref("studios/alice/logo").put(img(10), meta("image/png")));
+  await T.assertFails(alice.ref("anything/else").put(img(10), meta("image/png")));
+  await T.assertSucceeds(anon.ref("studios/alice/logo").getDownloadURL());
+  await T.assertFails(bob.ref("studios/alice/logo").delete());
+  await T.assertSucceeds(alice.ref("studios/alice/backdrop").delete());
 });

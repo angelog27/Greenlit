@@ -1,0 +1,20 @@
+rules_version = '2';
+// Studio images (campaign): studios/{uid}/logo and studios/{uid}/backdrop. Anyone can view them (logos show on
+// the campaign board); only the owner can upload or delete, images only, size-capped. The campaignStyle
+// function re-checks type and size before the studio uses an upload. Keep the KB caps in step with
+// "profile" in data/campaign.json (rules can't read that file).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /studios/{uid}/{name} {
+      allow read: if name in ['logo', 'backdrop'];
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && name in ['logo', 'backdrop']
+        && request.resource.contentType.matches('image/(jpeg|png|webp)')
+        && request.resource.size <= (name == 'logo' ? 400 : 1500) * 1024;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+    match /{all=**} {
+      allow read, write: if false;
+    }
+  }
+}

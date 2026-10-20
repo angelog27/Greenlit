@@ -175,7 +175,7 @@ function newCampaign(C, uid, cid, name, date, now) {
 }
 
 function defaultName(uid) { return "Studio " + uid.slice(0, 5).toUpperCase(); }
-function cleanName(s) { return typeof s === "string" ? s.replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 30) : ""; }
+function cleanName(s) { return cleanText(s, 30); }
 
 function checkIndex(st, index) {
   if (!st.currentProject || index !== st.currentProject.index) throw new Reject("That project is no longer current. Reload your studio.");
@@ -266,7 +266,8 @@ function release(C, st, uid, input, date, now) {
   let board = null;
   if (newGates.includes(C.cfg.boardGoal) && next.aTierFilms === null) {
     next.aTierFilms = filmsMade;
-    board = { displayName: st.studioName, filmsToATier: filmsMade, bailouts: next.bailouts, lifetimeProfit: lifetime, reachedAt: now };
+    board = { displayName: st.studioName, filmsToATier: filmsMade, bailouts: next.bailouts, lifetimeProfit: lifetime, reachedAt: now,
+      logo: st.profile.logo || null, color: st.profile.color || null };
   }
   const badges = awardBadges(C, before, next, { p, r, profit, budget: pj.budget, facts }, now);
   next.currentProject = makeProject(C, next, uid, date, false);
@@ -373,6 +374,22 @@ function setHard(C, st, uid, input) {
   return Object.assign({}, st, { currentProject: makeProject(C, st, uid, st.currentProject.date, hard) });
 }
 
+// Studio look: colour (from the palette in data/campaign.json), tagline, city, and the versions of the logo and
+// backdrop images. The store checks the images in Storage first and passes their versions (or null to remove).
+function cleanText(s, max) { return typeof s === "string" ? s.replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, max) : ""; }
+function style(C, st, input, images) {
+  st = normalize(st);
+  const P = C.cfg.profile, prof = Object.assign({}, st.profile), x = input || {};
+  if (x.color !== undefined) {
+    if (!C.cfg.studioColors.some((c) => c.id === x.color)) throw new Reject("Unknown studio colour.");
+    prof.color = x.color;
+  }
+  if (x.tagline !== undefined) prof.tagline = cleanText(x.tagline, P.taglineMax);
+  if (x.city !== undefined) prof.city = cleanText(x.city, P.cityMax);
+  ["logo", "backdrop"].forEach((k) => { if (images && own(images, k)) prof[k] = images[k]; });
+  return Object.assign({}, st, { profile: prof });
+}
+
 function rename(st, name) {
   if (st.renamed) throw new Reject("The studio has already been renamed once.");
   const n = cleanName(name);
@@ -383,5 +400,5 @@ function rename(st, name) {
 module.exports = {
   loadCampaign, makeCampaign, unlocksFor, nextGate, budgetFor, settle, castPools, crewList, projectEnv,
   makeProject, feasible, awardBadges, badgeValue, tierFor, filmFacts, newCampaign, release, pass, setHard, rename, defaultName, cleanName, projectKey,
-  levelFor, pointsLeft, discounts, upgrade, normalize,
+  levelFor, pointsLeft, discounts, upgrade, normalize, style,
 };

@@ -3,7 +3,9 @@
 //   campaigns/{uid}/films/{index} one released film, keyed by project index (also the idempotency record)
 //   campaignBoard/{uid}           public row once the studio reaches the board goal (A-tier)
 // Callables: start, project, release, pass, upgrade, rename.
-// Takes `db` (the Admin Firestore, or a stand-in with doc() and runTransaction() in tests).
+// Takes `db` (the Admin Firestore, or a stand-in with doc() and runTransaction() in tests) and `files` (Storage:
+// meta(path) -> { contentType, size, generation } or null, remove(path)).
+//   studios/{uid}/logo, studios/{uid}/backdrop   the studio's images in Storage, uploaded by the owner
 const crypto = require("crypto");
 const camp = require("./campaign");
 const { Reject } = require("./game");
@@ -13,7 +15,9 @@ const filmId = (i) => String(i).padStart(5, "0");
 // The model runs in its own vm realm; Firestore only stores plain objects of this realm, so copy through JSON.
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
-function makeStore(db, C) {
+const IMAGE = /^image\/(jpeg|png|webp)$/;
+
+function makeStore(db, C, files) {
   const ref = (uid) => db.doc(`campaigns/${uid}`);
   const load = async (tx, uid) => {
     const s = await tx.get(ref(uid));
@@ -65,6 +69,31 @@ function makeStore(db, C) {
       tx.set(ref(uid), out.state);
       return out;
     }),
+    // Colour, tagline, city, and logo/backdrop: true = "I uploaded a new one, check it", false = remove it.
+    style: async (uid, data, now) => {
+      const x = data || {}, images = {}, P = C.cfg.profile;
+      for (const k of ["logo", "backdrop"]) {
+        const path = `studios/${uid}/${k}`;
+        if (x[k] === true) {
+          const meta = files && (await files.meta(path));
+          if (!meta) throw new Reject("The image didn't finish uploading. Try again.");
+          if (!IMAGE.test(meta.contentType || "")) throw new Reject("Images must be JPEG, PNG or WebP.");
+          if (meta.size > P[k + "KB"] * 1024) throw new Reject(`That image is too big (max ${P[k + "KB"]} KB).`);
+          images[k] = String(meta.generation || now);
+        } else if (x[k] === false) {
+          if (files) await files.remove(path);
+          images[k] = null;
+        }
+      }
+      return db.runTransaction(async (tx) => {
+        const st = await load(tx, uid);
+        const board = st.aTierFilms !== null ? await tx.get(db.doc(`campaignBoard/${uid}`)) : null;
+        const next = plain(camp.style(C, st, x, images));
+        tx.set(ref(uid), next);
+        if (board && board.exists) tx.set(db.doc(`campaignBoard/${uid}`), Object.assign({}, board.data(), { logo: next.profile.logo || null, color: next.profile.color || null }));
+        return { state: next };
+      });
+    },
     // Once only. Also renames the board row if the studio is already on it.
     rename: (uid, data) => db.runTransaction(async (tx) => {
       const st = await load(tx, uid);

@@ -19,6 +19,17 @@
   "shortlist": { "perGender": 3, "freshPerRole": 2, "directors": 8, "freshDirectors": 2 },
   "feasibility": { "margin": 5, "maxResalts": 12 },
   "pass": { "fee": 5, "every": 3, "start": 1, "cap": 2 },
+  "profile": { "taglineMax": 60, "cityMax": 40, "logoKB": 400, "backdropKB": 1500 },
+  "studioColors": [
+    { "id": "green",  "name": "Greenlight", "dark": "#3DDC84", "light": "#12924C" },
+    { "id": "gold",   "name": "Marquee",    "dark": "#F2B63D", "light": "#9A6400" },
+    { "id": "red",    "name": "Red Carpet", "dark": "#F0675A", "light": "#C2352A" },
+    { "id": "blue",   "name": "Night Sky",  "dark": "#6FA8F2", "light": "#2B62B8" },
+    { "id": "violet", "name": "Premiere",   "dark": "#B39BF7", "light": "#6A4BC4" },
+    { "id": "pink",   "name": "Neon",       "dark": "#F28AC8", "light": "#B53484" },
+    { "id": "teal",   "name": "Lagoon",     "dark": "#3FD2C7", "light": "#0E837A" },
+    { "id": "silver", "name": "Silver Screen", "dark": "#C9D1CB", "light": "#4E5A52" }
+  ],
   "levels": [0, 400, 1000, 1800, 2800, 4000, 5500, 7500, 10000, 13000, 17000, 22000, 28000, 35000],
   "upgrades": [
     { "id": "scout",      "name": "Talent Scout",     "cost": 1, "ranks": ["See which actors and directors fit the genre.", "See who suits each part's tone, and which directors get the story's tone.", "See star ratings and director skill."] },

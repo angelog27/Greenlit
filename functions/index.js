@@ -7,6 +7,7 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getStorage } = require("firebase-admin/storage");
 const { loadGame, check, Reject } = require("./game");
 
 setGlobalOptions({ maxInstances: 10 });
@@ -54,7 +55,18 @@ exports.release = onCall(async (req) => {
 // transactions in campaign_store.js. Each returns the player's updated studio so the page needs no extra reads.
 const { loadCampaign } = require("./campaign");
 const { makeStore } = require("./campaign_store");
-const store = makeStore(db, loadCampaign(game));
+// Studio images live in the default bucket; the store only reads their metadata and deletes them.
+const files = {
+  async meta(path) {
+    const f = getStorage().bucket().file(path);
+    const [ok] = await f.exists();
+    if (!ok) return null;
+    const [md] = await f.getMetadata();
+    return { contentType: md.contentType, size: Number(md.size), generation: md.generation };
+  },
+  remove: (path) => getStorage().bucket().file(path).delete({ ignoreNotFound: true }),
+};
+const store = makeStore(db, loadCampaign(game), files);
 
 function campaignCall(fn) {
   return onCall(async (req) => {
@@ -73,3 +85,4 @@ exports.campaignRelease = campaignCall(store.release);
 exports.campaignPass = campaignCall(store.pass);
 exports.campaignRename = campaignCall(store.rename);
 exports.campaignUpgrade = campaignCall(store.upgrade);
+exports.campaignStyle = campaignCall(store.style);
