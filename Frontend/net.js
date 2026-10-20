@@ -81,8 +81,18 @@ async function start() {
       const q = Fs.query(Fs.collection(db, "users", net.user.uid, "runs"), Fs.orderBy("day", "desc"), Fs.limit(400));
       return Fs.onSnapshot(q, (s) => cb(s.docs.map((d) => Object.assign({ id: d.id }, d.data()))), err);
     },
-    errorText(e) {
+    // ctx "campaign" explains campaign failures; the usual cause of these is a project where the campaign's
+    // Firestore rules or functions haven't been deployed yet.
+    errorText(e, ctx) {
       const code = (e && e.code) || "";
+      const camp = ctx === "campaign" && {
+        "permission-denied": "The server won't let the page read your studio. The campaign's Firestore rules aren't deployed on this project yet (firebase deploy --only firestore).",
+        "functions/not-found": "The campaign functions aren't deployed on this project yet (firebase deploy --only functions).",
+        "functions/internal": "The campaign server hit an error.",
+        "functions/unavailable": "The campaign server can't be reached right now.",
+        "unavailable": "The campaign server can't be reached right now. If you're using ?emu, start the emulators.",
+      }[code];
+      if (camp) return camp;
       const msg = {
         "auth/invalid-credential": "That email and password don't match.",
         "auth/wrong-password": "That email and password don't match.",

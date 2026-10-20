@@ -1078,7 +1078,7 @@ function lbModeKey(){return "r3-"+state.lb.type+"-"+state.lb.diff}
 function watchBoard(){
   var lb=state.lb;if(lb.unsub){lb.unsub();lb.unsub=null}
   lb.rows=null;lb.err=null;
-  if(NET&&lb.type==="campaign")lb.unsub=NET.watchCampaignBoard(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e);drawBoard()});
+  if(NET&&lb.type==="campaign")lb.unsub=NET.watchCampaignBoard(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e,"campaign");drawBoard()});
   else if(NET)lb.unsub=NET.watchBoard(boardId(lb.type,lb.diff,TODAY),function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e);drawBoard()});
   drawBoard();
 }
@@ -1265,12 +1265,12 @@ function campLoad(){
   CAMP.loading=true;CAMP.err="";drawCamp();
   var who=state.me.uid;
   NET.campaignLoad().then(function(st){if(!state.me||state.me.uid!==who)return;CAMP.st=st;CAMP.loaded=true;CAMP.loading=false;drawCamp();if(document.body.classList.contains("lb-open"))drawBoard()},
-    function(e){CAMP.loading=false;CAMP.err=NET.errorText(e);drawCamp()});
+    function(e){CAMP.loading=false;CAMP.err=NET.errorText(e,"campaign");drawCamp()});
 }
 function campCall(name,payload,busy,then){
   CAMP.busy=busy;CAMP.err="";drawCamp();
   return NET.campaign(name,payload).then(function(o){CAMP.busy="";if(o&&o.state){CAMP.st=o.state;CAMP.loaded=true}if(then)then(o);drawCamp()},
-    function(e){CAMP.busy="";CAMP.err=NET.errorText(e);drawCamp()});
+    function(e){CAMP.busy="";CAMP.err=NET.errorText(e,"campaign");drawCamp()});
 }
 function drawCamp(){if(state.type!=="campaign")return;drawHead();if(state.stage==="hq"){drawRail();drawPurse();drawHQ()}else if(state.stage==="play")drawStage()}
 // Start (or resume) the current project in the wizard.
@@ -1374,7 +1374,7 @@ function campSend(res){
   NET.campaign("campaignRelease",{index:res.camp.index,pick:res.p}).then(function(o){
     CAMP.st=o.state;CAMP.history=null;res.camp={status:"ok",before:res.camp.before,index:res.camp.index,film:o.film,events:o.events};
     if(state.result===res){drawResult();drawHead()}
-  },function(e){res.camp.status="error";res.camp.msg=NET.errorText(e);if(state.result===res)drawResult()});
+  },function(e){res.camp.status="error";res.camp.msg=NET.errorText(e,"campaign");if(state.result===res)drawResult()});
 }
 
 function release(){
@@ -1430,7 +1430,7 @@ document.addEventListener("click",function(e){
   }
   else if(a==="camphistory"){
     if(CAMP.history){CAMP.history=null;drawHQ();return}
-    CAMP.history="loading";drawHQ();NET.campaignFilms().then(function(fs){CAMP.history=fs;drawHQ()},function(e){CAMP.history=null;CAMP.err=NET.errorText(e);drawHQ()});
+    CAMP.history="loading";drawHQ();NET.campaignFilms().then(function(fs){CAMP.history=fs;drawHQ()},function(e){CAMP.history=null;CAMP.err=NET.errorText(e,"campaign");drawHQ()});
   }
   else if(a==="theme")cycleTheme();
   else if(a==="diff"){if(state.diff!==t.dataset.m){swap(function(){state.diff=t.dataset.m;newGame();window.scrollTo(0,0)})}}
