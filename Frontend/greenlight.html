@@ -5,7 +5,7 @@
 <title>GREENLIGHT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://image.tmdb.org">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: top bar (mode, difficulty, budget, leaderboard), step rail on the left, one step per screen in the stage.
    Flat surfaces only: no gradients, square edges with one cut corner on heroes and the primary button.
@@ -16,7 +16,7 @@
   --accent:#3DDC84; --accent2:#62E89E; --on-accent:#03140A; --amber:#F2B63D; --orange:#F28C28; --bad:#F0675A; --cold:#86B6EA;
   --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
   --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --mono:var(--body); /* numbers use the body font with tabular figures; no code font anywhere */
   --ease:cubic-bezier(.2,.75,.15,1); --cut:16px; --toph:72px;
   --sig-bg:#000; --sig-off:#2A2F2A; --scrim:rgba(0,0,0,.62);
   color-scheme:dark;
