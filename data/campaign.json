@@ -19,6 +19,7 @@
   "shortlist": { "perGender": 3, "freshPerRole": 2, "directors": 8, "freshDirectors": 2 },
   "feasibility": { "margin": 5, "maxResalts": 12 },
   "pass": { "fee": 5, "every": 3, "start": 1, "cap": 2 },
+  "rerolls": [{ "level": 3, "count": 2 }, { "level": 6, "count": 4 }],
   "profile": { "taglineMax": 60, "cityMax": 40, "logoKB": 400, "backdropKB": 1500 },
   "studioColors": [
     { "id": "green",  "name": "Greenlight", "dark": "#3DDC84", "light": "#12924C" },

@@ -20,7 +20,9 @@ class Reject extends Error {}
 const own = (o, k) => typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k);
 const utcDay = (t) => new Date(t).toISOString().slice(0, 10);
 
-// input: { type: "basic" | "daily", diff: "easy" | "medium" | "hard", day: "YYYY-MM-DD", pick: { g, d, a1, a2, a3, w } }
+// input: { type: "basic" | "daily", diff: "easy" | "medium" | "hard", day: "YYYY-MM-DD", pick: { g, d, a1, a2, a3, w, s? } }
+// s is the pitch (index in plots.json) when a Basic player shuffled the story; it must be one of that genre's
+// pitches for the day. The Daily Challenge always uses the day's shared pitch.
 function check(game, input, now = Date.now()) {
   const m = game.m;
   const { type, diff, day, pick } = input || {};
@@ -31,17 +33,23 @@ function check(game, input, now = Date.now()) {
   const today = utcDay(now);
   if (day !== today && day !== m.addDays(today, -1)) throw new Reject("That day's puzzle is closed. Reload to play today's.");
   if (!pick || typeof pick !== "object") throw new Reject("No film in the request.");
-  const { g, d, a1, a2, a3, w } = pick;
+  const { g, d, a1, a2, a3, w, s } = pick;
 
-  const env = m.makeEnv(day), cfg = m.DIFFS[diff];
+  let env = m.makeEnv(day);
+  const cfg = m.DIFFS[diff];
   if (!own(m.G, g)) throw new Reject("Unknown genre.");
   if (type === "daily" && g !== env.daily) throw new Reject("That isn't today's Daily Challenge genre.");
+  if (s !== undefined && s !== null && s !== env.plots[g]) {
+    if (type === "daily") throw new Reject("The Daily Challenge uses today's shared story.");
+    if (!Number.isInteger(s) || !m.plotChoices(day, g).includes(s)) throw new Reject("That story isn't available for this genre today.");
+    env = m.envWithPlot(env, g, s);
+  }
   if (!m.dirsFor(env, g).includes(d)) throw new Reject("That director isn't on today's shortlist.");
   const pools = m.poolsFor(env, g);
   if (!pools[0].includes(a1) || !pools[1].includes(a2) || !pools[2].includes(a3)) throw new Reject("Someone in that cast isn't on today's shortlist for their part.");
   if (cfg.real ? !env.dates.includes(w) : !(own(m.W, w) && !m.W[w].hardOnly)) throw new Reject("That release slot isn't available.");
 
-  const p = { g, d, a1, a2, a3, w };
+  const p = { g, d, a1, a2, a3, w, s: env.plots[g] };
   const cost = m.costOf(p, cfg);
   if (cost > env.budget) throw new Reject("That film is over today's budget.");
   const r = m.evalFilm(env, p, cfg);

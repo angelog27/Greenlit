@@ -654,11 +654,14 @@ function makeEnv(day,key){
   GENRES.forEach(function(g){if(!g.mix)heat[g.id]=Math.round((0.85+r()*0.4)*100)/100});
   GENRES.forEach(function(g){if(g.mix){var s=0;g.mix.forEach(function(p){s+=heat[p]});heat[g.id]=Math.round(s/g.mix.length*100)/100}});
   var rival=WINDOWS.filter(function(w){return !w.hardOnly})[Math.floor(r()*6)].id,budget=110+5*Math.floor(r()*7);
-  // A pitch with `from` joins the draw on that date, so adding stories never changes an earlier day's puzzle.
-  GENRES.forEach(function(g){var ok=[];PLOTS[g.id].forEach(function(p,i){if(!p.from||p.from<=day)ok.push(i)});plots[g.id]=ok[hash(key+"|plot|"+g.id)%ok.length]});
+  GENRES.forEach(function(g){var ok=plotChoices(day,g.id);plots[g.id]=ok[hash(key+"|plot|"+g.id)%ok.length]});
   return {day:key,heat:heat,rival:rival,budget:budget,plots:plots,dates:buildDates(day),daily:GENRES[hash("daily|"+key)%GENRES.length].id};
 }
 function plotFor(env,gid){return PLOTS[gid][env.plots[gid]]}
+// Pitches a genre can use on a day: a pitch with `from` joins on that date, so adding stories never changes an
+// earlier day's puzzle. A shuffle or reroll swaps in another of these for one genre (envWithPlot).
+function plotChoices(day,gid){var ok=[];PLOTS[gid].forEach(function(p,i){if(!p.from||p.from<=day)ok.push(i)});return ok}
+function envWithPlot(env,gid,s){var e=Object.assign({},env);e.plots=Object.assign({},env.plots);e.plots[gid]=s;return e}
 function winId(p,cfg){return cfg.real?(p.w?seasonOf(p.w):null):p.w}
 function luckOf(env,p,cfg){var ids=cfg.roles?p.a1+"|"+p.a2+"|"+p.a3:[p.a1,p.a2].sort().join("|")+"|"+p.a3;return 0.92+0.16*rng(hash(env.day+"|"+p.g+"|"+p.d+"|"+ids+"|"+p.w))()}
 function genreBonus(env,gid){return env.bonus&&env.bonus[gid]?Math.round((1+env.bonus[gid])*100)/100:1}

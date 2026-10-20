@@ -2,7 +2,7 @@
 //   campaigns/{uid}               the player's studio (bank, unlocks, badges, current project); owner reads only
 //   campaigns/{uid}/films/{index} one released film, keyed by project index (also the idempotency record)
 //   campaignBoard/{uid}           public row once the studio reaches the board goal (A-tier)
-// Callables: start, project, release, pass, upgrade, rename.
+// Callables: start, project, release, pass, reroll, upgrade, style, rename.
 // Takes `db` (the Admin Firestore, or a stand-in with doc() and runTransaction() in tests) and `files` (Storage:
 // meta(path) -> { contentType, size, generation } or null, remove(path)).
 //   studios/{uid}/logo, studios/{uid}/backdrop   the studio's images in Storage, uploaded by the owner
@@ -55,6 +55,13 @@ function makeStore(db, C, files) {
       tx.set(db.doc(`campaigns/${uid}/films/${filmId(out.film.projectIndex)}`), Object.assign({}, out.film, { events: out.events }));
       if (out.board) tx.set(db.doc(`campaignBoard/${uid}`), out.board);
       return { state: out.state, film: out.film, events: out.events, replay: false };
+    }),
+    // Swap one genre's pitch on the current project (studio level perk).
+    reroll: (uid, data) => db.runTransaction(async (tx) => {
+      const st = await load(tx, uid);
+      const next = plain(camp.reroll(C, st, uid, data));
+      tx.set(ref(uid), next);
+      return { state: next };
     }),
     pass: (uid, data, now) => db.runTransaction(async (tx) => {
       const st = await load(tx, uid);

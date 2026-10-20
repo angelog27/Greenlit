@@ -349,6 +349,31 @@ function awardBadges(C, before, next, film, now) {
   return out;
 }
 
+// Story rerolls: from the studio levels in data/campaign.json `rerolls`, a number per project. A reroll swaps
+// one playable genre's pitch for another of its pitches (seeded by the project, so it can't be fished for),
+// skipping any pitch that would leave no film within budget clearing the feasibility margin.
+function rerollsFor(C, st) {
+  const lv = levelFor(C, st.lifetimeGross);
+  return (C.cfg.rerolls || []).reduce((n, r) => (lv >= r.level ? r.count : n), 0);
+}
+function reroll(C, st, uid, input) {
+  st = normalize(st);
+  checkIndex(st, input && input.index);
+  const m = C.m, pj = st.currentProject, g = input.g, allowed = rerollsFor(C, st), used = pj.rerolls || 0;
+  if (!allowed) throw new Reject(`Story rerolls unlock at studio level ${C.cfg.rerolls[0].level}.`);
+  if (used >= allowed) throw new Reject("No story rerolls left on this project.");
+  if (!own(pj.genres, g) || pj.genres[g].state !== "ok") throw new Reject("You can only reroll the story of a playable genre.");
+  const cur = pj.env.plots[g], env0 = projectEnv(pj), cfg = m.DIFFS[pj.diff];
+  const order = m.plotChoices(pj.date, g).filter((i) => i !== cur)
+    .map((i) => ({ i, k: m.rng(m.hash(pj.key + "|reroll|" + g + "|" + used + "|" + i))() })).sort((a, b) => a.k - b.k);
+  for (const { i } of order) {
+    if (!feasible(C, m.envWithPlot(env0, g, i), g, cfg)) continue;
+    const env = Object.assign({}, pj.env, { plots: Object.assign({}, pj.env.plots, { [g]: i }) });
+    return Object.assign({}, st, { currentProject: Object.assign({}, pj, { env, rerolls: used + 1 }) });
+  }
+  throw new Reject("No other story for that genre works within this budget.");
+}
+
 // Skip the current pitches: costs the development fee, uses a pass, moves to the next project index.
 function pass(C, st, uid, input, date) {
   st = normalize(st);
@@ -400,5 +425,5 @@ function rename(st, name) {
 module.exports = {
   loadCampaign, makeCampaign, unlocksFor, nextGate, budgetFor, settle, castPools, crewList, projectEnv,
   makeProject, feasible, awardBadges, badgeValue, tierFor, filmFacts, newCampaign, release, pass, setHard, rename, defaultName, cleanName, projectKey,
-  levelFor, pointsLeft, discounts, upgrade, normalize, style,
+  levelFor, pointsLeft, discounts, upgrade, normalize, style, rerollsFor, reroll,
 };

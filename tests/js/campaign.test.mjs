@@ -502,3 +502,28 @@ test("studio style reaches the campaign board row once the studio is on it", asy
   assert.equal(row.logo, "9");
   assert.equal(row.filmsToATier, 15);
 });
+
+test("story rerolls: unlocked by studio level, a few per project, seeded, never to an unplayable story", () => {
+  const R = cfg.rerolls, st0 = studio(0, { index: 4 });
+  rejects(() => camp.reroll(C, st0, "u1", { index: st0.currentProject.index, g: playable(st0)[0] }), /unlock at studio level/);
+  let st = { ...st0, lifetimeGross: cfg.levels[R[0].level - 1] };
+  assert.equal(camp.rerollsFor(C, st), R[0].count);
+  assert.equal(camp.rerollsFor(C, { ...st, lifetimeGross: cfg.levels[R[1].level - 1] }), R[1].count);
+  const g = playable(st)[0], before = st.currentProject.env.plots[g];
+  rejects(() => camp.reroll(C, st, "u1", { index: st.currentProject.index, g: "action" }), /playable genre/);
+  rejects(() => camp.reroll(C, st, "u1", { index: st.currentProject.index + 1, g }), /no longer current/);
+  const a = plain(camp.reroll(C, st, "u1", { index: st.currentProject.index, g }));
+  assert.notEqual(a.currentProject.env.plots[g], before, "a new story");
+  assert.ok(m.plotChoices(a.currentProject.date, g).includes(a.currentProject.env.plots[g]));
+  assert.equal(a.currentProject.rerolls, 1);
+  assert.deepEqual(plain(camp.reroll(C, st, "u1", { index: st.currentProject.index, g })), a, "seeded: same reroll, same story");
+  // The rerolled story is the one the film is scored with, and it still has a film clearing the margin.
+  const env = camp.projectEnv(a.currentProject);
+  assert.ok(camp.feasible(C, env, g, m.DIFFS[a.currentProject.diff]));
+  const p = bestFilm(a, g), out = camp.release(C, a, "u1", { index: a.currentProject.index, pick: p }, DATE, NOW);
+  assert.equal(out.film.title, m.PLOTS[g][a.currentProject.env.plots[g]].title);
+  assert.ok(!out.state.currentProject.rerolls, "a new project starts with fresh rerolls");
+  st = a;
+  for (let i = 1; i < R[0].count; i++) st = plain(camp.reroll(C, st, "u1", { index: st.currentProject.index, g }));
+  rejects(() => camp.reroll(C, st, "u1", { index: st.currentProject.index, g }), /No story rerolls left/);
+});

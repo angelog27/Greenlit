@@ -86,3 +86,4 @@ exports.campaignPass = campaignCall(store.pass);
 exports.campaignRename = campaignCall(store.rename);
 exports.campaignUpgrade = campaignCall(store.upgrade);
 exports.campaignStyle = campaignCall(store.style);
+exports.campaignReroll = campaignCall(store.reroll);

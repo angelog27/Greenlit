@@ -102,3 +102,24 @@ test("director shortlist: 8 per day and genre, deterministic, specialists favour
   assert.ok(base > 8);
   assert.ok(spec / n > 0.3, `specialists are ${Math.round((spec / n) * 100)}% of shortlists`);
 });
+
+test("a shuffled Basic story is scored with that story; it must be one of the genre's pitches for the day", () => {
+  const page = loadModel(new URL("Frontend/greenlight.html", root));
+  page.initModel(JSON.parse(JSON.stringify({ genres: m.GENRES, directors: m.DIRS, actors: m.ACTORS, plots: m.PLOTS, windows: m.WINDOWS,
+    loyal: m.LOYAL.map(([director, actor, bonus, films]) => ({ director, actor, bonus, films })), chem: m.CHEM.map(([a, b, bonus, films]) => ({ a, b, bonus, films })),
+    slate: m.SLATE_RAW.map(([date, title, genre, strength]) => ({ date, title, genre, strength })) })));
+  const base = { type: "basic", diff: "medium", day: DAY }, pick = honest(G0, "medium");
+  const choices = [...m.plotChoices(DAY, G0)], other = choices.find((i) => i !== env.plots[G0]);
+  const out = check(game, { ...base, pick: { ...pick, s: other } }, NOW);
+  const want = page.evalFilm(page.envWithPlot(page.makeEnv(DAY), G0, other), pick, page.DIFFS.medium);
+  assert.equal(out.profit, want.profit);
+  assert.equal(out.title, m.PLOTS[G0][other].title);
+  assert.equal(out.p.s, other);
+  assert.equal(check(game, { ...base, pick }, NOW).p.s, env.plots[G0], "no s means the day's story");
+  const later = m.PLOTS[G0].findIndex((p) => p.from && p.from > DAY);
+  if (later > -1) rejects({ ...base, pick: { ...pick, s: later } }, /isn't available/);
+  rejects({ ...base, pick: { ...pick, s: 99 } }, /isn't available/);
+  rejects({ ...base, pick: { ...pick, s: "1" } }, /isn't available/);
+  const dp = honest(env.daily, "hard");
+  rejects({ type: "daily", diff: "hard", day: DAY, pick: { ...dp, s: m.plotChoices(DAY, env.daily).find((i) => i !== env.plots[env.daily]) } }, /shared story/);
+});
