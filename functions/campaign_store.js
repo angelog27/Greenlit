@@ -59,11 +59,11 @@ function makeStore(db, C) {
       return out;
     }),
     // Spend upgrade points (one per studio level).
-    upgrade: (uid, data) => db.runTransaction(async (tx) => {
+    upgrade: (uid, data, now) => db.runTransaction(async (tx) => {
       const st = await load(tx, uid);
-      const next = plain(camp.upgrade(C, st, uid, data));
-      tx.set(ref(uid), next);
-      return { state: next };
+      const out = plain(camp.upgrade(C, st, uid, data, now));
+      tx.set(ref(uid), out.state);
+      return out;
     }),
     // Once only. Also renames the board row if the studio is already on it.
     rename: (uid, data) => db.runTransaction(async (tx) => {

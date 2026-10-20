@@ -40,7 +40,7 @@ function simulate({ cfg, ach, policy, run, films }) {
       const can = cfg.upgrades.filter((u) => (st.upgrades[u.id] || 0) < u.ranks.length && (!u.minLevel || camp.levelFor(C, st.lifetimeGross) >= u.minLevel) && camp.pointsLeft(C, st) >= u.cost);
       if (!can.length) break;
       const u = order ? can.slice().sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id))[0] : any(can);
-      st = plain(camp.upgrade(C, st, uid, { id: u.id }));
+      st = plain(camp.upgrade(C, st, uid, { id: u.id }).state);
     }
     if (reached[cfg.boardGoal]) break;
   }

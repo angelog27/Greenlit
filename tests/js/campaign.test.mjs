@@ -307,36 +307,52 @@ test("badges and gates: first hit, genre master perk, comeback, unlock events an
     // Keep making films in the genre with the most hits so far, so one reaches Genre Master.
     const g = playable(st).sort((x, y) => (st.genreHits[y] || 0) - (st.genreHits[x] || 0) || (x < y ? -1 : 1))[0];
     const out = camp.release(C, st, "u1", { index: st.currentProject.index, pick: bestFilm(st, g) }, DATE, NOW + i);
-    out.film.badges.forEach((b) => { assert.ok(!seen.has(b), "a badge is earned once"); seen.add(b); });
+    out.film.badges.forEach((b) => { const k = b.id + ":" + b.tier; assert.ok(!seen.has(k), "a badge tier is earned once"); seen.add(k); });
     events.push(out.events);
     if (out.events.perks.length && !perkGenre) perkGenre = out.events.perks[0];
     st = plain(out.state);
   }
-  assert.ok(seen.has("first_hit"));
+  assert.ok(seen.has("first_hit:1"));
   assert.ok(perkGenre, "three hits in one genre grant Genre Master");
+  assert.ok(st.badges.genre_master && st.badges.genre_master.tier >= 1);
   assert.equal(st.perks[perkGenre], C.badges.genre_master.bonus);
   assert.equal(st.currentProject.env.bonus[perkGenre], C.badges.genre_master.bonus, "perk reaches the next project's env");
-  assert.ok(Object.values(st.badges).every((t) => typeof t === "number"), "badges carry a timestamp");
+  assert.ok(Object.values(st.badges).every((x) => x.tier >= 1 && typeof x.at === "number"), "badges carry a tier and a timestamp");
+  assert.ok(st.stats.streak >= 1 && st.stats.seasons.length >= 1, "running stats are kept");
   assert.ok(events.some((e) => e.gates.length), "an unlock fired");
 
-  // Comeback needs a flop right before; Perfect Timing and Reunion are checked on the rule directly.
-  const before = { ...studio(0), lastProfit: -3, badges: {}, perks: {} };
-  const next = { ...before, genreHits: { horror: 1 } };
-  const f = { p: { g: "horror", d: "gluck", a1: "x", a2: "y", a3: "z", w: "hallow" }, cfg: m.DIFFS.easy, env: camp.projectEnv(before.currentProject), r: { cost: 50 }, profit: 4, budget: 100 };
-  assert.ok(camp.badgeEvents(C, before, next, f).badges.includes("comeback"));
-  assert.ok(!camp.badgeEvents(C, { ...before, lastProfit: 2 }, next, f).badges.includes("comeback"));
+  // Single rules, checked on the badge values directly.
+  const before = camp.normalize({ ...studio(0), lastProfit: -3, badges: {}, perks: {} });
+  const env = camp.projectEnv(before.currentProject), B = C.badges;
+  const film = (over = {}) => {
+    const f = { p: { g: "horror", d: "gluck", a1: "x", a2: "y", a3: "z", w: "hallow" }, cfg: m.DIFFS.easy, r: { cost: 50 }, profit: 4, budget: 100, ...over };
+    return { ...f, facts: camp.filmFacts(C, over.before || before, { p: f.p, cfg: f.cfg, env, profit: f.profit }) };
+  };
+  const tier = (id, f, st = before, from = before) => camp.tierFor(B[id], camp.badgeValue(C, id, from, st, f));
+  assert.equal(tier("comeback", film()), 1);
+  assert.equal(tier("comeback", film({ before: { ...before, lastProfit: 2 } })), 0);
+  assert.equal(tier("comeback", film({ profit: -1 })), 0);
   const loyal = m.LOYAL[0];
-  assert.ok(camp.badgeEvents(C, before, next, { ...f, p: { ...f.p, d: loyal[0], a2: loyal[1] } }).badges.includes("reunion"));
-  const plot = m.plotFor(f.env, "horror");
-  assert.equal(camp.badgeEvents(C, before, next, { ...f, p: { ...f.p, w: plot.win[0] } }).badges.includes("perfect_timing"), true);
-  assert.ok(camp.badgeEvents(C, before, next, { ...f, profit: 16, r: { cost: 60 } }).badges.includes("sleeper_hit"));
-  assert.ok(!camp.badgeEvents(C, before, next, { ...f, profit: 16, r: { cost: 61 } }).badges.includes("sleeper_hit"));
-  assert.ok(camp.badgeEvents(C, before, next, { ...f, profit: 100 }).badges.includes("blockbuster"));
+  assert.equal(film({ p: { g: "horror", d: loyal[0], a1: "x", a2: loyal[1], a3: "z", w: "hallow" } }).facts.reunion, true);
+  const plot = m.plotFor(env, "horror");
+  assert.equal(film({ p: { g: "horror", d: "gluck", a1: "x", a2: "y", a3: "z", w: plot.win[0] } }).facts.timing, true);
+  assert.equal(tier("sleeper_hit", film({ profit: 16, r: { cost: 60 } })), 1);
+  assert.equal(tier("sleeper_hit", film({ profit: 16, r: { cost: 61 } })), 0);
+  assert.deepEqual([99, 100, 200, 350].map((x) => tier("blockbuster", film({ profit: x }))), [0, 1, 2, 3]);
+  assert.equal(tier("phoenix", film({ before: { ...before, stats: { ...before.stats, bailedOut: true } } })), 1);
+  assert.equal(tier("phoenix", film()), 0);
   const dd = m.DIRS.find((d) => C.dirTier[d.id] === "D").id, da = m.ACTORS.filter((a) => C.actorTier[a.id] === "D").map((a) => a.id);
-  const fh = { ...f, p: { ...f.p, d: dd, a1: da[0], a2: da[1], a3: da[2] } };
-  assert.ok(!camp.badgeEvents(C, before, next, fh).badges.includes("full_house"), "not before C-list actors unlock");
+  const fh = film({ p: { g: "horror", d: dd, a1: da[0], a2: da[1], a3: da[2], w: "hallow" } });
+  assert.equal(tier("full_house", fh), 0, "not before C-list actors unlock");
   const later = { ...before, unlocked: camp.unlocksFor(C, cfg.ladder[1].at) };
-  assert.ok(camp.badgeEvents(C, later, next, fh).badges.includes("full_house"));
+  assert.equal(tier("full_house", fh, later, later), 1);
+  // Tiered studio badges: Fast Track counts down (fewer films is better).
+  const ft = B.fast_track;
+  assert.deepEqual([null, ft.tiers[0] + 1, ft.tiers[0], ft.tiers[2]].map((v) => camp.tierFor(ft, v)), [0, 0, 1, 3]);
+  assert.equal(tier("iron_studio", null, { ...before, aTierFilms: 14, bailouts: 0 }), 1);
+  assert.equal(tier("iron_studio", null, { ...before, aTierFilms: 14, bailouts: 1 }), 0);
+  assert.equal(tier("box_office", null, { ...before, lifetimeGross: B.box_office.tiers[1] }), 2);
+  assert.equal(tier("first_hit", null), 0, "film badges need a film");
 
   // Reaching the board goal writes the board row once.
   const near = studio(cfg.ladder[4].at - 0.1, { films: 20, bank: 120 });
@@ -376,19 +392,23 @@ test("upgrades: bought with points, rank by rank, with level gates and caps", ()
   rejects(() => camp.upgrade(C, base, "u1", { id: "__proto__" }), /Unknown upgrade/);
   let st = { ...base, lifetimeGross: cfg.levels[cfg.levels.length - 1] };
   const ranks = cfg.upgrades.find((u) => u.id === "scout").ranks.length;
-  for (let i = 1; i <= ranks; i++) { st = camp.upgrade(C, st, "u1", { id: "scout" }); assert.equal(st.upgrades.scout, i); }
+  for (let i = 1; i <= ranks; i++) { st = camp.upgrade(C, st, "u1", { id: "scout" }).state; assert.equal(st.upgrades.scout, i); }
   rejects(() => camp.upgrade(C, st, "u1", { id: "scout" }), /maxed out/);
   const sc = cfg.upgrades.find((u) => u.id === "screenings");
   const low = { ...base, lifetimeGross: cfg.levels[sc.minLevel - 2] + 1 };
   if (camp.pointsLeft(C, low) >= sc.cost) rejects(() => camp.upgrade(C, low, "u1", { id: "screenings" }), /needs studio level/);
-  assert.equal(camp.upgrade(C, { ...base, lifetimeGross: cfg.levels[sc.minLevel - 1] }, "u1", { id: "screenings" }).upgrades.screenings, 1);
+  assert.equal(camp.upgrade(C, { ...base, lifetimeGross: cfg.levels[sc.minLevel - 1] }, "u1", { id: "screenings" }).state.upgrades.screenings, 1);
+  // Buying ranks earns Well Equipped.
+  let eq = { ...base, lifetimeGross: cfg.levels[cfg.levels.length - 1] }, got = [];
+  for (const id of ["scout", "scout", "casting"]) { const o = camp.upgrade(C, eq, "u1", { id }, NOW); eq = o.state; got = got.concat(o.badges); }
+  assert.deepEqual(got.filter((b) => b.id === "well_equipped"), [{ id: "well_equipped", tier: 1 }]);
 });
 
 test("Reputation and Marketing Deals discount the current project's costs through the model", () => {
   let st = { ...studio(0, { index: 3 }), lifetimeGross: cfg.levels[6] };
   const pj0 = st.currentProject;
-  st = plain(camp.upgrade(C, st, "u1", { id: "reputation" }));
-  st = plain(camp.upgrade(C, st, "u1", { id: "marketing" }));
+  st = plain(camp.upgrade(C, st, "u1", { id: "reputation" }).state);
+  st = plain(camp.upgrade(C, st, "u1", { id: "marketing" }).state);
   const pj = st.currentProject, rep = cfg.upgrades.find((u) => u.id === "reputation"), mk = cfg.upgrades.find((u) => u.id === "marketing");
   assert.equal(pj.key, pj0.key, "same project, same seed");
   assert.deepEqual(pj.env.plots, pj0.env.plots, "same pitches");
@@ -413,10 +433,13 @@ test("release adds the gross to experience and reports level-ups; old studios ge
   assert.ok(out.events.level && out.events.level.from === 1 && out.events.level.to >= 2);
   assert.equal(out.events.level.points, camp.pointsLeft(C, out.state));
   const old = studio(0);
-  delete old.lifetimeGross; delete old.upgrades;
+  delete old.lifetimeGross; delete old.upgrades; delete old.stats; delete old.profile;
+  old.badges = { first_hit: 123 };
   const n = camp.normalize(old);
   assert.equal(n.lifetimeGross, 0);
   assert.deepEqual(n.upgrades, {});
+  assert.deepEqual(n.badges, { first_hit: { tier: 1, at: 123 } }, "old timestamp badges become tier 1");
+  assert.equal(n.stats.streak, 0);
   assert.ok(camp.release(C, old, "u1", { index: old.currentProject.index, pick: cheapest(old, playable(old)[0]) }, DATE, NOW).state.lifetimeGross > 0);
 });
 
@@ -426,7 +449,7 @@ test("discounted campaign films score exactly like the page's model", () => {
     loyal: m.LOYAL.map(([director, actor, bonus, films]) => ({ director, actor, bonus, films })), chem: m.CHEM.map(([a, b, bonus, films]) => ({ a, b, bonus, films })),
     slate: m.SLATE_RAW.map(([date, title, genre, strength]) => ({ date, title, genre, strength })) }));
   let st = { ...studio(cfg.ladder[2].at, { index: 9 }), lifetimeGross: cfg.levels[8] };
-  for (const id of ["reputation", "reputation", "marketing"]) st = plain(camp.upgrade(C, st, "u1", { id }));
+  for (const id of ["reputation", "reputation", "marketing"]) st = plain(camp.upgrade(C, st, "u1", { id }).state);
   for (const g of playable(st)) {
     const p = bestFilm(st, g), pj = st.currentProject;
     const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);

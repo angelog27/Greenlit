@@ -166,7 +166,7 @@ function newCampaign(C, uid, cid, name, date, now) {
     studioName: cleanName(name) || defaultName(uid), renamed: false, createdAt: now, campaignId: cid,
     bank: s.bank, lifetimeProfit: 0, filmsMade: 0, bailouts: 0, lastProfit: null,
     unlocked: { actorTier: u.actorTier, directorTier: u.directorTier, genres: u.genres, hard: u.hard },
-    gates: Object.fromEntries(u.gates.map((g) => [g, now])), badges: {}, perks: {}, genreHits: {},
+    gates: Object.fromEntries(u.gates.map((g) => [g, now])), badges: {}, perks: {}, genreHits: {}, stats: Object.assign({}, NEW_STATS, { seasons: [] }), profile: {},
     passesAvailable: C.cfg.pass.start, aTierFilms: null, projectIndex: 0, roster: C.game.version, recent: [],
     lifetimeGross: 0, upgrades: {},
   };
@@ -200,14 +200,19 @@ function discounts(C, st) {
   });
   return out;
 }
-// Studios founded before levels existed get the new fields.
+// Studios founded before levels, stats or tiered badges existed get the new fields (an old badge was a bare
+// timestamp; it becomes tier 1).
+const NEW_STATS = { streak: 0, reunions: 0, chemistry: 0, timing: 0, seasons: [], realHits: 0, bailedOut: false };
 function normalize(st) {
-  return Object.assign({ lifetimeGross: 0, upgrades: {} }, st);
+  const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {} }, st);
+  out.stats = Object.assign({}, NEW_STATS, st.stats, { seasons: ((st.stats || {}).seasons || []).slice() });
+  out.badges = Object.fromEntries(Object.entries(st.badges || {}).map(([k, v]) => [k, typeof v === "number" ? { tier: 1, at: v } : v]));
+  return out;
 }
 
 // Buy the next rank of an upgrade with points. A discount takes effect on the current project at once
 // (same seed, same pitches and shortlists; only the fees change).
-function upgrade(C, st, uid, input) {
+function upgrade(C, st, uid, input, now) {
   st = normalize(st);
   const u = upgradeDef(C, input && input.id);
   if (!u) throw new Reject("Unknown upgrade.");
@@ -215,9 +220,9 @@ function upgrade(C, st, uid, input) {
   if (have >= u.ranks.length) throw new Reject("That upgrade is already maxed out.");
   if (u.minLevel && level < u.minLevel) throw new Reject(`${u.name} needs studio level ${u.minLevel}.`);
   if (pointsLeft(C, st) < u.cost) throw new Reject("Not enough upgrade points. You earn one per studio level.");
-  const next = Object.assign({}, st, { upgrades: Object.assign({}, st.upgrades, { [u.id]: have + 1 }) });
+  const next = Object.assign({}, st, { upgrades: Object.assign({}, st.upgrades, { [u.id]: have + 1 }), badges: Object.assign({}, st.badges) });
   if (u.talent || u.windows) next.currentProject = makeProject(C, next, uid, st.currentProject.date, st.currentProject.diff === "hard");
-  return next;
+  return { state: next, badges: awardBadges(C, st, next, null, now || 0) };
 }
 
 function release(C, st, uid, input, date, now) {
@@ -237,7 +242,7 @@ function release(C, st, uid, input, date, now) {
   if (m.costOf(p, cfg, env) > pj.budget) throw new Reject("That film is over this project's budget.");
   const r = m.evalFilm(env, p, cfg), profit = round1(r.profit);
 
-  const before = st, lifetime = round1(st.lifetimeProfit + Math.max(0, profit));
+  const before = st, B = C.badges, lifetime = round1(st.lifetimeProfit + Math.max(0, profit));
   const money = settle(C, st.bank + profit);
   const filmsMade = st.filmsMade + 1;
   const u0 = unlocksFor(C, st.lifetimeProfit), u = unlocksFor(C, lifetime);
@@ -247,51 +252,100 @@ function release(C, st, uid, input, date, now) {
     unlocked: { actorTier: u.actorTier, directorTier: u.directorTier, genres: u.genres, hard: u.hard },
     gates: Object.assign({}, st.gates), badges: Object.assign({}, st.badges), perks: Object.assign({}, st.perks),
     genreHits: Object.assign({}, st.genreHits), projectIndex: st.projectIndex + 1,
-    lifetimeGross: Math.round(st.lifetimeGross + r.gross),
+    lifetimeGross: Math.round(st.lifetimeGross + r.gross), stats: Object.assign({}, st.stats, { seasons: st.stats.seasons.slice() }),
   });
   const lv0 = levelFor(C, st.lifetimeGross), lv1 = levelFor(C, next.lifetimeGross);
   newGates.forEach((x) => { next.gates[x] = now; });
   if (filmsMade % C.cfg.pass.every === 0) next.passesAvailable = Math.min(C.cfg.pass.cap, st.passesAvailable + 1);
   if (profit > 0) next.genreHits[g] = (st.genreHits[g] || 0) + 1;
-  const ev = badgeEvents(C, before, next, { p, cfg, env, r, profit, budget: pj.budget });
-  ev.badges.forEach((b) => { next.badges[b] = now; });
-  ev.perks.forEach((x) => { next.perks[x] = C.badges.genre_master.bonus; });
+  // Genre Master perk: the genre's films earn more from now on.
+  const perks = profit > 0 && next.genreHits[g] >= B.genre_master.films && !own(st.perks, g) ? [g] : [];
+  perks.forEach((x) => { next.perks[x] = B.genre_master.bonus; });
+  const facts = filmFacts(C, before, { p, cfg, env, profit });
+  updateStats(next.stats, facts, money.bailout);
   let board = null;
   if (newGates.includes(C.cfg.boardGoal) && next.aTierFilms === null) {
     next.aTierFilms = filmsMade;
     board = { displayName: st.studioName, filmsToATier: filmsMade, bailouts: next.bailouts, lifetimeProfit: lifetime, reachedAt: now };
   }
+  const badges = awardBadges(C, before, next, { p, r, profit, budget: pj.budget, facts }, now);
   next.currentProject = makeProject(C, next, uid, date, false);
   const film = {
     no: filmsMade, projectIndex: pj.index, title: m.plotFor(env, g).title, genre: g, pick: p, diff: pj.diff,
-    profit, gross: Math.round(r.gross), cost: r.cost, budget: pj.budget, badges: ev.badges, perks: ev.perks,
+    profit, gross: Math.round(r.gross), cost: r.cost, budget: pj.budget, badges, perks,
     gates: newGates, bailout: money.bailout, at: now,
   };
   // The last few films ride along in the studio doc so the HQ needs no extra reads.
   next.recent = [{ no: filmsMade, title: film.title, genre: g, profit, gross: film.gross, at: now }].concat(st.recent || []).slice(0, C.cfg.recentFilms || 5);
-  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges: ev.badges, perks: ev.perks, bailout: money.bailout,
+  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout,
     level: lv1 > lv0 ? { from: lv0, to: lv1, points: pointsLeft(C, next) } : null };
   return { state: next, film, events, board };
 }
 
-// Badges earned by this film. `before` is the state going in, `next` the state coming out.
-function badgeEvents(C, before, next, f) {
-  const m = C.m, B = C.badges, { p, cfg, env, r, profit, budget } = f, hit = profit > 0, out = [];
-  const people = [p.a1, p.a2, p.a3];
-  const test = {
-    first_hit: hit,
-    blockbuster: profit >= B.blockbuster.profit,
-    sleeper_hit: profit >= B.sleeper_hit.profit && r.cost <= B.sleeper_hit.costShare * budget,
-    reunion: m.LOYAL.some((l) => l[0] === p.d && people.includes(l[1])),
-    comeback: hit && before.lastProfit !== null && before.lastProfit < 0,
-    genre_master: hit && next.genreHits[p.g] >= B.genre_master.films,
-    full_house: hit && C.rank(before.unlocked.actorTier) >= C.rank(B.full_house.after) &&
-      C.dirTier[p.d] === B.full_house.tier && people.every((a) => C.actorTier[a] === B.full_house.tier),
-    perfect_timing: m.plotFor(env, p.g).win.includes(m.winId(p, cfg)),
+// ---- achievements. Each badge has a value (from this film or the studio's running stats) and tiers from
+// data/achievements.json (one tier when it lists none). A badge is stored as { tier, at } and fires again
+// only when a higher tier is reached.
+function filmFacts(C, before, { p, cfg, env, profit }) {
+  const m = C.m, cast = [p.a1, p.a2, p.a3];
+  let chem = false;
+  for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) if (m.CHEM.some((c) => m.pairKey(c[0], c[1]) === m.pairKey(cast[i], cast[j]))) chem = true;
+  return {
+    hit: profit > 0, cast, chem,
+    reunion: m.LOYAL.some((l) => l[0] === p.d && cast.includes(l[1])),
+    timing: m.plotFor(env, p.g).win.includes(m.winId(p, cfg)),
+    season: m.winId(p, cfg),
+    real: !!cfg.real,
+    synergy: m.synergies(env, p, cfg).reduce((s, x) => s + x[1], 0),
+    afterFlop: before.lastProfit !== null && before.lastProfit < 0,
+    afterBailout: !!before.stats.bailedOut,
   };
-  Object.keys(test).forEach((id) => { if (test[id] && B[id] && !own(before.badges, id)) out.push(id); });
-  const perks = test.genre_master && !own(before.perks, p.g) ? [p.g] : [];
-  return { badges: out, perks };
+}
+function updateStats(s, f, bailout) {
+  s.streak = f.hit ? s.streak + 1 : 0;
+  if (f.reunion) s.reunions++;
+  if (f.chem) s.chemistry++;
+  if (f.timing) s.timing++;
+  if (f.hit && !s.seasons.includes(f.season)) s.seasons.push(f.season);
+  if (f.hit && f.real) s.realHits++;
+  s.bailedOut = bailout;
+}
+// film is null when the change isn't a release (an upgrade): then only badges that need no film are checked.
+function badgeValue(C, id, before, st, film) {
+  const B = C.badges, s = st.stats, f = film && film.facts;
+  const studio = {
+    box_office: st.lifetimeGross, prolific: st.filmsMade, genre_master: Object.keys(st.perks).length,
+    genre_explorer: Object.values(st.genreHits).filter((n) => n > 0).length,
+    well_equipped: Object.values(st.upgrades || {}).reduce((a, x) => a + x, 0),
+    hit_streak: s.streak, reunion: s.reunions, chemistry: s.chemistry, perfect_timing: s.timing,
+    year_round: s.seasons.length, opening_weekend: s.realHits,
+    iron_studio: st.aTierFilms !== null && st.bailouts === 0 ? 1 : 0, fast_track: st.aTierFilms,
+  };
+  if (own(studio, id)) return studio[id];
+  if (!film) return undefined;
+  const { p, r, profit, budget } = film;
+  return {
+    first_hit: f.hit ? 1 : 0,
+    blockbuster: profit,
+    sleeper_hit: profit >= B.sleeper_hit.profit && r.cost <= B.sleeper_hit.costShare * budget ? 1 : 0,
+    comeback: f.hit && f.afterFlop ? 1 : 0,
+    full_house: f.hit && C.rank(before.unlocked.actorTier) >= C.rank(B.full_house.after) &&
+      C.dirTier[p.d] === B.full_house.tier && f.cast.every((a) => C.actorTier[a] === B.full_house.tier) ? 1 : 0,
+    in_sync: f.synergy,
+    phoenix: f.hit && f.afterBailout ? 1 : 0,
+  }[id];
+}
+function tierFor(b, v) {
+  if (v === undefined || v === null) return 0;
+  return (b.tiers || [1]).filter((t) => (b.atMost ? v <= t : v >= t - 1e-9)).length;
+}
+// Records newly reached tiers on next.badges and returns them as [{ id, tier }].
+function awardBadges(C, before, next, film, now) {
+  const out = [];
+  C.ach.badges.forEach((b) => {
+    const tier = tierFor(b, badgeValue(C, b.id, before, next, film)), have = (next.badges[b.id] || {}).tier || 0;
+    if (tier > have) { next.badges[b.id] = { tier, at: now }; out.push({ id: b.id, tier }); }
+  });
+  return out;
 }
 
 // Skip the current pitches: costs the development fee, uses a pass, moves to the next project index.
@@ -328,6 +382,6 @@ function rename(st, name) {
 
 module.exports = {
   loadCampaign, makeCampaign, unlocksFor, nextGate, budgetFor, settle, castPools, crewList, projectEnv,
-  makeProject, feasible, badgeEvents, newCampaign, release, pass, setHard, rename, defaultName, cleanName, projectKey,
+  makeProject, feasible, awardBadges, badgeValue, tierFor, filmFacts, newCampaign, release, pass, setHard, rename, defaultName, cleanName, projectKey,
   levelFor, pointsLeft, discounts, upgrade, normalize,
 };
