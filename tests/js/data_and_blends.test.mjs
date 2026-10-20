@@ -122,3 +122,16 @@ test("best possible film works for a blend", () => {
   const b = m.bestPossible(env, "horrorcomedy", m.DIFFS.medium);
   assert.ok(b && b.cost <= env.budget && b.p.g === "horrorcomedy");
 });
+
+test("shortlists don't depend on the order of actors.json or directors.json", () => {
+  const shuffled = loadModel(new URL("Frontend/greenlight.html", root));
+  const r = m.rng(4242), mix = (a) => a.map((x) => [r(), x]).sort((p, q) => p[0] - q[0]).map((p) => p[1]);
+  shuffled.initModel({ ...data, actors: mix(data.actors), directors: mix(data.directors).reverse() });
+  for (const day of DAYS) {
+    const a = m.makeEnv(day), b = shuffled.makeEnv(day);
+    for (const g of gids) {
+      assert.deepEqual(JSON.parse(JSON.stringify(shuffled.poolsFor(b, g))), JSON.parse(JSON.stringify(m.poolsFor(a, g))), `${day} ${g} cast`);
+      assert.deepEqual(JSON.parse(JSON.stringify(shuffled.dirsFor(b, g))), JSON.parse(JSON.stringify(m.dirsFor(a, g))), `${day} ${g} directors`);
+    }
+  }
+});

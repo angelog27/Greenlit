@@ -550,21 +550,23 @@ function evalFilm(env,p,cfg,luck){
   out.luck=lk;out.gross=m;out.share=m*SHARE;out.profit=out.share-out.cost;
   return out;
 }
-// Each role gets its own pool of six: three men and three women, no one repeated across roles. Seeded by day and genre, nudged toward actors who suit the genre.
+// Each role gets its own pool of six: three men and three women, no one repeated across roles. Nudged toward actors who suit the genre.
+// Every person draws from their own seed (day, genre, id), so the order of data/actors.json never changes a shortlist.
+function seedOf(tag,env,gid,id){return rng(hash(tag+"|"+env.day+"|"+gid+"|"+id))()}
+function byK(p,q){return p.k-q.k||(p.id<q.id?-1:1)}
 function poolsFor(env,gid){
-  var r=rng(hash("pool|"+env.day+"|"+gid)),m=[],f=[];
-  ACTORS.forEach(function(a){(a.s==="f"?f:m).push({a:a,k:r()-(inGenre(a.g,gid)?0.5:0)})});
-  function ord(x){x.sort(function(p,q){return p.k-q.k});return x.map(function(o){return o.a})}
+  var m=[],f=[];
+  ACTORS.forEach(function(a){(a.s==="f"?f:m).push({a:a,id:a.id,k:seedOf("pool",env,gid,a.id)-(inGenre(a.g,gid)?0.5:0)})});
+  function ord(x){x.sort(byK);return x.map(function(o){return o.a})}
   m=ord(m);f=ord(f);
   return [0,1,2].map(function(k){return m.slice(3*k,3*k+3).concat(f.slice(3*k,3*k+3)).sort(function(a,b){return b.fee-a.fee||(a.id<b.id?-1:1)}).map(function(a){return a.id})});
 }
 // Directors: once the roster passes DIR_SHORT, each day and genre gets a seeded shortlist, nudged toward
-// specialists like the cast pools, sorted by fee. With DIR_SHORT or fewer it is every director in roster order.
+// specialists like the cast pools, sorted by fee (per-person seeds, so file order doesn't matter). With DIR_SHORT or fewer it is every director in roster order.
 var DIR_SHORT=8;
 function dirsFor(env,gid){
   if(DIRS.length<=DIR_SHORT)return DIRS.map(function(d){return d.id});
-  var r=rng(hash("dirs|"+env.day+"|"+gid));
-  return DIRS.map(function(d){return {d:d,k:r()-(inGenre(d.spec,gid)?0.35:0)}}).sort(function(p,q){return p.k-q.k}).slice(0,DIR_SHORT)
+  return DIRS.map(function(d){return {d:d,id:d.id,k:seedOf("dirs",env,gid,d.id)-(inGenre(d.spec,gid)?0.35:0)}}).sort(byK).slice(0,DIR_SHORT)
     .map(function(o){return o.d}).sort(function(a,b){return b.fee-a.fee||(a.id<b.id?-1:1)}).map(function(d){return d.id});
 }
 // Lean numeric twin of evalFilm (same rounding) used only by the ceiling search.

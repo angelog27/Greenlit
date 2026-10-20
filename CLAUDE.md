@@ -12,7 +12,7 @@ Real directors and actors are game pieces. All fees, star ratings and dollar fig
   - Daily Challenge: always Hard, one shared genre and pitch for everyone.
 - Every mode and day has its own profit leaderboard; a player's best run of the day counts.
 - **Paged wizard, one step per screen:** Genre → Pitch → Director → Lead → Supporting → Villain → Release → Review → Result.
-- **Shortlists:** each cast role gets a seeded shortlist of 6 (3 men, 3 women), nobody repeated across roles (`poolsFor`).
+- **Shortlists:** each cast role gets a seeded shortlist of 6 (3 men, 3 women), nobody repeated across roles (`poolsFor`). Each person draws from their own seed (day, genre, id), so actors.json/directors.json order never matters (changed Oct 2026, user's choice, so the files can be sorted).
 
 ## Layout
 - `Frontend/greenlight.html`: the game (vanilla HTML/CSS/JS, no build step). The model sits between `// ===== MODEL START =====` and `// ===== MODEL END =====`; the UI comes after it.
@@ -20,6 +20,7 @@ Real directors and actors are game pieces. All fees, star ratings and dollar fig
 - `reference/greenlight.v1.html`: frozen original single-file prototype. **Never edit.** Parity tests compare against it.
 - `tools/model_loader.mjs`: loads the model section of an HTML file into a node `vm` context (used by tests and tools).
 - `tools/extract_data.mjs`: one-off that produced `data/*.json` from the reference file.
+- `tools/format_data.mjs`: sorts actors (star), directors (skill), loyal/chem (grouped by person) and lays every simple data file out one record per line. Run after editing data. genres/windows/plots order is seed-relevant and kept. `data/README.md` documents fields and sort orders.
 - `tools/fetch_images.mjs`: looks up TMDB images locally (key from env/.env) and writes `data/images.json` (public image paths only, never the key). The page loads it optionally and falls back to initials.
 - UI: dark, flat (no gradients), Big Shoulders Display / Instrument Sans / JetBrains Mono. Top bar = mode, difficulty, budget, leaderboard drawer; left rail = the wizard steps with what was picked. Director and cast pick from a horizontal reel. The budget meter colours by money left: red under $15M, orange under $40M, green otherwise. Step changes use the View Transitions API; honour prefers-reduced-motion.
 - `Frontend/net.js`: Firebase module (auth, release call, live boards). Missing config = offline play, results kept on the device.

@@ -1,272 +1,47 @@
 [
-  {
-    "a": "isaac",
-    "b": "momoa",
-    "bonus": 0.1,
-    "films": "Dune"
-  },
-  {
-    "a": "lupita",
-    "b": "duke",
-    "bonus": 0.12,
-    "films": "Us"
-  },
-  {
-    "a": "momoa",
-    "b": "wilson",
-    "bonus": 0.1,
-    "films": "Aquaman"
-  },
-  {
-    "a": "hathaway",
-    "b": "gyllenhaal",
-    "bonus": 0.12,
-    "films": "Love & Other Drugs"
-  },
-  {
-    "a": "foxx",
-    "b": "hathaway",
-    "bonus": 0.1,
-    "films": "Rio"
-  },
-  {
-    "a": "isaac",
-    "b": "lupita",
-    "bonus": 0.1,
-    "films": "Star Wars: The Force Awakens"
-  },
-  {
-    "a": "zendaya",
-    "b": "chalamet",
-    "bonus": 0.12,
-    "films": "Dune"
-  },
-  {
-    "a": "gosling",
-    "b": "stone",
-    "bonus": 0.12,
-    "films": "La La Land"
-  },
-  {
-    "a": "gosling",
-    "b": "robbie",
-    "bonus": 0.1,
-    "films": "Barbie"
-  },
-  {
-    "a": "cruise",
-    "b": "powell",
-    "bonus": 0.12,
-    "films": "Top Gun: Maverick"
-  },
-  {
-    "a": "murphy",
-    "b": "hardy",
-    "bonus": 0.12,
-    "films": "Inception, Dunkirk"
-  },
-  {
-    "a": "dicaprio",
-    "b": "hardy",
-    "bonus": 0.15,
-    "films": "Inception, The Revenant"
-  },
-  {
-    "a": "murphy",
-    "b": "blunt",
-    "bonus": 0.1,
-    "films": "Oppenheimer"
-  },
-  {
-    "a": "pugh",
-    "b": "chalamet",
-    "bonus": 0.1,
-    "films": "Little Women, Dune: Part Two"
-  },
-  {
-    "a": "black",
-    "b": "awkwafina",
-    "bonus": 0.1,
-    "films": "Jumanji: The Next Level"
-  },
-  {
-    "a": "johnson",
-    "b": "black",
-    "bonus": 0.1,
-    "films": "Jumanji films"
-  },
-  {
-    "a": "johnson",
-    "b": "awkwafina",
-    "bonus": 0.1,
-    "films": "Jumanji: The Next Level"
-  },
-  {
-    "a": "erivo",
-    "b": "grande",
-    "bonus": 0.12,
-    "films": "Wicked, Wicked: For Good"
-  },
-  {
-    "a": "erivo",
-    "b": "davis",
-    "bonus": 0.08,
-    "films": "Widows"
-  },
-  {
-    "a": "hemsworth",
-    "b": "thompson",
-    "bonus": 0.1,
-    "films": "Thor: Ragnarok, Men in Black: International"
-  },
-  {
-    "a": "hemsworth",
-    "b": "hiddleston",
-    "bonus": 0.1,
-    "films": "Thor, Thor: Ragnarok"
-  },
-  {
-    "a": "jordan",
-    "b": "thompson",
-    "bonus": 0.12,
-    "films": "Creed, Creed II, Creed III"
-  },
-  {
-    "a": "jordan",
-    "b": "lupita",
-    "bonus": 0.08,
-    "films": "Black Panther"
-  },
-  {
-    "a": "mescal",
-    "b": "pascal",
-    "bonus": 0.08,
-    "films": "Gladiator II"
-  },
-  {
-    "a": "pitt",
-    "b": "dicaprio",
-    "bonus": 0.12,
-    "films": "Once Upon a Time in Hollywood"
-  },
-  {
-    "a": "robbie",
-    "b": "pitt",
-    "bonus": 0.1,
-    "films": "Once Upon a Time in Hollywood, Babylon"
-  },
-  {
-    "a": "robbie",
-    "b": "dicaprio",
-    "bonus": 0.12,
-    "films": "The Wolf of Wall Street, Once Upon a Time in Hollywood"
-  },
-  {
-    "a": "stone",
-    "b": "plemons",
-    "bonus": 0.1,
-    "films": "Kinds of Kindness, Bugonia"
-  },
-  {
-    "a": "stone",
-    "b": "dafoe",
-    "bonus": 0.08,
-    "films": "Poor Things, Kinds of Kindness"
-  },
-  {
-    "a": "stone",
-    "b": "ruffalo",
-    "bonus": 0.08,
-    "films": "Poor Things"
-  },
-  {
-    "a": "pattinson",
-    "b": "dafoe",
-    "bonus": 0.1,
-    "films": "The Lighthouse"
-  },
-  {
-    "a": "pattinson",
-    "b": "ackie",
-    "bonus": 0.08,
-    "films": "Mickey 17"
-  },
-  {
-    "a": "damon",
-    "b": "chastain",
-    "bonus": 0.1,
-    "films": "Interstellar, The Martian"
-  },
-  {
-    "a": "phoenix",
-    "b": "stone",
-    "bonus": 0.08,
-    "films": "Irrational Man, Eddington"
-  },
-  {
-    "a": "hiddleston",
-    "b": "chastain",
-    "bonus": 0.08,
-    "films": "Crimson Peak"
-  },
-  {
-    "a": "johansson",
-    "b": "hemsworth",
-    "bonus": 0.08,
-    "films": "The Avengers, Avengers: Endgame"
-  },
-  {
-    "a": "johansson",
-    "b": "ruffalo",
-    "bonus": 0.08,
-    "films": "The Avengers, Avengers: Endgame"
-  },
-  {
-    "a": "johansson",
-    "b": "olsen",
-    "bonus": 0.08,
-    "films": "Avengers: Age of Ultron, Avengers: Endgame"
-  },
-  {
-    "a": "rodriguez",
-    "b": "johnson",
-    "bonus": 0.08,
-    "films": "Fast & Furious 6, Furious 7, The Fate of the Furious"
-  },
-  {
-    "a": "yeoh",
-    "b": "awkwafina",
-    "bonus": 0.1,
-    "films": "Crazy Rich Asians"
-  },
-  {
-    "a": "wu",
-    "b": "awkwafina",
-    "bonus": 0.08,
-    "films": "Crazy Rich Asians"
-  },
-  {
-    "a": "yeoh",
-    "b": "wu",
-    "bonus": 0.08,
-    "films": "Crazy Rich Asians"
-  },
-  {
-    "a": "ferguson",
-    "b": "cruise",
-    "bonus": 0.12,
-    "films": "Mission: Impossible – Rogue Nation, Fallout, Dead Reckoning"
-  },
-  {
-    "a": "taylorjoy",
-    "b": "hemsworth",
-    "bonus": 0.08,
-    "films": "Furiosa"
-  },
-  {
-    "a": "comer",
-    "b": "butler",
-    "bonus": 0.08,
-    "films": "The Bikeriders"
-  }
+  { "a": "dicaprio",  "b": "hardy",      "bonus": 0.15, "films": "Inception, The Revenant" },
+  { "a": "dicaprio",  "b": "pitt",       "bonus": 0.12, "films": "Once Upon a Time in Hollywood" },
+  { "a": "dicaprio",  "b": "robbie",     "bonus": 0.12, "films": "The Wolf of Wall Street, Once Upon a Time in Hollywood" },
+  { "a": "cruise",    "b": "ferguson",   "bonus": 0.12, "films": "Mission: Impossible – Rogue Nation, Fallout, Dead Reckoning" },
+  { "a": "cruise",    "b": "powell",     "bonus": 0.12, "films": "Top Gun: Maverick" },
+  { "a": "pitt",      "b": "robbie",     "bonus": 0.1,  "films": "Once Upon a Time in Hollywood, Babylon" },
+  { "a": "johnson",   "b": "black",      "bonus": 0.1,  "films": "Jumanji films" },
+  { "a": "johnson",   "b": "awkwafina",  "bonus": 0.1,  "films": "Jumanji: The Next Level" },
+  { "a": "johnson",   "b": "rodriguez",  "bonus": 0.08, "films": "Fast & Furious 6, Furious 7, The Fate of the Furious" },
+  { "a": "gosling",   "b": "stone",      "bonus": 0.12, "films": "La La Land" },
+  { "a": "gosling",   "b": "robbie",     "bonus": 0.1,  "films": "Barbie" },
+  { "a": "johansson", "b": "hemsworth",  "bonus": 0.08, "films": "The Avengers, Avengers: Endgame" },
+  { "a": "johansson", "b": "ruffalo",    "bonus": 0.08, "films": "The Avengers, Avengers: Endgame" },
+  { "a": "johansson", "b": "olsen",      "bonus": 0.08, "films": "Avengers: Age of Ultron, Avengers: Endgame" },
+  { "a": "pascal",    "b": "mescal",     "bonus": 0.08, "films": "Gladiator II" },
+  { "a": "hemsworth", "b": "thompson",   "bonus": 0.1,  "films": "Thor: Ragnarok, Men in Black: International" },
+  { "a": "hemsworth", "b": "hiddleston", "bonus": 0.1,  "films": "Thor, Thor: Ragnarok" },
+  { "a": "hemsworth", "b": "taylorjoy",  "bonus": 0.08, "films": "Furiosa" },
+  { "a": "hathaway",  "b": "gyllenhaal", "bonus": 0.12, "films": "Love & Other Drugs" },
+  { "a": "hathaway",  "b": "foxx",       "bonus": 0.1,  "films": "Rio" },
+  { "a": "damon",     "b": "chastain",   "bonus": 0.1,  "films": "Interstellar, The Martian" },
+  { "a": "pattinson", "b": "dafoe",      "bonus": 0.1,  "films": "The Lighthouse" },
+  { "a": "pattinson", "b": "ackie",      "bonus": 0.08, "films": "Mickey 17" },
+  { "a": "momoa",     "b": "isaac",      "bonus": 0.1,  "films": "Dune" },
+  { "a": "momoa",     "b": "wilson",     "bonus": 0.1,  "films": "Aquaman" },
+  { "a": "phoenix",   "b": "stone",      "bonus": 0.08, "films": "Irrational Man, Eddington" },
+  { "a": "jordan",    "b": "thompson",   "bonus": 0.12, "films": "Creed, Creed II, Creed III" },
+  { "a": "jordan",    "b": "lupita",     "bonus": 0.08, "films": "Black Panther" },
+  { "a": "chalamet",  "b": "zendaya",    "bonus": 0.12, "films": "Dune" },
+  { "a": "chalamet",  "b": "pugh",       "bonus": 0.1,  "films": "Little Women, Dune: Part Two" },
+  { "a": "blunt",     "b": "murphy",     "bonus": 0.1,  "films": "Oppenheimer" },
+  { "a": "stone",     "b": "plemons",    "bonus": 0.1,  "films": "Kinds of Kindness, Bugonia" },
+  { "a": "stone",     "b": "ruffalo",    "bonus": 0.08, "films": "Poor Things" },
+  { "a": "stone",     "b": "dafoe",      "bonus": 0.08, "films": "Poor Things, Kinds of Kindness" },
+  { "a": "butler",    "b": "comer",      "bonus": 0.08, "films": "The Bikeriders" },
+  { "a": "murphy",    "b": "hardy",      "bonus": 0.12, "films": "Inception, Dunkirk" },
+  { "a": "yeoh",      "b": "awkwafina",  "bonus": 0.1,  "films": "Crazy Rich Asians" },
+  { "a": "yeoh",      "b": "wu",         "bonus": 0.08, "films": "Crazy Rich Asians" },
+  { "a": "davis",     "b": "erivo",      "bonus": 0.08, "films": "Widows" },
+  { "a": "grande",    "b": "erivo",      "bonus": 0.12, "films": "Wicked, Wicked: For Good" },
+  { "a": "isaac",     "b": "lupita",     "bonus": 0.1,  "films": "Star Wars: The Force Awakens" },
+  { "a": "chastain",  "b": "hiddleston", "bonus": 0.08, "films": "Crimson Peak" },
+  { "a": "lupita",    "b": "duke",       "bonus": 0.12, "films": "Us" },
+  { "a": "black",     "b": "awkwafina",  "bonus": 0.1,  "films": "Jumanji: The Next Level" },
+  { "a": "awkwafina", "b": "wu",         "bonus": 0.08, "films": "Crazy Rich Asians" }
 ]

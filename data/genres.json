@@ -1,113 +1,15 @@
 [
-  {
-    "id": "action",
-    "name": "Action",
-    "base": 230,
-    "cost": 45,
-    "blurb": "Stunts, chases, spectacle"
-  },
-  {
-    "id": "scifi",
-    "name": "Sci-Fi",
-    "base": 220,
-    "cost": 50,
-    "blurb": "Big ideas, big effects"
-  },
-  {
-    "id": "animation",
-    "name": "Animation",
-    "base": 250,
-    "cost": 60,
-    "blurb": "Family event, long production"
-  },
-  {
-    "id": "comedy",
-    "name": "Comedy",
-    "base": 130,
-    "cost": 22,
-    "blurb": "Laughs on a modest budget"
-  },
-  {
-    "id": "horror",
-    "name": "Horror",
-    "base": 150,
-    "cost": 14,
-    "blurb": "Cheap to make, loud to open"
-  },
-  {
-    "id": "thriller",
-    "name": "Thriller",
-    "base": 125,
-    "cost": 24,
-    "blurb": "Tension and twists"
-  },
-  {
-    "id": "drama",
-    "name": "Drama",
-    "base": 95,
-    "cost": 18,
-    "blurb": "Prestige, slower burn"
-  },
-  {
-    "id": "romance",
-    "name": "Romance",
-    "base": 105,
-    "cost": 16,
-    "blurb": "The date-night crowd"
-  },
-  {
-    "id": "horrorcomedy",
-    "name": "Horror-Comedy",
-    "base": 140,
-    "cost": 18,
-    "blurb": "Screams and laughs, cheap to shoot",
-    "mix": [
-      "horror",
-      "comedy"
-    ]
-  },
-  {
-    "id": "actioncomedy",
-    "name": "Action-Comedy",
-    "base": 180,
-    "cost": 34,
-    "blurb": "Buddy chaos with big set pieces",
-    "mix": [
-      "action",
-      "comedy"
-    ]
-  },
-  {
-    "id": "romcom",
-    "name": "Rom-Com",
-    "base": 118,
-    "cost": 19,
-    "blurb": "Meet-cutes and misunderstandings",
-    "mix": [
-      "romance",
-      "comedy"
-    ]
-  },
-  {
-    "id": "scifithriller",
-    "name": "Sci-Fi Thriller",
-    "base": 172,
-    "cost": 37,
-    "blurb": "Paranoia with a premise",
-    "mix": [
-      "scifi",
-      "thriller"
-    ]
-  },
-  {
-    "id": "scifihorror",
-    "name": "Sci-Fi Horror",
-    "base": 185,
-    "cost": 32,
-    "blurb": "Something is on board",
-    "mix": [
-      "scifi",
-      "horror"
-    ]
-  }
+  { "id": "action",        "name": "Action",          "base": 230, "cost": 45, "blurb": "Stunts, chases, spectacle" },
+  { "id": "scifi",         "name": "Sci-Fi",          "base": 220, "cost": 50, "blurb": "Big ideas, big effects" },
+  { "id": "animation",     "name": "Animation",       "base": 250, "cost": 60, "blurb": "Family event, long production" },
+  { "id": "comedy",        "name": "Comedy",          "base": 130, "cost": 22, "blurb": "Laughs on a modest budget" },
+  { "id": "horror",        "name": "Horror",          "base": 150, "cost": 14, "blurb": "Cheap to make, loud to open" },
+  { "id": "thriller",      "name": "Thriller",        "base": 125, "cost": 24, "blurb": "Tension and twists" },
+  { "id": "drama",         "name": "Drama",           "base": 95,  "cost": 18, "blurb": "Prestige, slower burn" },
+  { "id": "romance",       "name": "Romance",         "base": 105, "cost": 16, "blurb": "The date-night crowd" },
+  { "id": "horrorcomedy",  "name": "Horror-Comedy",   "base": 140, "cost": 18, "blurb": "Screams and laughs, cheap to shoot", "mix": ["horror", "comedy"] },
+  { "id": "actioncomedy",  "name": "Action-Comedy",   "base": 180, "cost": 34, "blurb": "Buddy chaos with big set pieces",    "mix": ["action", "comedy"] },
+  { "id": "romcom",        "name": "Rom-Com",         "base": 118, "cost": 19, "blurb": "Meet-cutes and misunderstandings",   "mix": ["romance", "comedy"] },
+  { "id": "scifithriller", "name": "Sci-Fi Thriller", "base": 172, "cost": 37, "blurb": "Paranoia with a premise",            "mix": ["scifi", "thriller"] },
+  { "id": "scifihorror",   "name": "Sci-Fi Horror",   "base": 185, "cost": 32, "blurb": "Something is on board",              "mix": ["scifi", "horror"] }
 ]

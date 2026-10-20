@@ -2,7 +2,7 @@
 // The live game data (data/*.json) has since grown (new people, new stories, blended genres), so the data
 // comes from v1 itself; tests/js/data_and_blends.test.mjs covers the live data.
 // Run: node --test tests/js/*.test.mjs
-import { test } from "node:test";
+import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { loadModel } from "../../tools/model_loader.mjs";
 
@@ -27,11 +27,10 @@ test("constants are unchanged", () => {
   }
 });
 
-test("daily environment and shortlists are unchanged", () => {
-  for (const day of DAYS) {
-    assert.deepEqual(plain(cur.makeEnv(day)), plain(ref.makeEnv(day)), day);
-    for (const g of ref.GENRES) assert.deepEqual(plain(cur.poolsFor(ref.makeEnv(day), g.id)), plain(ref.poolsFor(ref.makeEnv(day), g.id)), `${day} ${g.id}`);
-  }
+// Cast shortlists are drawn differently on purpose since Oct 2026 (one seed per person, so the order of
+// actors.json doesn't matter); data_and_blends.test.mjs checks them. The day's market is still identical.
+test("daily environment is unchanged", () => {
+  for (const day of DAYS) assert.deepEqual(plain(cur.makeEnv(day)), plain(ref.makeEnv(day)), day);
 });
 
 test("scoring is unchanged over random picks in every mode", () => {
@@ -56,6 +55,10 @@ test("scoring is unchanged over random picks in every mode", () => {
 });
 
 test("best possible film is unchanged", () => {
+  // Same search over the same shortlists: hand the current model v1's pools.
+  const own = cur.poolsFor;
+  cur.poolsFor = (env, gid) => plain(ref.poolsFor(env, gid));
+  after(() => { cur.poolsFor = own; });
   for (const day of DAYS.slice(0, 2)) {
     for (const diff of DIFFS) {
       for (const g of ["horror", "action"]) {

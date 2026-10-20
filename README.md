@@ -48,6 +48,8 @@ node --test tests/js/*.test.mjs
 
 All fees, ratings and dollar amounts are invented game numbers.
 
+See [`data/README.md`](data/README.md) for every field, how each file is sorted, and how to find someone. After editing data, run `node tools/format_data.mjs` to re-sort and re-align it.
+
 ## Images (TMDB)
 
 Portraits, genre stills and slate posters come from `data/images.json`, which holds only public `image.tmdb.org` paths. The page never sees the API key. To (re)build it after adding people or slate films:
