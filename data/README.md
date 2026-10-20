@@ -85,6 +85,10 @@ It only sorts and lays out records. It never adds, removes or changes them. Then
 
 `cost` is marketing in $M and `base` is the season's gross multiplier. `g` holds genre multipliers for that season (a missing genre counts as ×1). `hardOnly` seasons appear only in Hard mode, where the month of the release date picks the season.
 
+### plots.json
+
+Six pitches per genre. `tones` are the tones the story wants, `win` the seasons it suits, and `lead`, `side`, `anta` describe each part (`r`) and the tone it needs (`t`). A pitch with `from` (a date) only joins the draw from that UTC day, so adding stories never changes a day that has already been played: **append new pitches at the end of a genre's list with a `from` date at least a day ahead, and deploy the functions before that date.**
+
 ### slate.json
 
 `date` is the release date. `genre` is our nearest plain genre. `strength` (1 to 10) is how hard the film competes. A film in your genre on your weekend costs the most.

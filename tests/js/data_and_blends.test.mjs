@@ -38,11 +38,12 @@ test("ids are unique and every reference resolves", () => {
   for (const s of ["m", "f"]) assert.ok(data.actors.filter((a) => a.s === s).length >= 9, `at least 9 actors with s=${s}`);
 });
 
-test("every genre has three complete pitches", () => {
+test("every genre has at least six complete pitches", () => {
   for (const g of data.genres) {
     const ps = data.plots[g.id];
-    assert.ok(Array.isArray(ps) && ps.length === 3, `${g.id} has 3 pitches`);
+    assert.ok(Array.isArray(ps) && ps.length >= 6, `${g.id} has 6+ pitches`);
     for (const p of ps) {
+      if (p.from !== undefined) assert.match(p.from, /^\d{4}-\d\d-\d\d$/, `${p.title} from date`);
       assert.ok(p.title && p.text, `${g.id} pitch text`);
       assert.ok(p.tones.length >= 1 && p.tones.every((t) => TONES.includes(t)), `${p.title} tones`);
       assert.ok(p.win.length >= 1 && p.win.every((w) => winIds.includes(w)), `${p.title} windows`);
@@ -51,6 +52,24 @@ test("every genre has three complete pitches", () => {
   }
   const titles = Object.values(data.plots).flat().map((p) => p.title);
   assert.equal(new Set(titles).size, titles.length, "pitch titles unique");
+});
+
+// New pitches carry a `from` date: before it, every day keeps exactly the pitch it had; from it on, all join.
+test("pitches with a from date never change an earlier day's puzzle", () => {
+  const before = Object.fromEntries(data.genres.map((g) => [g.id, data.plots[g.id].filter((p) => !p.from)]));
+  const old = loadModel(new URL("Frontend/greenlight.html", root));
+  old.initModel({ ...data, plots: before });
+  const firstFrom = Object.values(data.plots).flat().map((p) => p.from).filter(Boolean).sort()[0];
+  for (let i = 1; i <= 40; i++) {
+    const day = m.addDays(firstFrom, -i);
+    assert.deepEqual(JSON.parse(JSON.stringify(m.makeEnv(day))), JSON.parse(JSON.stringify(old.makeEnv(day))), day);
+  }
+  const seen = new Set();
+  for (let i = 0; i < 120; i++) {
+    const env = m.makeEnv(m.addDays(firstFrom, i));
+    for (const g of data.genres) { const p = m.plotFor(env, g.id); assert.ok(!p.from || p.from <= env.day); seen.add(p.title); }
+  }
+  assert.ok(seen.size > Object.values(before).flat().length, "new pitches show up after their date");
 });
 
 test("blends: halves exist, heat is their average, and either half matches", () => {
