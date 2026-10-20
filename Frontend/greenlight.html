@@ -18,7 +18,23 @@
   --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
   --ease:cubic-bezier(.2,.75,.15,1); --cut:16px; --toph:72px;
+  --sig-bg:#000; --sig-off:#2A2F2A; --scrim:rgba(0,0,0,.62);
   color-scheme:dark;
+}
+/* Light theme: follows the system unless the theme button picked one (html[data-theme]). */
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#F4F5F1; --panel:#FFFFFF; --panel2:#ECEEE8; --raise:#E3E6DF; --line:#DADFD5; --line2:#BEC5BA;
+  --ink:#111411; --muted:#566058; --dim:#8A938B;
+  --accent:#12924C; --accent2:#0E7A3F; --on-accent:#FFFFFF; --amber:#A86E06; --orange:#BC5A08; --bad:#C2352A; --cold:#2D67A8;
+  --sig-bg:#1B1E1B; --sig-off:#3A403A; --scrim:rgba(20,24,20,.45);
+  color-scheme:light;
+}}
+:root[data-theme="light"]{
+  --bg:#F4F5F1; --panel:#FFFFFF; --panel2:#ECEEE8; --raise:#E3E6DF; --line:#DADFD5; --line2:#BEC5BA;
+  --ink:#111411; --muted:#566058; --dim:#8A938B;
+  --accent:#12924C; --accent2:#0E7A3F; --on-accent:#FFFFFF; --amber:#A86E06; --orange:#BC5A08; --bad:#C2352A; --cold:#2D67A8;
+  --sig-bg:#1B1E1B; --sig-off:#3A403A; --scrim:rgba(20,24,20,.45);
+  color-scheme:light;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -40,8 +56,8 @@ em{font-style:normal;color:var(--ink)}
 h1{font-family:var(--display);font-weight:900;font-size:32px;line-height:.9;letter-spacing:.01em;margin:0}
 h1 span{color:var(--accent)}
 .date{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:3px}
-.signal{display:flex;flex-direction:column;gap:3px;background:#000;padding:5px;border:1px solid var(--line)}
-.signal i{display:block;width:9px;height:9px;border-radius:50%;background:#2A2F2A;transition:background .35s var(--ease),box-shadow .35s var(--ease)}
+.signal{display:flex;flex-direction:column;gap:3px;background:var(--sig-bg);padding:5px;border:1px solid var(--line)}
+.signal i{display:block;width:9px;height:9px;border-radius:50%;background:var(--sig-off);transition:background .35s var(--ease),box-shadow .35s var(--ease)}
 .signal.red i:nth-child(1){background:#F0584A}
 .signal.amber i:nth-child(2){background:#F2B63D}
 .signal.green i:nth-child(3){background:#35D07F}
@@ -148,6 +164,9 @@ h1 span{color:var(--accent)}
 .card{position:relative;display:flex;flex-direction:column;min-width:0;background:var(--panel);border:1px solid var(--line);transition:border-color .3s var(--ease),transform .45s var(--ease),background .3s var(--ease)}
 .card:hover{border-color:var(--line2);transform:translateY(-3px);background:var(--panel2)}
 .card[aria-pressed="true"]{border-color:var(--accent);background:var(--panel2)}
+.card:disabled{cursor:not-allowed;opacity:.5}
+.card:disabled:hover{transform:none;border-color:var(--line);background:var(--panel)}
+.card:disabled .media img{filter:grayscale(1) brightness(.7)}
 .media{display:block;position:relative;aspect-ratio:3/4;overflow:hidden;background:var(--panel2)}
 .media.wide{aspect-ratio:16/9}
 .media img{width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);filter:grayscale(1) contrast(1.06) brightness(.92);transition:opacity .6s var(--ease),transform .8s var(--ease),filter .5s var(--ease)}
@@ -258,7 +277,7 @@ pre{margin:8px 0 12px;white-space:pre-wrap;word-break:break-word;font-family:var
 .banner b{display:block;font-family:var(--display);font-size:24px;text-transform:uppercase}
 
 /* ---------- leaderboard drawer ---------- */
-.scrim{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.62);opacity:0;pointer-events:none;transition:opacity .35s var(--ease)}
+.scrim{position:fixed;inset:0;z-index:40;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .35s var(--ease)}
 .drawer{position:fixed;top:0;right:0;bottom:0;z-index:41;width:min(460px,100vw);background:var(--panel);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .5s var(--ease),visibility 0s .5s;visibility:hidden;overflow:auto;padding:22px;display:grid;gap:20px;align-content:start}
 body.lb-open .scrim{opacity:1;pointer-events:auto}
 body.lb-open .drawer{transform:none;visibility:visible;transition:transform .5s var(--ease)}
@@ -304,12 +323,12 @@ footer{margin-top:56px;padding:20px 0 40px;border-top:1px solid var(--line);font
 .lb .you{font-family:var(--body);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--on-accent);background:var(--accent);padding:1px 5px;margin-left:6px;vertical-align:2px}
 
 /* ---------- sign-in modal ---------- */
-.modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.66);opacity:0;pointer-events:none;transition:opacity .3s var(--ease)}
+.modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .3s var(--ease)}
 .modal.open{opacity:1;pointer-events:auto}
 .mbox{width:min(420px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--panel);border:1px solid var(--line2);padding:22px;display:grid;gap:16px;transform:translateY(14px);transition:transform .4s var(--ease);clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%)}
 .modal.open .mbox{transform:none}
 .gbtn{width:100%;background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.gbtn:hover{background:#fff;border-color:#fff}
+.gbtn:hover{background:var(--ink);border-color:var(--ink);opacity:.86}
 .or{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:12px}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .field{display:grid;gap:6px}
@@ -351,6 +370,53 @@ body.intro-open{overflow:hidden}
 body.intro-open .ihero,body.intro-open .iboard{animation:rise .6s var(--ease) both}
 body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:calc(var(--i,0) * 40ms + .15s)}
 
+/* ---------- campaign: studio HQ, unlocks, badges ---------- */
+.hq{display:grid;gap:24px}
+.hq .hero{margin-bottom:0}
+.hq-name{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.hq-name form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hq-name input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line2);padding:8px 10px;min-width:220px}
+.hq-name input:focus{outline:none;border-color:var(--accent)}
+.hqgrid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start}
+.hqgrid>*{min-width:0}
+.pbar{position:relative;height:10px;background:var(--line);overflow:hidden;margin:12px 0 8px}
+.pbar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);transition:width 1.2s var(--ease)}
+.ladder{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px}
+.ladder li{display:grid;grid-template-columns:22px 70px minmax(0,1fr);gap:10px;align-items:start;font-size:13.5px;color:var(--muted)}
+.ladder li b{color:var(--ink);font-weight:600}
+.ladder li .mono{color:var(--ink)}
+.ladder li.on{color:var(--ink)}
+.ladder li .ck{width:20px;height:20px;display:grid;place-items:center;border:1px solid var(--line2);color:var(--accent)}
+.ladder li .ck svg{width:14px;height:14px}
+.ladder li.next .ck{border-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;margin-top:10px}
+.kv dd{margin:0;display:flex;flex-wrap:wrap;gap:4px}
+.shelf{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));margin-top:10px}
+.badge{display:grid;gap:6px;align-content:start;padding:12px;border:1px solid var(--line);background:var(--panel2)}
+.badge .bi{width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--accent);color:var(--accent);background:var(--panel)}
+.badge b{font-family:var(--display);font-weight:800;font-size:18px;line-height:1;text-transform:uppercase}
+.badge small{font-size:11.5px;color:var(--muted);line-height:1.35}
+.badge.off{background:var(--panel)}
+.badge.off .bi{border-color:var(--line2);color:var(--dim);background:var(--line);filter:grayscale(1)}
+.badge.off b{color:var(--dim)}
+.hqbar{position:sticky;bottom:0;z-index:5;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;background:var(--bg);border-top:1px solid var(--line)}
+.hqbar .row{align-items:center}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.switch input{accent-color:var(--accent);width:16px;height:16px}
+.unlock{border:1px solid var(--accent);border-left-width:4px;padding:16px 18px;display:grid;gap:8px;background:var(--panel2)}
+.unlock .lbl{color:var(--accent)}
+.unlock h4{font-family:var(--display);font-weight:900;font-size:clamp(30px,3.4vw,44px);line-height:.9;text-transform:uppercase;margin:0}
+.bail{border:1px solid var(--amber);border-left-width:4px;padding:12px 16px;font-size:14px}
+.bail b{color:var(--amber)}
+.camp-res{display:grid;gap:16px}
+.money2{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline}
+.money2 b{font-family:var(--display);font-weight:900;font-size:34px;line-height:1}
+.money2 .lbl{display:block;margin-bottom:4px}
+.pop{animation:pop .7s var(--ease) both;animation-delay:calc(var(--i,0) * 120ms + .5s)}
+@keyframes pop{0%{opacity:0;transform:scale(.6)}60%{opacity:1;transform:scale(1.06)}100%{transform:none}}
+.flash{animation:flash 1.6s var(--ease) .3s both}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--accent)}40%{box-shadow:0 0 0 6px transparent}100%{box-shadow:none}}
+
 /* ---------- motion ---------- */
 @keyframes rise{from{opacity:0;transform:translateY(16px)}}
 @keyframes fadein{from{opacity:0}}
@@ -372,6 +438,8 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
 }
 
 /* ---------- small screens ---------- */
+/* Three modes plus the theme button: drop button labels (icons stay) before the top bar would wrap. */
+@media (max-width:1480px){.tbtn>span:not(.acct-av){display:none}.tbtn{padding:9px 10px}}
 @media (max-width:1100px){.work.two{grid-template-columns:1fr}.aside{position:static}.review,.rgrid{grid-template-columns:1fr}}
 @media (max-width:900px){
   .top{position:static}
@@ -385,6 +453,8 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
   .mark{left:6px;right:6px;top:auto;bottom:-9px;width:auto;height:3px}
   .rail-foot{display:none}
   .rpurse{display:flex;min-width:120px;flex:none}
+  .hq>.hero{order:-2}
+  .hq>.hqbar{order:-1;position:static;border-top:0;border-bottom:1px solid var(--line);padding-top:0}
   .rpurse .lbl{display:none}
   .top .purse{display:none}
   .top{gap:10px 12px}
@@ -392,7 +462,7 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
   .ctl .lbl{display:none}
   .seg button{padding:7px 10px}
   .tbtn{padding:9px 10px}
-  .tbtn span{display:none}
+  .tbtn>span:not(.acct-av){display:none}
   .aside{position:static}
   .hero{grid-template-columns:1fr}
   .hero .art.photo{clip-path:none;min-height:180px;order:-1}
@@ -413,6 +483,7 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
     <div class="ctl" id="diffwrap"><span class="lbl" id="diff-l">Difficulty</span><div class="seg" id="diff" role="group" aria-labelledby="diff-l"></div></div>
   </div>
   <div class="purse" id="purse" aria-live="polite"></div>
+  <button class="tbtn" data-act="theme" id="themebtn"></button>
   <button class="tbtn" data-act="intro" id="helpbtn" aria-label="How to play"></button>
   <button class="tbtn" data-act="lb" aria-haspopup="dialog" aria-controls="drawer" id="lbbtn"></button>
   <div id="acct"></div>
@@ -427,6 +498,7 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
     <div class="stage" id="stage">
       <div class="work" id="work"><div class="page" id="page"></div><aside class="aside" id="aside" hidden><div class="panel" id="model"></div></aside></div>
       <div id="result" hidden></div>
+      <div id="hq" hidden></div>
     </div>
     <footer>
       <p>Real directors and actors appear as game pieces. Fees, tone tags, genre tags, competitor strength ratings and all dollar amounts are the game's own invented numbers, not real pay or box-office data. Reunion and chemistry bonuses are based on films the people actually made together.</p>
@@ -626,12 +698,13 @@ var REDUCED=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").ma
 
 // The puzzle day is the UTC date, the same day the server checks against.
 var TODAY=new Date().toISOString().slice(0,10);
-var state={type:"basic",diff:"medium",day:TODAY,env:null,pick:{g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"},result:null,stage:"play",step:"genre",enter:false,
+var state={type:"basic",diff:"medium",campDiff:"easy",day:TODAY,env:null,dayEnv:null,pick:{g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"},result:null,stage:"play",step:"genre",enter:false,
   me:null,days:{},ceil:null,attempt:0,lb:{type:"basic",diff:"medium",rows:null,err:null,unsub:null}};
 var LKEY="greenlight.days.v2";
-function CFG(){return DIFFS[state.diff]}
+// In the campaign the project sets the rules (Easy for the first films, then Medium, Hard by choice).
+function CFG(){return DIFFS[state.type==="campaign"?state.campDiff:state.diff]}
 function modeKey(){return "r3-"+state.type+"-"+state.diff}
-function modeLabel(){return (state.type==="daily"?"Daily Challenge":"Basic")+" · "+CFG().name}
+function modeLabel(){return state.type==="campaign"?"Campaign · "+CFG().name+" rules":(state.type==="daily"?"Daily Challenge":"Basic")+" · "+CFG().name}
 function dkey(day){return modeKey()+"|"+(day||state.day)}
 function loadLocal(){try{state.days=JSON.parse(localStorage.getItem(LKEY)||"{}")||{}}catch(e){state.days={}}}
 function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(state.days))}catch(e){}}
@@ -675,7 +748,10 @@ var ICON={
   link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
   dice:'<path d="M4 4h16v16H4zM8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/>',
-  check:'<path d="M5 12.5l4.5 4.5L19 7"/>'
+  check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
+  sun:'<path d="M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  auto:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 3v18"/>'
 };
 function icon(k){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">'+ICON[k]+'</svg>'}
 function tag(t,c){return '<span class="tag '+(c||"")+'">'+esc(t)+'</span>'}
@@ -683,17 +759,21 @@ function tag(t,c){return '<span class="tag '+(c||"")+'">'+esc(t)+'</span>'}
 // ---- top bar
 function drawHead(){
   var daily=state.type==="daily";
-  $("#date").textContent=prettyDate(state.day)+" · "+modeLabel();
-  $("#type").innerHTML='<button data-act="type" data-m="basic" aria-pressed="'+!daily+'">Basic</button><button data-act="type" data-m="daily" aria-pressed="'+daily+'">Daily Challenge</button>';
+  var camp=state.type==="campaign";
+  $("#date").textContent=camp?(CAMP.st?CAMP.st.studioName+" · Film #"+(CAMP.st.filmsMade+(state.stage==="result"?0:1))+" · "+CFG().name+" rules":"Campaign"):prettyDate(state.day)+" · "+modeLabel();
+  $("#type").innerHTML=[["basic","Basic"],["daily","Daily Challenge"],["campaign","Campaign"]].map(function(x){return '<button data-act="type" data-m="'+x[0]+'" aria-pressed="'+(state.type===x[0])+'">'+x[1]+'</button>'}).join("");
   $("#diff").innerHTML=["easy","medium","hard"].map(function(k){return '<button data-act="diff" data-m="'+k+'" aria-pressed="'+(state.diff===k)+'">'+DIFFS[k].name+'</button>'}).join("");
-  $("#diffwrap").hidden=daily;
+  $("#diffwrap").hidden=daily||camp;
   $("#railfoot").innerHTML='<span class="lbl">Scoring</span><span>Profit is your score: your studio\'s <b>'+Math.round(SHARE*100)+'%</b> of the box office minus everything you spend.</span>'+(CFG().show?'':'<span>How your choices combine stays secret until you greenlight.</span>');
 }
 // Updated in place so the meter and signal animate instead of being rebuilt.
 // Colour by money left: red under $15M (or over), orange under $40M, green otherwise.
 function budgetTier(left){return left<15?"red":left<40?"orange":"green"}
 function drawPurse(){
-  var env=state.env,cost=curCost(),over=cost>env.budget,left=env.budget-cost,tier=budgetTier(left),light=tier==="orange"?"amber":tier;
+  var env=state.env;
+  ["#purse","#rpurse"].forEach(function(s){$(s).hidden=!env});
+  if(!env)return;
+  var cost=curCost(),over=cost>env.budget,left=env.budget-cost,tier=budgetTier(left),light=tier==="orange"?"amber":tier;
   ["#purse","#rpurse"].forEach(function(s){
     var el=$(s);
     if(!el.firstChild)el.innerHTML='<div class="signal" aria-hidden="true"><i></i><i></i><i></i></div><div class="pv"><div class="pn"><span class="lbl left"></span><span class="amt"></span></div><div class="meter"><i></i></div></div>';
@@ -723,7 +803,7 @@ function stepValue(id){
 function drawRail(){
   var l=stepList(),cur=state.stage==="play"?state.step:null;
   $("#steps").innerHTML=l.map(function(id,k){
-    var v=stepValue(id),isCur=id===cur,done=stepFilled(id)&&!isCur,ok=isCur||canGo(id);
+    var v=stepValue(id),isCur=id===cur,done=stepFilled(id)&&!isCur,ok=state.stage!=="hq"&&(isCur||canGo(id));
     var ic=v&&v.img?pic(v.img,v.t):icon(id);
     return '<li><button class="step'+(isCur?" cur":"")+(done?" done":"")+'" data-act="goto" data-id="'+id+'"'+(ok?"":" disabled")+(isCur?' aria-current="step"':"")+' title="'+esc(stepName(id))+'">'+
       (isCur?'<i class="mark" aria-hidden="true"></i>':"")+'<span class="ic">'+ic+'</span><span class="tx"><span class="k">'+String(k+1).padStart(2,"0")+" · "+esc(stepName(id))+'</span><span class="v">'+esc(v?v.t:stepPrompt(id))+'</span></span>'+
@@ -754,7 +834,7 @@ function autoAdvance(){
 }
 
 function card(o){
-  return '<button class="card" style="--i:'+o.i+'" data-act="'+o.act+'" data-id="'+esc(o.id)+'" aria-pressed="'+o.sel+'">'+
+  return '<button class="card" style="--i:'+o.i+'" data-act="'+o.act+'" data-id="'+esc(o.id)+'" aria-pressed="'+o.sel+'"'+(o.off?" disabled":"")+'>'+
     (o.media!==undefined?o.media:'<span class="media'+(o.wide?" wide":"")+'">'+pic(o.img,o.title)+'</span>')+
     (o.cost!==null?'<span class="fee mono">$'+o.cost+'M</span>':"")+'<span class="tick">'+icon("check")+'</span>'+
     '<span class="body"><span class="nm">'+esc(o.title)+'</span>'+(o.sub?'<span class="sub">'+o.sub+'</span>':"")+(o.chips?'<span class="chips">'+o.chips+'</span>':"")+'</span></button>';
@@ -779,6 +859,9 @@ function sheet(active){
     return '<span class="frame'+(x[0]===active?" on":"")+(who?" full":"")+'"><span class="fm">'+(who?pic(faceUrl(who.id,"w185"),who.name):"")+'</span><span class="lbl">'+x[1]+'</span></span>'}).join("")+'</div>';
 }
 function modeNote(){
+  if(state.type==="campaign")return '<p class="modenote">'+{easy:"<b>Training wheels.</b> For your first "+CAMPCFG.trainingFilms+" films every number is on screen: boosts, multipliers and a projected profit.",
+    medium:"<b>Medium rules.</b> Numbers stay hidden until release, and you decide who plays the lead.",
+    hard:"<b>Real calendar.</b> Numbers hidden, and you release on a real date against real upcoming films."}[state.campDiff]+" The budget is your studio's bank.</p>";
   var info={easy:"<b>Easy.</b> Every number is on screen: boosts, multipliers and a projected profit. Good for learning the scoring.",
    medium:"<b>Medium.</b> Numbers stay hidden. You also decide who plays the lead and who plays the supporting role.",
    hard:"<b>Hard.</b> Everything hidden, and you release on a real calendar date against real upcoming films."}[state.diff];
@@ -812,11 +895,17 @@ function stepHtml(){
   var plot=g?plotFor(env,g.id):null,L=A[P.a1],S=A[P.a2],T=A[P.a3],wid=winId(curPick(),cfg);
   function over(add,sub){return cur-(sub||0)+add>env.budget?tag("Over budget","no"):""}
   if(id==="genre"){
-    h+=hero({eyebrow:"Step 01 · "+esc(modeLabel()),title:"Pick a genre",text:'<p>The studio hands you a pitch in that genre. Then you build the film around it.</p>'+modeNote(),art:marketArt(),artCls:"side"});
+    var camp=state.type==="campaign",pj=camp&&campProject();
+    h+=hero({eyebrow:(camp?"Film #"+(CAMP.st.filmsMade+1)+" · ":"Step 01 · ")+esc(modeLabel()),title:"Pick a genre",text:'<p>The studio hands you a pitch in that genre. Then you build the film around it.</p>'+modeNote()+(camp?passBtn():""),art:marketArt(),artCls:"side"});
     var plain=GENRES.filter(function(x){return !x.mix}),mixed=GENRES.filter(function(x){return x.mix});
     function gcard(x,i){
       var ht=env.heat[x.id],ch=(x.mix?tag(x.mix.map(function(p){return G[p].name}).join(" + "),""):"")+(show?tag("Today "+x2(ht),ht>=1.1?"hot":ht<=0.92?"cold":""):"");
-      return card({act:"g",id:x.id,sel:P.g===x.id,title:x.name,cost:x.cost,img:stillUrl(x.id),wide:true,i:i,sub:(show?"Potential $"+x.base+"M · ":"")+esc(x.blurb),chips:ch+(minCost(x.id)>env.budget?tag("Too pricey today","no"):P.g!==x.id?over(x.cost,g?g.cost:0):"")});
+      // Campaign: locked genres show what unlocks them; the server marks genres with no profitable film in budget.
+      var gs=pj?pj.genres[x.id]:null;
+      if(gs&&gs.state!=="ok")return card({act:"g",id:x.id,sel:false,off:true,title:x.name,cost:x.cost,img:stillUrl(x.id),wide:true,i:i,sub:esc(x.blurb),
+        chips:gs.state==="locked"?tag("Unlocks at $"+gs.at+"M",""):ch+tag("Too pricey today","no")});
+      return card({act:"g",id:x.id,sel:P.g===x.id,title:x.name,cost:x.cost,img:stillUrl(x.id),wide:true,i:i,sub:(show?"Potential $"+x.base+"M · ":"")+esc(x.blurb),
+        chips:ch+(env.bonus&&env.bonus[x.id]?tag("Genre Master","ok"):"")+(minCost(x.id)>env.budget?tag("Too pricey today","no"):P.g!==x.id?over(x.cost,g?g.cost:0):"")});
     }
     h+='<div class="sech"><h3>Classics</h3></div><div class="grid anim">'+plain.map(gcard).join("")+'</div>'+
       (mixed.length?'<div class="sech" style="margin-top:32px"><h3>Blends</h3><span class="note">'+(show?"Two genres in one. Cast, director and rival films from either half count; heat is the average of both.":"Two genres in one film.")+'</span></div><div class="grid anim">'+mixed.map(function(x,k){return gcard(x,k+plain.length)}).join("")+'</div>':"")+nav("Next",!!P.g);
@@ -845,9 +934,9 @@ function stepHtml(){
     var rol=k===0?plot.lead:k===1?plot.side:plot.anta;
     var title=k===2?"Cast the villain":cfg.roles?(k===0?"Cast the lead":"Cast the supporting role"):(k===0?"Choose your first actor":"Choose your second actor");
     var desc=(cfg.roles||k===2)?'Playing <b>'+esc(rol.r)+'</b>.':'Either of your two actors can carry the story.';
-    h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(stepName(id)),title:title,text:'<p>'+desc+' Today\'s shortlist: three men and three women, found only for this part.'+(show&&(cfg.roles||k===2)?' This role needs a <b>'+esc(rol.t)+'</b> presence.':'')+'</p>',art:sheet(id),artCls:"side"});
+    h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(stepName(id)),title:title,text:'<p>'+desc+(state.type==="campaign"?' Your shortlist: three men and three women your studio can sign'+(campProject().loans.length?', plus a few on loan from the next tier up while yours is thin':'')+'.':' Today\'s shortlist: three men and three women, found only for this part.')+(show&&(cfg.roles||k===2)?' This role needs a <b>'+esc(rol.t)+'</b> presence.':'')+'</p>',art:sheet(id),artCls:"side"});
     h+=reelOpen("Shortlist of "+pool.length)+pool.map(function(x,i){
-      var sel=P[id]===x.id,sub,ch=tag(x.s==="f"?"Woman":"Man","");
+      var sel=P[id]===x.id,sub,ch=tag(x.s==="f"?"Woman":"Man","")+(state.type==="campaign"&&campProject().loans.indexOf(x.id)>-1?tag("On loan",""):"");
       if(show){sub='★ '+x.star+' · '+esc(x.known);
         ch+=x.g.filter(function(s){return G[s]}).map(function(s){return tag(G[s].name,partsOf(P.g).indexOf(s)>-1?"ok":"")}).join("")+x.tone.map(function(t){var m=(cfg.roles||k===2)?rol.t===t:plot.tones.indexOf(t)>-1;return tag(t,m?"ok":"")}).join("");
         if(d)LOYAL.forEach(function(l){if(l[0]===d.id&&l[1]===x.id)ch+=tag("Reunion with "+d.name.split(" ").pop(),"ok")});
@@ -901,8 +990,9 @@ function stepHtml(){
 
 function drawStage(){
   var play=state.stage==="play";
-  $("#work").hidden=!play;$("#result").hidden=play;
+  $("#work").hidden=!play;$("#result").hidden=state.stage!=="result";$("#hq").hidden=state.stage!=="hq";
   drawRail();drawPurse();
+  if(state.stage==="hq")drawHQ();
   if(play){
     var a=document.activeElement,fid=a&&a.closest&&a.closest("#page [data-id]")?a.dataset.id:null;
     var tr=$("#page .track"),sl=tr?tr.scrollLeft:0,fresh=state.enter;
@@ -953,7 +1043,7 @@ function drawResult(){
   var cl=state.ceil&&state.ceil.k===res.ck?state.ceil.best:null,effic=cl&&cl.profit>0?Math.round(r.profit/cl.profit*100):null;
   var when=cfg.real?prettyDate(p.w):W[wid].name,share="GREENLIGHT "+state.day+" · "+modeLabel()+"\n"+plot.title+" · "+G[p.g].name+" · "+when+"\nBox office "+money(r.gross)+" · Profit "+money(r.profit)+" · Cost "+money(r.cost)+" of $"+env.budget+"M\n"+(rank?"Rank #"+rank+" of "+post.total+" today · ":"")+"Attempt "+state.attempt+"\nCan you beat it?";
   var wf=r.steps.map(function(s,i){var run=s.run||s.abs;return '<div><span>'+esc(s.k)+'</span><span class="bk"><i style="--i:'+i+';width:'+Math.max(2,run/max*100)+'%"></i></span><span class="mono" style="text-align:right">'+(s.abs!==undefined?"$"+s.abs+"M":x2(s.x))+'</span></div>'}).join("");
-  var best=state.days[dkey()],isBest=best&&Math.round(best.profit*10)===Math.round(r.profit*10);
+  var camp=!!res.camp,best=camp?null:state.days[dkey()],isBest=best&&Math.round(best.profit*10)===Math.round(r.profit*10);
   var wanted=plot.tones.join(" and ")+" in tone, released in "+plot.win.map(function(id){return W[id].name}).join(" or ");
   var rv="";
   if(cfg.real){var ls=r.rivals.slice().sort(function(a,b){return b.pen-a.pen});
@@ -964,12 +1054,15 @@ function drawResult(){
   $("#result").innerHTML='<div class="'+(first?"res-in":"")+'"><section class="hero res"><div class="copy"><p class="lbl verdict'+(r.profit<0?" neg":"")+'">'+verdictOf(r.profit)+(isBest?" · your best today":"")+' · '+esc(modeLabel())+'</p><h2>'+esc(plot.title)+'</h2>'+
      '<p class="credits">'+G[p.g].name+' · '+esc(D[p.d].name)+' · '+esc(A[p.a1].name)+(cfg.roles?' (lead)':'')+', '+esc(A[p.a2].name)+(cfg.roles?' (supporting)':'')+' &amp; '+esc(A[p.a3].name)+' (antagonist) · '+esc(when)+'</p><div class="faces">'+faces+'</div></div>'+
      '<div class="art side"><div class="figs"><div><span class="lbl">Box office</span><b class="big2 mono" id="grossnum">'+money(r.gross)+'</b></div><div><span class="lbl">Net profit</span><b class="big mono '+(r.profit>=0?"pos":"neg")+'" id="bignum">'+money(r.profit)+'</b></div></div>'+
-     '<span class="note">Attempt '+state.attempt+' · cost '+money(r.cost)+' of $'+env.budget+'M</span>'+postLine(post)+'</div></section>'+
+     '<span class="note">'+(camp?"Cost ":"Attempt "+state.attempt+" · cost ")+money(r.cost)+' of $'+env.budget+'M</span>'+postLine(post)+'</div></section>'+
    '<div class="rgrid"><div><section class="panel"><h3>Box office build</h3><div class="wf">'+wf+'</div><p class="note" style="margin-top:12px">Worldwide gross '+money(r.gross)+'. Studio share '+Math.round(SHARE*100)+'%: '+money(r.share)+'. Costs: '+money(r.cost)+'. Luck this run: '+x2(r.luck)+'.</p>'+
      '<p class="lbl" style="margin-top:16px">Bonuses you earned</p>'+(r.syn.length?'<ul class="bon">'+r.syn.map(function(s){return '<li>'+esc(s)+'</li>'}).join("")+'</ul>':'<p class="note">None this time.</p>')+
      '<p class="note" style="margin-top:12px">This pitch wanted: '+esc(wanted)+'. '+(cfg.roles?'The lead called for a '+esc(plot.lead.t)+' presence, the supporting role for a '+esc(plot.side.t)+' one and the antagonist for a '+esc(plot.anta.t)+' one':'The antagonist called for a '+esc(plot.anta.t)+' presence')+'.</p>'+rv+'</section></div>'+
-   '<div>'+cdiv+'<section class="panel"><h3>Share it</h3><pre id="share">'+esc(share)+'</pre><div class="row"><button class="btn go" data-act="copy" id="copy">Copy result</button><button class="btn" data-act="again">Tweak and rerelease</button><button class="btn" data-act="new">New film</button><button class="btn" data-act="lb">Leaderboard</button></div></section></div></div></div>';
+   '<div>'+(camp?campResultHtml(res)+cdiv:cdiv+'<section class="panel"><h3>Share it</h3><pre id="share">'+esc(share)+'</pre><div class="row"><button class="btn go" data-act="copy" id="copy">Copy result</button><button class="btn" data-act="again">Tweak and rerelease</button><button class="btn" data-act="new">New film</button><button class="btn" data-act="lb">Leaderboard</button></div></section>')+'</div></div></div>';
   if(first){countUp($("#grossnum"),r.gross);countUp($("#bignum"),r.profit)}
+  // Campaign: the progress bar grows from where it was to where the film took it (once).
+  var bar=$("#campbar");if(bar&&!res.camp.grown){res.camp.grown=true;requestAnimationFrame(function(){requestAnimationFrame(function(){bar.style.width=bar.dataset.to+"%"})})}
+  else if(bar)bar.style.width=bar.dataset.to+"%";
 }
 function countUp(el,to){
   if(REDUCED||!el)return;
@@ -1076,7 +1169,9 @@ function submitAuth(form){
 // Server runs are keyed like "r3-basic-medium_2026-10-19"; the page keeps "r3-basic-medium|2026-10-19".
 function runsToDays(runs){var o={};runs.forEach(function(e){var k=e.id.replace(/_(\d{4}-\d\d-\d\d)$/,"|$1");if(k!==e.id)o[k]=e});return o}
 function onUser(u){
+  var changed=(state.me&&state.me.uid)!==(u&&u.uid);
   state.me=u;drawAcct();
+  if(changed){CAMP.st=null;CAMP.loaded=false;CAMP.history=null;CAMP.renaming=false;if(state.type==="campaign"){if(state.stage!=="hq")newGame();else campLoad()}}
   if(runsUnsub){runsUnsub();runsUnsub=null}
   if(u)runsUnsub=NET.watchRuns(function(runs){state.days=mergeDays(state.days,runsToDays(runs));saveLocal();if(document.body.classList.contains("lb-open"))drawBoard()},function(){});
   if($("#authm").classList.contains("open"))drawAuth();
@@ -1102,7 +1197,8 @@ function introHtml(){
     ["win","Release timing","Some seasons suit some stories, and marketing costs change with the season. A rival studio can crowd your weekend."],
     ["dice","A little luck","A small hidden factor, seeded by the day. The same film made by two players today does exactly the same business."]];
   var modes=[["Easy","Learn the ropes","Every number on screen: boosts, multipliers and a projected profit."],["Medium","Trust your gut","The numbers stay hidden until release, and you decide who plays the lead."],
-    ["Hard","Real calendar","Hidden numbers, a real Friday release date, and real upcoming films opening against you."],["Daily Challenge","Same film for everyone","One shared genre and pitch, always on Hard. One board, everyone on it."]];
+    ["Hard","Real calendar","Hidden numbers, a real Friday release date, and real upcoming films opening against you."],["Daily Challenge","Same film for everyone","One shared genre and pitch, always on Hard. One board, everyone on it."],
+    ["Campaign","Build a studio","Your own studio, film after film. Start with cheap genres and unknown talent; profits unlock better talent, bigger budgets and new genres. Saved to your account."]];
   var signed=state.me;
   return '<div class="intro-in"><header class="ihead"><div class="brand"><div class="signal green" aria-hidden="true"><i></i><i></i><i></i></div><h1>GREEN<span>LIGHT</span></h1></div><button class="btn" data-act="introclose">Skip to the game</button></header>'+
     '<section class="ihero"><p class="lbl">A daily movie-studio game</p><h2>You\'re running the studio. <span>Make one film.</span> Make it pay.</h2>'+
@@ -1128,7 +1224,140 @@ function closeIntro(){
 }
 function introSeen(){try{return localStorage.getItem(IKEY)==="1"}catch(e){return false}}
 
+// ---- campaign: one studio per account, all of it on the server (functions/campaign.js). The page reads the
+// studio once per load (NET.campaignLoad); every change goes through a campaign* callable, which returns the new
+// studio. Shortlists, budget and visibility come from the server's current project; the page only draws them.
+var CAMPCFG=null,ACH=null;
+var CAMP={st:null,loaded:false,loading:false,err:"",note:"",busy:"",history:null,renaming:false,passArm:false};
+function campProject(){return CAMP.st&&CAMP.st.currentProject}
+// The stored project in the shape the model expects (Firestore can't hold nested arrays).
+function projEnv(pj){
+  var e=Object.assign({},pj.env,{pools:{},dirs:{}});
+  Object.keys(pj.genres).forEach(function(g){var x=pj.genres[g];if(x.pools){e.pools[g]=[x.pools.a1,x.pools.a2,x.pools.a3];e.dirs[g]=x.dirs}});
+  return e;
+}
+function gateInfo(id){return ACH.gates.filter(function(x){return x.id===id})[0]||{name:id,text:""}}
+function ladderAt(life){var o={prev:CAMPCFG.ladder[0],next:null};CAMPCFG.ladder.forEach(function(s){if(s.at<=life)o.prev=s;else if(!o.next)o.next=s});return o}
+function ladderPct(life){var l=ladderAt(life);return l.next?Math.max(0,Math.min(100,(life-l.prev.at)/(l.next.at-l.prev.at)*100)):100}
+function campLoad(){
+  if(!NET||!state.me){CAMP.st=null;CAMP.loaded=false;drawCamp();return}
+  CAMP.loading=true;CAMP.err="";drawCamp();
+  var who=state.me.uid;
+  NET.campaignLoad().then(function(st){if(!state.me||state.me.uid!==who)return;CAMP.st=st;CAMP.loaded=true;CAMP.loading=false;drawCamp()},
+    function(e){CAMP.loading=false;CAMP.err=NET.errorText(e);drawCamp()});
+}
+function campCall(name,payload,busy,then){
+  CAMP.busy=busy;CAMP.err="";drawCamp();
+  return NET.campaign(name,payload).then(function(o){CAMP.busy="";if(o&&o.state){CAMP.st=o.state;CAMP.loaded=true}if(then)then(o);drawCamp()},
+    function(e){CAMP.busy="";CAMP.err=NET.errorText(e);drawCamp()});
+}
+function drawCamp(){if(state.type!=="campaign")return;drawHead();if(state.stage==="hq"){drawRail();drawPurse();drawHQ()}else if(state.stage==="play")drawStage()}
+// Start (or resume) the current project in the wizard.
+function campPlay(){
+  var pj=campProject();if(!pj)return;
+  swap(function(){state.campDiff=pj.diff;state.env=projEnv(pj);state.result=null;state.stage="play";state.step="genre";state.enter=true;
+    state.pick={g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"};drawAll();window.scrollTo(0,0)});
+}
+function campHQ(){
+  CAMP.passArm=false;CAMP.note="";
+  swap(function(){var pj=campProject();state.result=null;state.stage="hq";state.enter=true;state.pick={g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"};if(pj){state.campDiff=pj.diff;state.env=projEnv(pj)}else state.env=null;drawAll();window.scrollTo(0,0)});
+}
+function passBtn(){
+  var st=CAMP.st;if(!st)return "";
+  var fee=CAMPCFG.pass.fee,n=st.passesAvailable;
+  return '<p class="note" style="margin-top:6px">'+(n?'<button class="btn sm" data-act="camppass"'+(CAMP.busy?" disabled":"")+'>'+(CAMP.passArm?"Confirm: pass for $"+fee+"M":"Pass on these pitches")+'</button> ':'')+
+    (n?n+' pass'+(n>1?"es":"")+' left. A pass costs a $'+fee+'M development fee and brings new pitches.':'No passes left. You earn one every '+CAMPCFG.pass.every+' films.')+'</p>';
+}
+function badgeTile(b,when,i){
+  return '<div class="badge'+(when?" pop":" off")+'" style="--i:'+(i||0)+'"><span class="bi">'+icon(when?"trophy":"spark")+'</span><b>'+esc(b.name)+'</b><small>'+esc(b.text)+'</small>'+(when&&typeof when==="number"?'<small class="mono">'+new Date(when).toISOString().slice(0,10)+'</small>':"")+'</div>';
+}
+function tierChips(st){
+  var u=st.unlocked;
+  return '<dl class="kv"><dt class="lbl">Cast</dt><dd>'+tag(u.actorTier+"-list","ok")+'</dd><dt class="lbl">Directors</dt><dd>'+tag(u.directorTier+"-list","ok")+'</dd>'+
+    '<dt class="lbl">Genres</dt><dd>'+u.genres.map(function(g){return tag(G[g].name,st.perks&&st.perks[g]?"ok":"")}).join("")+'</dd>'+
+    (Object.keys(st.perks||{}).length?'<dt class="lbl">Perks</dt><dd>'+Object.keys(st.perks).map(function(g){return tag("Genre Master: "+G[g].name+" +"+Math.round(st.perks[g]*100)+"%","ok")}).join("")+'</dd>':"")+
+    (u.hard?'<dt class="lbl">Calendar</dt><dd>'+tag("Real release dates","ok")+'</dd>':"")+'</dl>';
+}
+function ladderHtml(life){
+  var l=ladderAt(life);
+  return '<ol class="ladder">'+CAMPCFG.ladder.map(function(s){var on=life>=s.at,gi=gateInfo(s.id);
+    return '<li class="'+(on?"on":"")+(l.next===s?" next":"")+'"><span class="ck">'+(on?icon("check"):"")+'</span><span class="mono">$'+s.at+'M</span><span><b>'+esc(gi.name)+'</b><br>'+esc(gi.text)+'</span></li>'}).join("")+'</ol>';
+}
+function filmRows(list){
+  if(!list.length)return '<p class="note">No films yet. Your first project is waiting.</p>';
+  return '<div class="scroll"><table><thead><tr><th>#</th><th>Film</th><th class="n">Box office</th><th class="n">Profit</th></tr></thead><tbody>'+list.map(function(f){
+    return '<tr><td class="mono">'+f.no+'</td><td><b>'+esc(f.title)+'</b><small>'+(G[f.genre]?G[f.genre].name:"")+'</small></td><td class="n">'+money(f.gross)+'</td><td class="n '+(f.profit>=0?"pos":"neg")+'">'+money(f.profit)+'</td></tr>'}).join("")+'</tbody></table></div>';
+}
+function hqHtml(){
+  var intro='<p>Run one studio over many films. Start small with a few cheap genres and D-list talent; every profitable film adds to your lifetime profit, which unlocks better talent, bigger budgets and new genres. A flop never takes an unlock away.</p>';
+  if(!CAMPCFG)return hero({eyebrow:"Campaign",title:"Not available",text:'<p>The campaign settings could not load. Reload the page to try again.</p>'});
+  if(!NET)return hero({eyebrow:"Campaign",title:"Run a studio",text:intro+'<p>Your studio lives on the game server so you can carry on from any device. Online play isn\'t set up in this build.</p>'});
+  if(!state.me)return hero({eyebrow:"Campaign",title:"Run your own studio",text:intro+'<p>Your studio is saved to your account, so you can pick it up on any device. Sign in to start.</p><div class="row" style="margin-top:8px"><button class="btn go" data-act="signin">Sign in to start</button></div>'});
+  if(!CAMP.loaded)return hero({eyebrow:"Campaign",title:CAMP.err?"Couldn't open your studio":"Opening your studio…",text:CAMP.err?'<p class="neg">'+esc(CAMP.err)+'</p><div class="row" style="margin-top:8px"><button class="btn" data-act="campretry">Try again</button></div>':'<p class="note">Fetching your studio from the server.</p>'});
+  var st=CAMP.st,busy=CAMP.busy,err=CAMP.err?'<p class="neg" role="alert">'+esc(CAMP.err)+'</p>':"";
+  if(!st)return hero({eyebrow:"Campaign · New studio",title:"Found your studio",text:intro+
+    '<p>You open with <b>$'+CAMPCFG.start.bank+'M</b> in the bank. Each film\'s profit goes back into it, and your next budget is the bank, up to a cap that grows as you unlock tiers. If the bank ever drops below $'+CAMPCFG.start.floor+'M, the studio is bailed out back to $'+CAMPCFG.start.floor+'M; the run never ends.</p>'+
+    '<form class="mform" id="campform" style="max-width:420px;margin-top:6px"><label class="field"><span>Studio name (shown on the campaign board, optional)</span><input name="name" maxlength="30" autocomplete="off" placeholder="Studio '+esc(state.me.uid.slice(0,5).toUpperCase())+'"></label>'+err+
+    '<button class="btn go" type="submit"'+(busy?" disabled":"")+'>'+(busy==="start"?"Opening…":"Open the studio")+'</button></form>'});
+  var pj=st.currentProject,life=st.lifetimeProfit,l=ladderAt(life),pct=ladderPct(life);
+  var rules=pj.diff==="easy"?"Training wheels: every number on screen":pj.diff==="hard"?"Real calendar, numbers hidden":"Numbers hidden until release";
+  var name='<div class="hq-name">'+(CAMP.renaming?'<form id="renameform"><input name="name" maxlength="30" value="'+esc(st.studioName)+'" aria-label="Studio name"><button class="btn sm go" type="submit"'+(busy?" disabled":"")+'>Save</button><button class="btn sm" type="button" data-act="camprenamex">Cancel</button></form><span class="note">You can rename your studio once.</span>':
+    (!st.renamed?'<button class="btn sm" data-act="camprename">Rename (once)</button>':""))+'</div>';
+  var h='<div class="hq">'+hero({cls:"res",eyebrow:"Studio HQ · Film #"+(st.filmsMade+1)+" next",title:st.studioName,text:name+
+    '<p>Next project: <b>$'+pj.budget+'M budget</b> · '+esc(rules)+'.</p>'+(CAMP.note?'<p class="bail">'+esc(CAMP.note)+'</p>':"")+(st.bailouts?'<p class="note">Bailed out '+st.bailouts+' time'+(st.bailouts>1?"s":"")+'.</p>':""),
+    art:'<div class="figs"><div><span class="lbl">Bank</span><b class="big mono">'+money(st.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="big2 mono pos">'+money(life)+'</b></div></div>',artCls:"side"});
+  h+='<section class="panel"><div class="sech"><h3>'+(l.next?"Next unlock: "+esc(gateInfo(l.next.id).name):"Everything unlocked")+'</h3><span class="mono">'+money(life)+(l.next?" / $"+l.next.at+"M":"")+'</span></div>'+
+    '<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(pct)+'" aria-label="Progress to the next unlock"><i style="width:'+pct+'%"></i></div>'+
+    '<p class="note">'+(l.next?esc(gateInfo(l.next.id).text)+" Only profitable films count toward it.":"Your studio has the whole roster, every genre and real release dates.")+'</p>'+ladderHtml(life)+'</section>';
+  var shelf=ACH.badges.map(function(b,i){return badgeTile(b,st.badges[b.id],i)}).join("");
+  h+='<div class="hqgrid"><section class="panel"><h3>Your talent</h3>'+tierChips(st)+'<dl class="kv"><dt class="lbl">Films made</dt><dd class="mono">'+st.filmsMade+'</dd><dt class="lbl">Passes</dt><dd class="mono">'+st.passesAvailable+'</dd></dl></section>'+
+    '<section class="panel"><div class="sech"><h3>'+(CAMP.history?"All films":"Recent films")+'</h3>'+(st.filmsMade>(st.recent||[]).length||CAMP.history?'<button class="btn sm" data-act="camphistory">'+(CAMP.history?"Recent only":"All films")+'</button>':"")+'</div>'+
+      (CAMP.history==="loading"?'<p class="note">Loading…</p>':filmRows(Array.isArray(CAMP.history)?CAMP.history:st.recent||[]))+'</section></div>';
+  h+='<section class="panel"><h3>Badges</h3><p class="note">'+Object.keys(st.badges).length+' of '+ACH.badges.length+' earned.</p><div class="shelf">'+shelf+'</div></section>';
+  var hard=st.unlocked.hard?'<label class="switch"><input type="checkbox" data-act="camphard"'+(pj.diff==="hard"?" checked":"")+(busy?" disabled":"")+'> Real release dates for this project</label>':"";
+  h+='<div class="hqbar">'+(err||'<span>'+passBtn()+'</span>')+'<div class="row">'+hard+'<button class="btn go" data-act="campnext"'+(busy?" disabled":"")+'>'+(busy==="hard"?"Updating the calendar…":busy==="pass"?"Passing…":"Start next project")+'</button></div></div></div>';
+  return h;
+}
+function drawHQ(){
+  var el=$("#hq");
+  el.className="page"+(state.enter?" enter":"");state.enter=false;el.innerHTML=hqHtml();
+}
+// The campaign's part of the result screen: the server's verdict, bank, unlocks, badges, bailout.
+function campResultHtml(res){
+  var c=res.camp,btn='<div class="row"><button class="btn go" data-act="camphq">Back to HQ</button></div>';
+  if(c.status==="pending")return '<section class="panel camp-res"><h3>Studio report</h3><p class="note">Sending your film to the studio…</p></section>';
+  if(c.status==="error")return '<section class="panel camp-res"><h3>Studio report</h3><p class="neg">'+esc(c.msg)+'</p><div class="row"><button class="btn" data-act="campretryrel">Try again</button><button class="btn" data-act="camphq">Back to HQ</button></div></section>';
+  var f=c.film,ev=c.events,b0=c.before,b1=CAMP.st,h='<section class="panel camp-res"><h3>Studio report</h3>';
+  if(ev.bailout)h+='<p class="bail"><b>The studio was bailed out.</b> The bank fell below $'+CAMPCFG.start.floor+'M, so investors topped it back up to $'+CAMPCFG.start.floor+'M. Your unlocks are safe.</p>';
+  h+='<div class="money2"><div><span class="lbl">Bank</span><b class="mono">'+money(b0.bank)+' → '+money(b1.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="mono pos">'+money(b1.lifetimeProfit)+'</b></div></div>';
+  var l=ladderAt(b1.lifetimeProfit),from=ev.gates.length?0:ladderPct(b0.lifetimeProfit);
+  h+='<div><div class="pbar"><i id="campbar" style="width:'+from+'%" data-to="'+ladderPct(b1.lifetimeProfit)+'"></i></div><p class="note">'+(l.next?money(l.next.at-b1.lifetimeProfit).replace("-","")+" more lifetime profit to "+esc(gateInfo(l.next.id).name)+".":"Everything is unlocked.")+'</p></div>';
+  ev.gates.forEach(function(s,i){var gi=gateInfo(s.id),what=[];
+    if(s.actors)what.push(tag(s.actors+"-list cast","ok"));if(s.directors)what.push(tag(s.directors+"-list directors","ok"));
+    (s.genres||[]).forEach(function(g){what.push(tag(G[g].name,"ok"))});if(s.hard)what.push(tag("Real release dates","ok"));
+    h+='<div class="unlock pop flash" style="--i:'+i+'"><span class="lbl">Unlocked!</span><h4>'+esc(gi.name)+'</h4><p class="note">'+esc(gi.text)+'</p><span class="chips">'+what.join("")+'</span></div>'});
+  if(ev.badges.length)h+='<div><p class="lbl" style="margin-bottom:8px">New badge'+(ev.badges.length>1?"s":"")+'</p><div class="shelf">'+ev.badges.map(function(id,i){return badgeTile(ACH.badges.filter(function(b){return b.id===id})[0],true,i+ev.gates.length)}).join("")+'</div></div>';
+  ev.perks.forEach(function(g){h+='<p class="note"><b class="pos">Genre Master:</b> your '+esc(G[g].name)+' films earn +'+Math.round(b1.perks[g]*100)+'% at the box office from now on.</p>'});
+  return h+btn+'</section>';
+}
+function campRelease(){
+  var cfg=CFG(),p=curPick(),pj=campProject(),r=evalFilm(state.env,p,cfg),title=plotFor(state.env,p.g).title,ck="camp|"+pj.key+"|"+p.g;
+  var res=state.result={p:p,r:r,title:title,cfg:cfg,ck:ck,camp:{status:"pending",before:CAMP.st,index:pj.index}};
+  swap(function(){state.stage="result";drawAll();window.scrollTo(0,0)});
+  campSend(res);
+  if(!state.ceil||state.ceil.k!==ck){var env=state.env;bestPossibleAsync(env,p.g,cfg,function(b){if(!state.result||state.result.ck!==ck)return;state.ceil={k:ck,best:b};drawResult()})}
+}
+// Releasing is idempotent on the server, so a retry after a network error can't count the film twice.
+function campSend(res){
+  res.camp.status="pending";if(state.result===res)drawResult();
+  NET.campaign("campaignRelease",{index:res.camp.index,pick:res.p}).then(function(o){
+    CAMP.st=o.state;CAMP.history=null;res.camp={status:"ok",before:res.camp.before,index:res.camp.index,film:o.film,events:o.events};
+    if(state.result===res){drawResult();drawHead()}
+  },function(e){res.camp.status="error";res.camp.msg=NET.errorText(e);if(state.result===res)drawResult()});
+}
+
 function release(){
+  if(state.type==="campaign"){campRelease();return}
   var cfg=CFG(),p=curPick(),r=evalFilm(state.env,p,cfg),title=plotFor(state.env,p.g).title,k=dkey();
   var ck=modeKey()+"|"+state.day+"|"+p.g;
   var post=NET&&state.me?{status:"pending"}:{status:NET?"signedout":"offline"};
@@ -1149,6 +1378,9 @@ function release(){
 
 function drawAll(){drawHead();drawStage();drawResult();drawAcct()}
 function newGame(){
+  if(state.type==="campaign"){var pj=campProject();state.result=null;state.stage="hq";state.enter=true;state.pick={g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"};
+    state.env=pj?projEnv(pj):null;if(pj)state.campDiff=pj.diff;if(!CAMP.loaded&&!CAMP.loading)campLoad();drawAll();return}
+  state.env=state.dayEnv;
   state.result=null;state.stage="play";state.step=stepList()[0];state.enter=true;state.pick={g:state.type==="daily"?state.env.daily:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"};
   var e=state.days[dkey()];state.attempt=e?e.attempts||0:0;drawAll();
 }
@@ -1162,6 +1394,24 @@ document.addEventListener("click",function(e){
   var t=e.target.closest("[data-act]");if(!t||t.disabled)return;
   var a=t.dataset.act,id=t.dataset.id,P=state.pick;
   if(a==="type"){if(state.type!==t.dataset.m){swap(function(){state.type=t.dataset.m;if(state.type==="daily")state.diff="hard";newGame();window.scrollTo(0,0)})}}
+  else if(a==="campnext")campPlay();
+  else if(a==="camphq")campHQ();
+  else if(a==="campretry")campLoad();
+  else if(a==="campretryrel"){if(state.result&&state.result.camp)campSend(state.result)}
+  else if(a==="camprename"){CAMP.renaming=true;drawHQ();var ri=$("#renameform input");if(ri)ri.focus()}
+  else if(a==="camprenamex"){CAMP.renaming=false;drawHQ()}
+  else if(a==="camppass"){
+    if(!CAMP.passArm){CAMP.passArm=true;drawCamp();return}
+    CAMP.passArm=false;var wasPlay=state.stage==="play";
+    campCall("campaignPass",{index:campProject().index},"pass",function(o){
+      CAMP.note=o.events.bailout?"The development fee took the bank below $"+CAMPCFG.start.floor+"M, so the studio was bailed out back to $"+CAMPCFG.start.floor+"M.":"";
+      if(wasPlay)campPlay();else newGame()});
+  }
+  else if(a==="camphistory"){
+    if(CAMP.history){CAMP.history=null;drawHQ();return}
+    CAMP.history="loading";drawHQ();NET.campaignFilms().then(function(fs){CAMP.history=fs;drawHQ()},function(e){CAMP.history=null;CAMP.err=NET.errorText(e);drawHQ()});
+  }
+  else if(a==="theme")cycleTheme();
   else if(a==="diff"){if(state.diff!==t.dataset.m){swap(function(){state.diff=t.dataset.m;newGame();window.scrollTo(0,0)})}}
   else if(a==="g"||a==="d"||a==="w"||a==="c"){
     var key=a==="c"?state.step:a;
@@ -1188,7 +1438,17 @@ document.addEventListener("click",function(e){
   else if(a==="google")authTry(NET.google().then(function(){}));
   else if(a==="signout"){NET.signOut();closeAuth()}
 });
-document.addEventListener("submit",function(e){if(e.target.id==="authform"){e.preventDefault();submitAuth(e.target)}});
+document.addEventListener("submit",function(e){
+  var f=e.target;
+  if(f.id==="authform"){e.preventDefault();submitAuth(f)}
+  else if(f.id==="campform"){e.preventDefault();campCall("campaignStart",{studioName:f.name.value.trim()},"start",function(){newGame()})}
+  else if(f.id==="renameform"){e.preventDefault();campCall("campaignRename",{name:f.name.value},"rename",function(o){if(o)CAMP.renaming=false})}
+});
+// The hard-mode switch on the HQ: same project and pitches, real release dates instead of windows.
+document.addEventListener("change",function(e){
+  var t=e.target;if(!t.dataset||t.dataset.act!=="camphard")return;
+  campCall("campaignProject",{index:campProject().index,hard:t.checked},"hard",function(){newGame()});
+});
 $("#authm").addEventListener("click",function(e){if(e.target===this)closeAuth()});
 // Reels: keep the arrows in sync, and let a plain mouse wheel scroll them sideways until an end is reached.
 document.addEventListener("scroll",function(e){var t=e.target;if(t&&t.classList&&t.classList.contains("track"))reelState(t)},true);
@@ -1204,6 +1464,13 @@ if(window.ResizeObserver)new ResizeObserver(setTopH).observe($("#top"));else win
 $("#lbbtn").innerHTML=icon("trophy")+"<span>Leaderboard</span>";$("#lbbtn").setAttribute("aria-label","Leaderboard");
 $("#helpbtn").innerHTML=icon("help");$("#helpbtn").title="How to play";
 $("#lbx").innerHTML=icon("close");
+// Theme: follows the system until the button picks light or dark (kept per device).
+var TKEY="greenlight.theme";
+function themeNow(){try{return localStorage.getItem(TKEY)||"system"}catch(e){return "system"}}
+function applyTheme(t){var h=document.documentElement;if(t==="light"||t==="dark")h.dataset.theme=t;else delete h.dataset.theme;
+  var b=$("#themebtn"),n={system:"Theme: system",light:"Theme: light",dark:"Theme: dark"}[t];b.innerHTML=icon(t==="light"?"sun":t==="dark"?"moon":"auto");b.title=n;b.setAttribute("aria-label",n+". Change theme")}
+function cycleTheme(){var t={system:"light",light:"dark",dark:"system"}[themeNow()];try{localStorage.setItem(TKEY,t)}catch(e){}applyTheme(t)}
+applyTheme(themeNow());
 
 var DATA_URL="../data/",DATA_FILES=["genres","directors","actors","plots","windows","loyal","chem","slate"];
 function loadData(){
@@ -1211,12 +1478,16 @@ function loadData(){
     .then(function(v){var o={};DATA_FILES.forEach(function(n,i){o[n]=v[i]});return o});
 }
 // Optional: the game runs without images.json (initials stand in).
+function loadCampaignData(){
+  return Promise.all(["campaign","achievements"].map(function(n){return fetch(DATA_URL+n+".json").then(function(r){if(!r.ok)throw new Error(n);return r.json()})}))
+    .then(function(v){CAMPCFG=v[0];ACH=v[1]},function(){CAMPCFG=ACH=null});
+}
 function loadImages(){return fetch(DATA_URL+"images.json").then(function(r){return r.ok?r.json():{}}).catch(function(){return {}})}
 (async function boot(){
   setTopH();
-  try{var both=await Promise.all([loadData(),loadImages()]);initModel(both[0]);IMG=Object.assign(IMG,both[1])}catch(e){
+  try{var both=await Promise.all([loadData(),loadImages(),loadCampaignData()]);initModel(both[0]);IMG=Object.assign(IMG,both[1])}catch(e){
     $("#page").innerHTML='<div class="banner"><b>Could not load the game data.</b>'+esc(e.message)+'. Serve this folder over HTTP (see README) instead of opening the file directly.</div>';return}
-  state.env=makeEnv(TODAY);
+  state.env=state.dayEnv=makeEnv(TODAY);
   loadLocal();newGame();netReady();
   if(!introSeen())openIntro();
 })();
