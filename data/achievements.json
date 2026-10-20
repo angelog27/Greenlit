@@ -1,0 +1,19 @@
+{
+  "gates": [
+    { "id": "open",   "name": "Open for Business", "text": "D-list cast and directors. Horror, Comedy, Drama and Horror-Comedy." },
+    { "id": "c_cast", "name": "Rising Cast",       "text": "C-list actors join your shortlists." },
+    { "id": "c_crew", "name": "Real Directors",    "text": "C-list directors, plus Thriller, Romance and Rom-Com." },
+    { "id": "b_tier", "name": "Major Player",      "text": "B-list cast and directors, plus Action, Sci-Fi and their blends." },
+    { "id": "a_tier", "name": "A-List Studio",     "text": "A-list cast and directors, Animation, and real release dates on any project." }
+  ],
+  "badges": [
+    { "id": "first_hit",      "name": "First Hit",      "text": "Make a profit on a film." },
+    { "id": "blockbuster",    "name": "Blockbuster",    "text": "Earn $100M profit on one film.", "profit": 100 },
+    { "id": "sleeper_hit",    "name": "Sleeper Hit",    "text": "Earn $15M profit while spending at most 60% of the budget.", "profit": 15, "costShare": 0.6 },
+    { "id": "reunion",        "name": "Reunion",        "text": "Reunite a director with an actor they have made films with." },
+    { "id": "comeback",       "name": "Comeback",       "text": "Make a hit right after a flop." },
+    { "id": "genre_master",   "name": "Genre Master",   "text": "Three profitable films in one genre. That genre earns +3% at the box office from then on.", "films": 3, "bonus": 0.03 },
+    { "id": "full_house",     "name": "Full House",     "text": "Make a hit with only D-list talent after C-list actors unlock.", "tier": "D", "after": "C" },
+    { "id": "perfect_timing", "name": "Perfect Timing", "text": "Release in a window the story suits." }
+  ]
+}

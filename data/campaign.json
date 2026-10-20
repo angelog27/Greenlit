@@ -1,0 +1,21 @@
+{
+  "start": { "bank": 75, "floor": 70 },
+  "caps": { "D": 75, "C": 95, "B": 120, "A": 150 },
+  "tiers": {
+    "order": ["D", "C", "B", "A"],
+    "actorMinStar": { "D": 0, "C": 7, "B": 8, "A": 9 },
+    "directorMinSkill": { "D": 0, "C": 1.15, "B": 1.2, "A": 1.25 }
+  },
+  "ladder": [
+    { "id": "open",   "at": 0,   "actors": "D", "directors": "D", "genres": ["horror", "comedy", "drama", "horrorcomedy"] },
+    { "id": "c_cast", "at": 25,  "actors": "C" },
+    { "id": "c_crew", "at": 50,  "directors": "C", "genres": ["thriller", "romance", "romcom"] },
+    { "id": "b_tier", "at": 75,  "actors": "B", "directors": "B", "genres": ["action", "scifi", "actioncomedy", "scifithriller", "scifihorror"] },
+    { "id": "a_tier", "at": 100, "actors": "A", "directors": "A", "genres": ["animation"], "hard": true }
+  ],
+  "boardGoal": "a_tier",
+  "trainingFilms": 3,
+  "shortlist": { "perGender": 3, "freshPerRole": 2, "directors": 8, "freshDirectors": 2 },
+  "feasibility": { "margin": 5, "maxResalts": 12 },
+  "pass": { "fee": 5, "every": 3, "start": 1, "cap": 2 }
+}
