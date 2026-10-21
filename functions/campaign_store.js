@@ -83,6 +83,7 @@ function makeStore(db, C, files) {
         const f = s.exists ? s.data() : null;
         if (!f || !f.scores) throw new Reject("One of those films can't be entered.");
         if (f.at < wk.start || f.at >= wk.end) throw new Reject("Only films released this week (Monday to Sunday, UTC) can be entered.");
+        if (list[k] < (st.firstIndex || 0)) throw new Reject("Only films from your current run can be entered.");
         return { projectIndex: list[k], title: f.title, genre: f.genre, d: f.d || null, cast: f.cast || null, scores: f.scores };
       });
       const pr = st.profile || {};
@@ -188,6 +189,14 @@ function makeStore(db, C, files) {
       });
     },
     // Once only. Also renames the board row if the studio is already on it.
+    // Starts the studio over (same name and look); see camp.restart.
+    restart: (uid, data, now) => db.runTransaction(async (tx) => {
+      const st = await load(tx, uid);
+      const next = plain(camp.restart(C, st, uid, data, utcDay(now), now));
+      tx.set(ref(uid), next);
+      card(tx, uid, next, now);
+      return { state: next };
+    }),
     rename: (uid, data) => db.runTransaction(async (tx) => {
       const st = await load(tx, uid);
       const board = st.aTierFilms !== null ? await tx.get(db.doc(`campaignBoard/${uid}`)) : null;

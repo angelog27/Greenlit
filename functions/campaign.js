@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 // Campaign (solo career) rules. Pure functions: a campaign state goes in, the next state comes out, so the
 // rules are testable without Firebase; campaign_store.js wraps them in Firestore transactions.
 // Films are scored by the page's own model (game.m). A project is an env from makeEnv(date, key) plus the
@@ -184,6 +185,17 @@ function newCampaign(C, uid, cid, name, date, now) {
   };
   st.currentProject = makeProject(C, st, uid, date, false);
   return st;
+}
+
+// Starts the studio over: a fresh run under the same name and look. Project indexes keep counting (released films
+// are stored by index), and firstIndex marks where this run's films begin.
+function restart(C, st, uid, data, date, now) {
+  if (!data || data.confirm !== "RESTART") throw new Reject("Confirm the restart first.");
+  const next = newCampaign(C, uid, crypto.randomBytes(6).toString("hex"), st.studioName, date, now);
+  Object.assign(next, { studioName: st.studioName, renamed: st.renamed, profile: st.profile || {}, createdAt: st.createdAt,
+    projectIndex: st.projectIndex, firstIndex: st.projectIndex, restarts: (st.restarts || 0) + 1, restartedAt: now });
+  next.currentProject = makeProject(C, next, uid, date, false);
+  return next;
 }
 
 function defaultName(uid) { return "Studio " + uid.slice(0, 5).toUpperCase(); }
@@ -631,5 +643,5 @@ module.exports = {
   loadCampaign, makeCampaign, unlocksFor, nextGate, budgetFor, settle, castPools, crewList, projectEnv,
   makeProject, feasible, awardBadges, badgeValue, tierFor, filmFacts, newCampaign, release, pass, setHard, rename, defaultName, cleanName, projectKey,
   levelFor, pointsLeft, discounts, upgrade, normalize, style, rerollsFor, reroll, pickScript, publicStudio,
-  identity, typeFor, typeEffects, identLean, breakoutFor, master, masterReady, masteryBonus,
+  restart, identity, typeFor, typeEffects, identLean, breakoutFor, master, masterReady, masteryBonus,
 };

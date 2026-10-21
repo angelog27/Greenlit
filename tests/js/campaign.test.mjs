@@ -908,3 +908,18 @@ test("popcorn: word of mouth and fan base follow the audience score, capped", ()
   }
   assert.ok(lovedNo < hatedNo, `${lovedNo} vs ${hatedNo}`);
 });
+
+test("restart: a fresh run under the same name and look; project indexes keep counting", () => {
+  const st0 = studio(0, { index: 600 }), g = playable(st0)[0], pj = st0.currentProject;
+  const played = camp.release(C, st0, "u1", { index: pj.index, pick: cheapest(st0, g) }, DATE, NOW).state;
+  const st = { ...played, profile: { color: "red", tagline: "Hi" }, rel: { x: 50 }, upgrades: { reputation: 1 } };
+  rejects(() => camp.restart(C, st, "u1", {}, DATE, NOW), /Confirm/);
+  const out = camp.restart(C, st, "u1", { confirm: "RESTART" }, DATE, NOW);
+  assert.equal(out.studioName, st.studioName);
+  assert.deepEqual(out.profile, st.profile);
+  assert.equal(out.filmsMade, 0); assert.equal(out.bank, cfg.start.bank); assert.equal(out.lifetimeProfit, 0);
+  assert.deepEqual(out.upgrades, {}); assert.ok(!out.rel || !Object.keys(out.rel).length); assert.ok(!out.identity);
+  assert.notEqual(out.campaignId, st.campaignId);
+  assert.equal(out.firstIndex, st.projectIndex); assert.equal(out.currentProject.index, st.projectIndex);
+  assert.equal(out.restarts, 1);
+});

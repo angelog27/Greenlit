@@ -520,6 +520,21 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 .trophies{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .money2 small.note{display:block;margin-top:4px}
 .pop{font-weight:700;white-space:nowrap}.pop.big{font-family:var(--display);font-weight:900;font-size:30px;line-height:1}
+.sstats{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 4px}
+.sstats .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line2);background:var(--panel2);font-size:14px;font-weight:700}
+.sstats .pill small{font-weight:400;color:var(--ink2)}
+details.info{position:relative}
+details.info summary{list-style:none;cursor:pointer;width:26px;height:26px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-weight:800;font-style:italic;font-family:Georgia,serif;font-size:15px;color:var(--ink)}
+details.info summary::-webkit-details-marker{display:none}
+details.info[open] summary,details.info summary:hover{border-color:var(--accent);color:var(--accent)}
+details.info[open]{flex-basis:100%}
+.infobox{margin-top:8px;max-width:560px;padding:14px;background:var(--panel);border:1px solid var(--line2)}
+.infobox .ttl{display:block;margin-bottom:8px}
+.infobox ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.infobox li{display:grid;grid-template-columns:28px 1fr;gap:8px;font-size:13px;color:var(--ink2)}
+.infobox li b{display:block;color:var(--ink);font-size:14px}
+.infobox .sym{display:grid;place-items:center;height:26px;font-weight:800;color:var(--accent)}.infobox .sym svg{width:18px;height:18px}
+.bail.restart{margin-top:10px}
 .hq-fans{display:grid;gap:4px;margin-top:10px;max-width:260px}.hq-fans small{color:var(--ink2);font-size:12px}
 .relcols{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){.relcols{grid-template-columns:1fr}}
 ul.rel{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}
@@ -1659,7 +1674,7 @@ function introSeen(){try{return localStorage.getItem(IKEY)==="1"}catch(e){return
 // studio once per load (NET.campaignLoad); every change goes through a campaign* callable, which returns the new
 // studio. Shortlists, budget and visibility come from the server's current project; the page only draws them.
 var CAMPCFG=null,ACH=null,IDN=null,AWD=null,EVT=null;
-var CAMP={st:null,loaded:false,loading:false,err:"",note:"",busy:"",history:null,passArm:false};
+var CAMP={st:null,loaded:false,loading:false,err:"",note:"",busy:"",history:null,passArm:false,restartArm:false};
 function campProject(){return CAMP.st&&CAMP.st.currentProject}
 // The stored project in the shape the model expects (Firestore can't hold nested arrays).
 function projEnv(pj){
@@ -1778,6 +1793,23 @@ function headTrophies(st){
     (last?'<small>Latest: '+esc(last.name)+' · '+esc(last.title)+'</small>':'<small>No awards yet. Every 6 films is an awards season.</small>')+'</button>'+
     (function(){var fa=fanAvgPage(st);return '<div class="hq-fans"><span class="lbl">Fan base</span>'+(fa==null?'<small>Make a couple of films and audiences will make up their minds.</small>':popcorn(fa,true)+'<small>'+(fa>=70?"Audiences love your films: talent wants in and every film opens bigger.":fa<50?"Audiences are wary of you: films open smaller and talent is harder to sign.":"Audiences like you well enough.")+'</small>')+'</div>'})();
 }
+// The studio's numbers at a glance, with an "i" that explains every symbol on the HQ header.
+function studioStats(st){
+  var all=st.popcorn||[],avg=all.length?Math.round(all.reduce(function(a,b){return a+b},0)/all.length):null,tr=(st.trophies||{}).total||0,gl=(st.globes||{}).wins||0;
+  var row=function(sym,t,d){return '<li><span class="sym">'+sym+'</span><span><b>'+t+'</b>'+d+'</span></li>'};
+  return '<div class="sstats"><span class="pill" title="Average popcorn score of your recent films">'+(avg==null?"🍿 —":popcorn(avg))+' <small>avg popcorn</small></span>'+
+    '<span class="pill">Level '+campLevel(st)+'</span><span class="pill">'+st.filmsMade+' film'+(st.filmsMade===1?"":"s")+'</span>'+
+    '<details class="info"><summary aria-label="What these mean">i</summary><div class="infobox"><b class="ttl">Your studio at a glance</b><ul>'+
+    row("🍿","Popcorn score","How much audiences loved a film (0–100%). High scores spread by word of mouth and earn more at the box office. Your average of recent films is your fan base: it lifts or drags every film you make next, and talent is keener to sign with a studio audiences love.")+
+    row("Lv","Level","Grows with your lifetime box office (flops count too). Each new level gives an upgrade point to spend at HQ.")+
+    row("$","Bank","Money you have now. Your next budget comes from it. Drop too low and the studio is bailed out.")+
+    row("$↑","Lifetime profit","Every hit added up; flops never take it away. It unlocks better talent, genres and real release dates.")+
+    row(icon("trophy"),"Golden Reels","Every 6 films is an awards season against rival studios. Wins pay the bank.")+
+    row(icon("star"),"Globes","Weekly awards against other players. Enter up to 5 of this week's films.")+
+    row("●","Medals","Your badges. Bronze, silver and gold tiers each pay a reward.")+
+    row("♥","Relationships","How talent feels about you. Friends sign on and give a friends rate; fall out and they won't work with you.")+
+    '</ul></div></details></div>';
+}
 function studioHead(st,rules){
   var pr=st.profile||{},uid=state.me.uid,bd=studioImg(uid,"backdrop",pr.backdrop),pj=st.currentProject;
   return '<section class="studio tint" style="'+tintStyle(pr.color)+'">'+(bd?'<div class="bd"><img src="'+esc(bd)+'" alt=""></div>':"")+'<div class="in"><div class="who">'+
@@ -1785,7 +1817,9 @@ function studioHead(st,rules){
     '<div class="id">'+logoHtml(uid,st.studioName,pr)+'<div><h2>'+esc(st.studioName)+'</h2>'+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+(st.identity?typeBadge(st.identity.type):"")+'</div></div>'+
     badgeStrip(st)+
     '<p>Next project: <b>$'+pj.budget+'M budget</b> · '+esc(rules)+'.</p>'+(CAMP.note?'<p class="bail">'+esc(CAMP.note)+'</p>':"")+(st.bailouts?'<p class="note">Bailed out '+st.bailouts+' time'+(st.bailouts>1?"s":"")+'.</p>':"")+
-    '<div class="row"><button class="btn sm" data-act="campedit">'+icon("edit")+'Customize studio</button></div></div>'+
+    studioStats(st)+
+    '<div class="row"><button class="btn sm" data-act="campedit">'+icon("edit")+'Customize studio</button><button class="btn sm" data-act="restart"'+(CAMP.busy?" disabled":"")+'>'+icon("dice")+(CAMP.restartArm?"Cancel restart":"Restart studio")+'</button></div>'+
+    (CAMP.restartArm?'<div class="bail restart"><p><b>Start your studio over?</b> Your bank, unlocks, level, upgrades, badges, awards, mastered genres and relationships all reset, and you choose your studio type again. Your studio name, logo and look stay. This can\'t be undone.</p><div class="row"><button class="btn sm go" data-act="restartgo"'+(CAMP.busy?" disabled":"")+'>Yes, start over</button><button class="btn sm" data-act="restart">Keep my studio</button></div></div>':"")+'</div>'+
     '<div class="side"><div><span class="lbl">Bank</span><b class="big mono">'+money(st.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="big2 mono pos">'+money(st.lifetimeProfit)+'</b></div>'+headTrophies(st)+'</div></div></section>';
 }
 // Studio editor: images are cropped and shrunk in the browser, uploaded to Storage, then campaignStyle checks them.
@@ -1978,7 +2012,7 @@ function loadGlobes(){
   GLB={loading:true,entries:[],films:[],sel:[]};drawHQ();
   Promise.all([NET.awardsWeek(wk.id),NET.awardsWeek(last.id),NET.campaignFilmsSince(wk.start)]).then(function(v){
     var mine=v[0].entries.filter(function(e){return e.uid===state.me.uid})[0];
-    GLB={entries:v[0].entries,last:v[1],films:v[2].filter(function(f){return f.scores}),sel:mine?mine.films.map(function(f){return f.projectIndex}):[]};drawHQ();
+    GLB={entries:v[0].entries,last:v[1],films:v[2].filter(function(f){return f.scores&&f.projectIndex>=(CAMP.st.firstIndex||0)}),sel:mine?mine.films.map(function(f){return f.projectIndex}):[]};drawHQ();
   },function(e){GLB={err:NET.errorText(e,"campaign"),entries:[],films:[],sel:[]};drawHQ()});
 }
 function ceremonyHtml(s){
@@ -2008,7 +2042,7 @@ function hqHtml(){
   h+=levelHtml(st);
   h+='<div class="hqgrid"><section class="panel"><h3>Your talent</h3>'+tierChips(st)+'<dl class="kv"><dt class="lbl">Films made</dt><dd class="mono">'+st.filmsMade+'</dd><dt class="lbl">Passes</dt><dd class="mono">'+st.passesAvailable+'</dd></dl></section>'+
     '<section class="panel"><div class="sech"><h3>'+(CAMP.history?"All films":"Recent films")+'</h3>'+(st.filmsMade>(st.recent||[]).length||CAMP.history?'<button class="btn sm" data-act="camphistory">'+(CAMP.history?"Recent only":"All films")+'</button>':"")+'</div>'+
-      (CAMP.history==="loading"?'<p class="note">Loading…</p>':filmRows(Array.isArray(CAMP.history)?CAMP.history:st.recent||[]))+'</section></div>';
+      (CAMP.history==="loading"?'<p class="note">Loading…</p>':filmRows(Array.isArray(CAMP.history)?CAMP.history.filter(function(f){return f.projectIndex>=(st.firstIndex||0)}):st.recent||[]))+'</section></div>';
   h+=awardsPanel(st);
   h+=masteryPanel(st);
   h+=relPanel(st);
@@ -2143,6 +2177,8 @@ document.addEventListener("click",function(e){
   else if(a==="campretry")campLoad();
   else if(a==="campretryrel"){if(state.result&&state.result.camp)campSend(state.result)}
   else if(a==="campedit")openEditor();
+  else if(a==="restart"){CAMP.restartArm=!CAMP.restartArm;drawHQ()}
+  else if(a==="restartgo"){CAMP.restartArm=false;campCall("campaignRestart",{confirm:"RESTART"},"restart",function(o){if(o){CAMP.history=null;GLB=null;CAMP.note="Your studio is starting over. Good luck!";newGame()}})}
   else if(a==="gotoawards"){var ap=$("#awardspanel");if(ap)ap.scrollIntoView({behavior:REDUCED?"auto":"smooth",block:"start"})}
   else if(a==="master"){if(CAMP.masterArm!==id){CAMP.masterArm=id;drawHQ()}else{CAMP.masterArm=null;campCall("campaignMaster",{genre:id},"master",function(o){if(o){newGame();toastBadges(o.badges)}})}}
   else if(a==="globes"){if(GLB){GLB=null;drawHQ()}else loadGlobes()}

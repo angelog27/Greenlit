@@ -100,6 +100,7 @@ exports.campaignProject = campaignCall(store.project, (d) => (d.hard !== undefin
 exports.campaignRelease = campaignCall(store.release);
 exports.campaignPass = campaignCall(store.pass);
 exports.campaignRename = campaignCall(store.rename);
+exports.campaignRestart = campaignCall(store.restart, "restart");
 exports.campaignUpgrade = campaignCall(store.upgrade);
 exports.campaignStyle = campaignCall(store.style, "style");
 exports.campaignReroll = campaignCall(store.reroll);

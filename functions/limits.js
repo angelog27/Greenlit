@@ -6,6 +6,7 @@ const RULES = {
   release: { max: 30, windowMs: 60_000 }, // daily/basic releases
   hard: { max: 6, windowMs: 60_000 }, // switching a project to real dates re-checks every date (a few seconds of CPU)
   style: { max: 10, windowMs: 60_000 }, // studio look (reads Storage)
+  restart: { max: 3, windowMs: 60_000 }, // starting over builds a new project
 };
 
 function makeLimiter(rules = RULES, clock = Date.now) {
