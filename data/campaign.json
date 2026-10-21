@@ -10,8 +10,8 @@
     { "id": "open",   "at": 0,    "actors": "D", "directors": "D", "genres": ["horror", "comedy", "drama", "horrorcomedy"] },
     { "id": "c_cast", "at": 200,  "actors": "C" },
     { "id": "c_crew", "at": 500,  "directors": "C", "genres": ["thriller", "romance", "romcom"] },
-    { "id": "b_tier", "at": 1000, "actors": "B", "directors": "B", "genres": ["action", "scifi", "actioncomedy", "scifithriller", "scifihorror"] },
-    { "id": "a_tier", "at": 2000, "actors": "A", "directors": "A", "genres": ["animation"], "hard": true }
+    { "id": "b_tier", "at": 1200, "actors": "B", "directors": "B", "genres": ["action", "scifi", "actioncomedy", "scifithriller", "scifihorror"] },
+    { "id": "a_tier", "at": 2600, "actors": "A", "directors": "A", "genres": ["animation"], "hard": true }
   ],
   "boardGoal": "a_tier",
   "trainingFilms": 3,
@@ -19,6 +19,7 @@
   "shortlist": { "perGender": 3, "freshPerRole": 2, "directors": 8, "freshDirectors": 2 },
   "feasibility": { "margin": 5, "maxResalts": 12 },
   "pass": { "fee": 5, "every": 3, "start": 1, "cap": 2 },
+  "breakout": { "threshold": 0.94, "wheel": [{ "x": 1.3, "w": 40 }, { "x": 1.5, "w": 30 }, { "x": 2, "w": 22 }, { "x": 3, "w": 8 }] },
   "rerolls": [{ "level": 3, "count": 2 }, { "level": 6, "count": 4 }],
   "profile": { "taglineMax": 60, "cityMax": 40, "logoKB": 400, "backdropKB": 1500 },
   "studioColors": [

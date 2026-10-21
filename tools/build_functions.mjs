@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = path.join(ROOT, "functions", "gen");
 const FILES = ["genres", "directors", "actors", "plots", "windows", "loyal", "chem", "slate"];
-const EXTRA = ["campaign", "achievements"];
+const EXTRA = ["campaign", "achievements", "identity"];
 
 const html = fs.readFileSync(path.join(ROOT, "Frontend", "greenlight.html"), "utf8");
 const a = html.indexOf("// ===== MODEL START ====="), b = html.indexOf("// ===== MODEL END =====");

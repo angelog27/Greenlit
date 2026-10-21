@@ -700,6 +700,10 @@ function scriptOffer(seed,choices){
 function basicOffer(day,gid,n){return scriptOffer("offer|"+day+"|"+gid+"|"+n,plotChoices(day,gid))}
 function envWithScript(env,gid,s,q){var e=envWithPlot(env,gid,s);e.quality=Object.assign({},env.quality);e.quality[gid]=q;return e}
 function scriptQ(env,gid){return env.quality&&env.quality[gid]?env.quality[gid]:1}
+// Campaign only: the studio type's genre lean (env.ident, from data/identity.json) and a breakout's roulette
+// multiplier (env.boom). Daily envs have neither, so daily scores never change.
+function identQ(env,gid){return env.ident&&env.ident[gid]?Math.round((1+env.ident[gid])*100)/100:1}
+function boomQ(env,gid){return env.boom&&env.boom[gid]?env.boom[gid]:1}
 function winId(p,cfg){return cfg.real?(p.w?seasonOf(p.w):null):p.w}
 function luckOf(env,p,cfg){var ids=cfg.roles?p.a1+"|"+p.a2+"|"+p.a3:[p.a1,p.a2].sort().join("|")+"|"+p.a3;return 0.92+0.16*rng(hash(env.day+"|"+p.g+"|"+p.d+"|"+ids+"|"+p.w))()}
 function genreBonus(env,gid){return env.bonus&&env.bonus[gid]?Math.round((1+env.bonus[gid])*100)/100:1}
@@ -753,8 +757,10 @@ function evalFilm(env,p,cfg,luck){
   var sm=Math.round((1+sum)*100)/100;push("Synergies",sm,syn.length?"":"No synergies this time");m*=sm;steps[steps.length-1].run=m;
   var gb=genreBonus(env,g.id);if(gb!==1){push("Genre Master",gb,"Your studio's track record in "+g.name);m*=gb;steps[steps.length-1].run=m}
   var sq=scriptQ(env,g.id);if(sq!==1){push("Script potential",sq,sq>=SCRIPT_Q[0]?"The strongest draft":sq>1?"A solid draft":"A weaker draft");m*=sq;steps[steps.length-1].run=m}
+  var iq=identQ(env,g.id);if(iq!==1){push("Studio type",iq,"Your studio's lean toward "+g.name);m*=iq;steps[steps.length-1].run=m}
   out.syn=syn.map(function(s){return s[0]+" +"+Math.round(s[1]*100)+"%"});
   var lk=luck===undefined?luckOf(env,p,cfg):luck;push("Hidden luck",Math.round(lk*100)/100,"Seeded by today's date and your slate");m*=lk;steps[steps.length-1].run=m;
+  var bq=boomQ(env,g.id);if(bq!==1){push("Breakout",bq,"Audiences kept coming back");m*=bq;steps[steps.length-1].run=m}
   out.luck=lk;out.gross=m;out.share=m*SHARE;out.profit=out.share-out.cost;
   return out;
 }
@@ -794,7 +800,9 @@ function evalFast(env,p,cfg,pre){
   m*=Math.round((1+sum)*100)/100;
   m*=genreBonus(env,g.id);
   m*=scriptQ(env,g.id);
+  m*=identQ(env,g.id);
   m*=luckOf(env,p,cfg);
+  m*=boomQ(env,g.id);
   var cost=costOf(p,cfg,env);
   return {gross:m,cost:cost,profit:m*SHARE-cost};
 }

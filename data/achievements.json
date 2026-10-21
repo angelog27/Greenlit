@@ -27,6 +27,8 @@
     { "id": "fast_track",      "name": "Fast Track",        "icon": "rocket",   "tiers": [20, 15, 12], "atMost": true, "text": "Reach the A-list within {n} films." },
     { "id": "year_round",      "name": "Year-Round",        "icon": "sun",      "tiers": [3, 5, 6], "text": "Make hits in {n} different release seasons." },
     { "id": "opening_weekend", "name": "Opening Weekend",   "icon": "ticket",   "tiers": [1, 3, 10], "text": "Make {n} hit(s) on real release dates." },
-    { "id": "phoenix",         "name": "Phoenix",           "icon": "phoenix",  "text": "Make a hit right after a bailout." }
+    { "id": "phoenix",         "name": "Phoenix",           "icon": "phoenix",  "text": "Make a hit right after a bailout." },
+    { "id": "breakout",        "name": "Breakout Hit",      "icon": "rocket",   "tiers": [1, 3, 8], "text": "Have {n} film(s) break out (within 94% of the best film the project allowed)." },
+    { "id": "jackpot",         "name": "Jackpot",           "icon": "coins",    "text": "Land the top slot on the breakout wheel." }
   ]
 }

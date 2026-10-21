@@ -231,7 +231,9 @@ test("a campaign film scores exactly like the page's own model for the same pick
       for (const g of playable(st)) {
         const p = cheapest(st, g), pj = st.currentProject;
         const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
-        const want = page.evalFilm(plain(camp.projectEnv(pj)), p, page.DIFFS[pj.diff]);
+        const penv = plain(camp.projectEnv(pj));
+        if (out.film.breakout) penv.boom = { [g]: out.film.breakout.x }; // the server's spin, replayed on the page
+        const want = page.evalFilm(penv, p, page.DIFFS[pj.diff]);
         assert.equal(out.film.profit, Math.round(want.profit * 10) / 10);
         assert.equal(out.film.gross, Math.round(want.gross));
         assert.equal(out.film.cost, want.cost);
@@ -453,7 +455,9 @@ test("discounted campaign films score exactly like the page's model", () => {
   for (const g of playable(st)) {
     const p = bestFilm(st, g), pj = st.currentProject;
     const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
-    const want = page.evalFilm(plain(camp.projectEnv(pj)), p, page.DIFFS[pj.diff]);
+    const penv = plain(camp.projectEnv(pj));
+    if (out.film.breakout) penv.boom = { [g]: out.film.breakout.x };
+    const want = page.evalFilm(penv, p, page.DIFFS[pj.diff]);
     assert.equal(out.film.profit, Math.round(want.profit * 10) / 10);
     assert.equal(out.film.cost, want.cost);
   }
@@ -570,3 +574,67 @@ test("public studio card: written on every change, shows the biggest film, never
   const old = camp.normalize({ ...st, bestFilm: undefined, recent: [{ title: "A", genre: "horror", gross: 300, profit: 50, no: 1 }, { title: "B", genre: "comedy", gross: 500, profit: 80, no: 2 }] });
   assert.equal(old.bestFilm.title, "B");
 });
+
+// ---- studio type (onboarding) and breakouts
+test("studio type: four answers pick one of five types; chosen once; effects reach the project", () => {
+  const I = C.idn, st0 = studio(0, { index: 2 });
+  const ans = (ids) => ({ answers: ids });
+  rejects(() => camp.identity(C, st0, "u1", ans(["crowd"])), /Answer every question/);
+  rejects(() => camp.identity(C, st0, "u1", ans(["crowd", "big", "stars", "__proto__"])), /isn't one of the answers/);
+  rejects(() => camp.identity(C, st0, "u1", ans([1, 2, 3, 4])), /isn't one of the answers/);
+  // Every type can be reached, and each answer combination gives exactly one type.
+  const seen = new Set();
+  (function rec(k, acc) {
+    if (k === I.questions.length) { seen.add(camp.typeFor(C, acc)); return; }
+    for (const a of I.questions[k].answers) rec(k + 1, acc.concat([a]));
+  })(0, []);
+  assert.deepEqual([...seen].sort(), I.types.map((t) => t.id).sort(), "all five types reachable");
+  const gs = plain(camp.identity(C, st0, "u1", ans(["thrills", "lean", "fresh", "showman"])));
+  assert.equal(gs.identity.type, "genre");
+  rejects(() => camp.identity(C, gs, "u1", ans(["crowd", "big", "stars", "gamble"])), /already set/);
+  const fx = I.types.find((t) => t.id === "genre").effects, env = gs.currentProject.env;
+  assert.equal(env.ident.horror, fx.genres.horror, "genre lean in the env");
+  assert.equal(env.ident.horrorcomedy, Math.round(((fx.genres.horror || 0) + (fx.genres.comedy || 0)) / 2 * 10000) / 10000, "a blend averages its halves");
+  assert.equal(env.disc.talent, -fx.fees === 0 ? undefined : Math.round((1 - (1 + fx.fees)) * 10000) / 10000, "cheaper talent");
+  assert.equal(gs.currentProject.budget, Math.min(Math.round(cfg.caps.D * (1 + fx.cap)), Math.max(cfg.start.floor, gs.bank)), "budget cap moves");
+  assert.deepEqual(gs.currentProject.env.plots, st0.currentProject.env.plots, "same project, same pitches");
+  // The lean shows up as a Studio type step in the score.
+  const g = playable(gs).includes("horror") ? "horror" : playable(gs)[0], p = cheapest(gs, g);
+  const r = m.evalFilm(camp.projectEnv(gs.currentProject), p, m.DIFFS[gs.currentProject.diff]);
+  if (fx.genres[g]) assert.ok(r.steps.some((s) => s.k === "Studio type"));
+  assert.equal(camp.publicStudio(C, "u1", gs, NOW).type, "genre", "the type is on the public card");
+});
+
+test("breakouts: films near the best possible spin the wheel; the multiplier lands in the score", () => {
+  const W = cfg.breakout.wheel;
+  let hits = 0, misses = 0;
+  const slots = new Array(W.length).fill(0);
+  for (let i = 0; i < 24; i++) {
+    const st = studio(0, { index: 40 + i, films: 5 }), g = playable(st)[0], pj = st.currentProject, dcfg = m.DIFFS[pj.diff], env = camp.projectEnv(pj);
+    const best = m.bestPossible(env, g, dcfg), cheap = cheapest(st, g);
+    for (const p of [best.p, cheap]) {
+      const r0 = m.evalFilm(env, p, dcfg), out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+      const b = out.film.breakout, share = r0.profit / best.profit;
+      if (share >= cfg.breakout.threshold - 1e-9 && r0.profit > 0) {
+        assert.ok(b, `breakout expected at ${share.toFixed(3)}`);
+        assert.ok(W.some((w) => w.x === b.x));
+        assert.ok(Math.abs(out.film.gross - Math.round(r0.gross * b.x)) <= 1, "gross multiplied by the wheel");
+        assert.ok(out.film.profit > round(r0.profit), "profit grows");
+        assert.ok(out.events.breakout && out.state.stats.breakouts === 1);
+        slots[b.slot]++; hits++;
+        // Same project and film: same spin.
+        assert.deepEqual(plain(camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW).film.breakout), plain(b));
+      } else { assert.equal(b, null, `no breakout at ${share.toFixed(3)}`); misses++; }
+    }
+  }
+  assert.ok(hits >= 10, "the best film breaks out (" + hits + ")");
+  // Wildcard studios break out lower; Talent Agency higher.
+  const wild = { ...studio(0, { index: 7 }), identity: { type: "wildcard" } }, tal = { ...studio(0, { index: 7 }), identity: { type: "talent" } };
+  const pj = wild.currentProject, g = playable(wild)[0], env = camp.projectEnv(pj), dcfg = m.DIFFS[pj.diff];
+  const fake = (share) => ({ profit: share * m.bestPossible(env, g, dcfg).profit });
+  const T = (id) => cfg.breakout.threshold + (C.idn.types.find((t) => t.id === id).effects.breakout || 0);
+  assert.ok(camp.breakoutFor(C, wild, pj, env, cheapest(wild, g), dcfg, fake(T("wildcard") + 0.005)), "wildcard breaks out lower");
+  assert.equal(camp.breakoutFor(C, wild, pj, env, cheapest(wild, g), dcfg, fake(T("wildcard") - 0.01)), null);
+  assert.equal(camp.breakoutFor(C, tal, pj, env, cheapest(wild, g), dcfg, fake(cfg.breakout.threshold + 0.01)), null, "talent agency needs more");
+});
+function round(x) { return Math.round(x * 10) / 10; }

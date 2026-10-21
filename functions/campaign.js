@@ -13,18 +13,18 @@ const ROLES = ["a1", "a2", "a3"];
 
 function loadCampaign(game, dir = path.join(__dirname, "gen", "data")) {
   const rd = (n) => JSON.parse(fs.readFileSync(path.join(dir, n + ".json"), "utf8"));
-  return makeCampaign(game, rd("campaign"), rd("achievements"));
+  return makeCampaign(game, rd("campaign"), rd("achievements"), rd("identity"));
 }
 
 // Tiers are derived from stats: the highest tier whose minimum the person meets.
-function makeCampaign(game, cfg, ach) {
+function makeCampaign(game, cfg, ach, idn) {
   const m = game.m, order = cfg.tiers.order;
   const tierOf = (v, mins) => order.reduce((t, x) => (v >= mins[x] - 1e-9 ? x : t), order[0]);
   const actorTier = {}, dirTier = {};
   m.ACTORS.forEach((a) => { actorTier[a.id] = tierOf(a.star, cfg.tiers.actorMinStar); });
   m.DIRS.forEach((d) => { dirTier[d.id] = tierOf(d.skill, cfg.tiers.directorMinSkill); });
   const badges = Object.fromEntries(ach.badges.map((b) => [b.id, b]));
-  return { game, m, cfg, ach, badges, order, rank: (t) => order.indexOf(t), actorTier, dirTier };
+  return { game, m, cfg, ach, idn: idn || { types: [], questions: [] }, badges, order, rank: (t) => order.indexOf(t), actorTier, dirTier };
 }
 
 // What a lifetime profit has unlocked: the last tier each ladder step names, every genre named so far.
@@ -47,7 +47,8 @@ function genreUnlockAt(C, gid) { const s = C.cfg.ladder.find((x) => (x.genres ||
 // Next project's budget: the bank, clamped between the floor and the cap of the highest unlocked tier.
 function budgetFor(C, st) {
   const top = C.order[Math.max(C.rank(st.unlocked.actorTier), C.rank(st.unlocked.directorTier))];
-  return Math.min(C.cfg.caps[top], Math.max(C.cfg.start.floor, st.bank));
+  const cap = Math.round(C.cfg.caps[top] * (1 + (typeEffects(C, st).cap || 0)));
+  return Math.min(cap, Math.max(C.cfg.start.floor, st.bank));
 }
 // Bank after a film or fee. Below the floor the studio is bailed out back to the floor.
 function settle(C, bank) {
@@ -141,7 +142,7 @@ function makeProject(C, st, uid, date, hard, proofs) {
   for (let salt = 0; salt <= f.maxResalts; salt++) {
     const key = projectKey(uid, st.campaignId, st.projectIndex, salt);
     const e = m.makeEnv(date, key);
-    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: Object.assign({}, st.perks), disc: discounts(C, st) };
+    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: Object.assign({}, st.perks), disc: discounts(C, st), ident: identLean(C, st) };
     const genres = {}, loans = new Set();
     m.GENRES.forEach((g) => {
       if (!u.genres.includes(g.id)) { genres[g.id] = { state: "locked", at: genreUnlockAt(C, g.id) }; return; }
@@ -191,20 +192,79 @@ function pointsLeft(C, st) {
   const spent = C.cfg.upgrades.reduce((s, u) => s + (st.upgrades[u.id] || 0) * u.cost, 0);
   return levelFor(C, st.lifetimeGross) - 1 - spent;
 }
+// Fee and marketing discounts from upgrades, combined with the studio type's fees/marketing (a positive type
+// value makes things dearer): the model charges fee * (1 - discount).
 function discounts(C, st) {
-  const out = {};
+  const out = {}, fx = typeEffects(C, st);
+  let talent = 0, windows = 0;
   C.cfg.upgrades.forEach((u) => {
     const r = (st.upgrades || {})[u.id] || 0;
-    if (r && u.talent) out.talent = u.talent[r - 1];
-    if (r && u.windows) out.windows = u.windows[r - 1];
+    if (r && u.talent) talent = u.talent[r - 1];
+    if (r && u.windows) windows = u.windows[r - 1];
+  });
+  const t = 1 - (1 - talent) * (1 + (fx.fees || 0)), w = 1 - (1 - windows) * (1 + (fx.marketing || 0));
+  if (Math.abs(t) > 1e-9) out.talent = Math.round(t * 10000) / 10000;
+  if (Math.abs(w) > 1e-9) out.windows = Math.round(w * 10000) / 10000;
+  return out;
+}
+
+// ---- studio type (onboarding, data/identity.json): four answers add points to five types; the type with the
+// most wins (ties go to the type the risk answer favours, then file order). Its effects lean genres (env.ident),
+// change fees, marketing and the budget cap, and move the breakout threshold. Chosen once.
+function typeFor(C, answers) {
+  const pts = Object.fromEntries(C.idn.types.map((t) => [t.id, 0]));
+  answers.forEach((a) => Object.entries(a.points).forEach(([t, v]) => { if (own(pts, t)) pts[t] += v; }));
+  const risk = answers[answers.length - 1].points;
+  return C.idn.types.map((t) => t.id).sort((x, y) => pts[y] - pts[x] || (risk[y] || 0) - (risk[x] || 0))[0];
+}
+function typeEffects(C, st) {
+  const id = st.identity && st.identity.type, t = id && C.idn.types.find((x) => x.id === id);
+  return (t && t.effects) || {};
+}
+// Genre lean per genre id; a blend gets the average of its halves.
+function identLean(C, st) {
+  const lean = typeEffects(C, st).genres || {}, out = {};
+  C.m.GENRES.forEach((g) => {
+    const parts = g.mix || [g.id], v = parts.reduce((s, x) => s + (lean[x] || 0), 0) / parts.length;
+    if (v) out[g.id] = Math.round(v * 10000) / 10000;
   });
   return out;
 }
+function identity(C, st, uid, input) {
+  st = normalize(st);
+  if (st.identity) throw new Reject("Your studio type is already set.");
+  const ids = input && input.answers, qs = C.idn.questions;
+  if (!Array.isArray(ids) || ids.length !== qs.length) throw new Reject("Answer every question first.");
+  const answers = qs.map((q, i) => {
+    const a = typeof ids[i] === "string" && q.answers.find((x) => x.id === ids[i]);
+    if (!a) throw new Reject("That isn't one of the answers.");
+    return a;
+  });
+  const next = Object.assign({}, st, { identity: { type: typeFor(C, answers), answers: answers.map((a) => a.id) } });
+  next.currentProject = makeProject(C, next, uid, st.currentProject.date, st.currentProject.diff === "hard");
+  return next;
+}
+
+// ---- breakouts: a film that makes at least `threshold` of the best film its project allowed (in that genre)
+// spins a weighted roulette (data/campaign.json breakout.wheel), seeded by the project and the exact film so it
+// can't be re-spun. The multiplier is a Breakout step in the model (env.boom).
+function breakoutFor(C, st, pj, env, p, cfg, r) {
+  const m = C.m, b = C.cfg.breakout;
+  if (!b || r.profit <= 0) return null;
+  const best = m.bestPossible(env, p.g, cfg);
+  if (!best || best.profit <= 0) return null;
+  const need = b.threshold + (typeEffects(C, st).breakout || 0), share = r.profit / best.profit;
+  if (share < need - 1e-9) return null;
+  const total = b.wheel.reduce((s, x) => s + x.w, 0);
+  let roll = m.rng(m.hash(pj.key + "|boom|" + [p.g, p.d, p.a1, p.a2, p.a3, p.w].join("|")))() * total, slot = 0;
+  while (slot < b.wheel.length - 1 && roll >= b.wheel[slot].w) { roll -= b.wheel[slot].w; slot++; }
+  return { x: b.wheel[slot].x, slot, share: Math.round(share * 1000) / 1000, need: Math.round(need * 1000) / 1000, best: round1(best.profit) };
+}
 // Studios founded before levels, stats or tiered badges existed get the new fields (an old badge was a bare
 // timestamp; it becomes tier 1).
-const NEW_STATS = { streak: 0, reunions: 0, chemistry: 0, timing: 0, seasons: [], realHits: 0, bailedOut: false };
+const NEW_STATS = { streak: 0, reunions: 0, chemistry: 0, timing: 0, seasons: [], realHits: 0, bailedOut: false, breakouts: 0 };
 function normalize(st) {
-  const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {} }, st);
+  const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {}, identity: null }, st);
   out.stats = Object.assign({}, NEW_STATS, st.stats, { seasons: ((st.stats || {}).seasons || []).slice() });
   out.badges = Object.fromEntries(Object.entries(st.badges || {}).map(([k, v]) => [k, typeof v === "number" ? { tier: 1, at: v } : v]));
   // Studios from before the public card: their best film so far is the biggest of their recent ones.
@@ -221,7 +281,7 @@ function publicStudio(C, uid, st, now) {
     lifetimeGross: st.lifetimeGross || 0, lifetimeProfit: st.lifetimeProfit, aTierFilms: st.aTierFilms,
     profile: { color: pr.color || null, tagline: pr.tagline || "", city: pr.city || "", logo: pr.logo || null, backdrop: pr.backdrop || null },
     badges: Object.fromEntries(Object.entries(st.badges || {}).map(([k, v]) => [k, typeof v === "number" ? 1 : v.tier])),
-    bestFilm: st.bestFilm || null, updatedAt: now,
+    bestFilm: st.bestFilm || null, type: (st.identity && st.identity.type) || null, updatedAt: now,
   };
 }
 
@@ -255,7 +315,10 @@ function release(C, st, uid, input, date, now) {
   if (cfg.real ? !pj.env.dates.includes(w) : !(own(m.W, w) && !m.W[w].hardOnly)) throw new Reject("That release slot isn't available.");
   const p = { g, d, a1, a2, a3, w }, env = projectEnv(pj);
   if (m.costOf(p, cfg, env) > pj.budget) throw new Reject("That film is over this project's budget.");
-  const r = m.evalFilm(env, p, cfg), profit = round1(r.profit);
+  let r = m.evalFilm(env, p, cfg);
+  const boom = breakoutFor(C, st, pj, env, p, cfg, r);
+  if (boom) { env.boom = { [g]: boom.x }; r = m.evalFilm(env, p, cfg); }
+  const profit = round1(r.profit);
 
   const before = st, B = C.badges, lifetime = round1(st.lifetimeProfit + Math.max(0, profit));
   const money = settle(C, st.bank + profit);
@@ -276,7 +339,7 @@ function release(C, st, uid, input, date, now) {
   // Genre Master perk: the genre's films earn more from now on.
   const perks = profit > 0 && next.genreHits[g] >= B.genre_master.films && !own(st.perks, g) ? [g] : [];
   perks.forEach((x) => { next.perks[x] = B.genre_master.bonus; });
-  const facts = filmFacts(C, before, { p, cfg, env, profit });
+  const facts = Object.assign(filmFacts(C, before, { p, cfg, env, profit }), { boom });
   updateStats(next.stats, facts, money.bailout);
   let board = null;
   if (newGates.includes(C.cfg.boardGoal) && next.aTierFilms === null) {
@@ -291,14 +354,15 @@ function release(C, st, uid, input, date, now) {
     profit, gross: Math.round(r.gross), cost: r.cost, budget: pj.budget, badges, perks,
     gates: newGates, bailout: money.bailout, at: now,
     script: pj.script && pj.script.g === g ? { s: pj.script.s, q: m.scriptQ(env, g), items: pj.script.items } : null,
+    breakout: boom,
   };
   // Highest-grossing film so far, for the public studio card.
   if (!st.bestFilm || film.gross > st.bestFilm.gross) {
-    next.bestFilm = { title: film.title, genre: g, gross: film.gross, profit, no: filmsMade, d: p.d, cast: [p.a1, p.a2, p.a3] };
+    next.bestFilm = { title: film.title, genre: g, gross: film.gross, profit, no: filmsMade, d: p.d, cast: [p.a1, p.a2, p.a3], boom: boom ? boom.x : null };
   }
   // The last few films ride along in the studio doc so the HQ needs no extra reads.
   next.recent = [{ no: filmsMade, title: film.title, genre: g, profit, gross: film.gross, at: now }].concat(st.recent || []).slice(0, C.cfg.recentFilms || 5);
-  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout,
+  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout, breakout: boom,
     level: lv1 > lv0 ? { from: lv0, to: lv1, points: pointsLeft(C, next) } : null };
   return { state: next, film, events, board };
 }
@@ -328,6 +392,7 @@ function updateStats(s, f, bailout) {
   if (f.timing) s.timing++;
   if (f.hit && !s.seasons.includes(f.season)) s.seasons.push(f.season);
   if (f.hit && f.real) s.realHits++;
+  if (f.boom) s.breakouts = (s.breakouts || 0) + 1;
   s.bailedOut = bailout;
 }
 // film is null when the change isn't a release (an upgrade): then only badges that need no film are checked.
@@ -338,7 +403,7 @@ function badgeValue(C, id, before, st, film) {
     genre_explorer: Object.values(st.genreHits).filter((n) => n > 0).length,
     well_equipped: Object.values(st.upgrades || {}).reduce((a, x) => a + x, 0),
     hit_streak: s.streak, reunion: s.reunions, chemistry: s.chemistry, perfect_timing: s.timing,
-    year_round: s.seasons.length, opening_weekend: s.realHits,
+    year_round: s.seasons.length, opening_weekend: s.realHits, breakout: s.breakouts || 0,
     iron_studio: st.aTierFilms !== null && st.bailouts === 0 ? 1 : 0, fast_track: st.aTierFilms,
   };
   if (own(studio, id)) return studio[id];
@@ -352,6 +417,7 @@ function badgeValue(C, id, before, st, film) {
     full_house: f.hit && C.rank(before.unlocked.actorTier) >= C.rank(B.full_house.after) &&
       C.dirTier[p.d] === B.full_house.tier && f.cast.every((a) => C.actorTier[a] === B.full_house.tier) ? 1 : 0,
     in_sync: f.synergy,
+    jackpot: f.boom && f.boom.slot === C.cfg.breakout.wheel.length - 1 ? 1 : 0,
     phoenix: f.hit && f.afterBailout ? 1 : 0,
   }[id];
 }
@@ -453,4 +519,5 @@ module.exports = {
   loadCampaign, makeCampaign, unlocksFor, nextGate, budgetFor, settle, castPools, crewList, projectEnv,
   makeProject, feasible, awardBadges, badgeValue, tierFor, filmFacts, newCampaign, release, pass, setHard, rename, defaultName, cleanName, projectKey,
   levelFor, pointsLeft, discounts, upgrade, normalize, style, rerollsFor, reroll, pickScript, publicStudio,
+  identity, typeFor, typeEffects, identLean, breakoutFor,
 };

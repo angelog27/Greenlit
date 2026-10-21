@@ -17,21 +17,24 @@ import os from "node:os";
 const require = createRequire(import.meta.url);
 const ROOT = new URL("../", import.meta.url);
 
-function simulate({ cfg, ach, policy, run, films }) {
+function simulate({ cfg, ach, idn, policy, run, films }) {
   const { loadGame } = require("../functions/game.js");
   const camp = require("../functions/campaign.js");
-  const game = loadGame(), C = camp.makeCampaign(game, cfg, ach), m = C.m;
+  const game = loadGame(), C = camp.makeCampaign(game, cfg, ach, idn), m = C.m;
   const plain = (v) => JSON.parse(JSON.stringify(v));
   const uid = `sim-${policy}-${run}`, DATE = "2026-10-20";
   const r = m.rng(m.hash(uid));
   const any = (a) => a[Math.floor(r() * a.length)];
   let st = plain(camp.newCampaign(C, uid, "c" + run, "", DATE, 0));
-  const reached = {}, profits = [];
+  // Every studio answers the onboarding at random, so all five studio types are in the mix.
+  st = plain(camp.identity(C, st, uid, { answers: idn.questions.map((q) => any(q.answers).id) }));
+  const reached = {}, profits = [], grosses = [];
   for (let n = 1; n <= films; n++) {
     const pj = st.currentProject, dcfg = m.DIFFS[pj.diff], env = camp.projectEnv(pj);
     const pick = (policy === "random" ? randomPick : decentPick)(m, pj, env, dcfg, any);
     const out = plain(camp.release(C, st, uid, { index: pj.index, pick }, DATE, n));
     profits.push(out.film.profit);
+    grosses.push(out.film.gross);
     out.events.gates.forEach((g) => { reached[g.id] = n; });
     st = out.state;
     // Spend upgrade points: random buys anything it can; decent buys the discounts first.
@@ -44,7 +47,8 @@ function simulate({ cfg, ach, policy, run, films }) {
     }
     if (reached[cfg.boardGoal]) break;
   }
-  return { policy, run, reached, bailouts: st.bailouts, films: profits.length, profits, lifetime: st.lifetimeProfit, level: camp.levelFor(C, st.lifetimeGross) };
+  return { policy, run, reached, bailouts: st.bailouts, films: profits.length, profits, lifetime: st.lifetimeProfit, level: camp.levelFor(C, st.lifetimeGross),
+    type: st.identity.type, breakouts: st.stats.breakouts || 0, grosses };
 }
 
 function windowsOf(m, pj, dcfg) { return dcfg.real ? pj.env.dates : m.WINDOWS.filter((w) => !w.hardOnly).map((w) => w.id); }
@@ -54,7 +58,7 @@ function randomPick(m, pj, env, dcfg, any) {
   for (let i = 0; i < 400; i++) {
     const g = any(ok), gs = pj.genres[g];
     const p = { g, d: any(gs.dirs), a1: any(gs.pools.a1), a2: any(gs.pools.a2), a3: any(gs.pools.a3), w: any(windowsOf(m, pj, dcfg)) };
-    if (m.costOf(p, dcfg) <= pj.budget) return p;
+    if (m.costOf(p, dcfg, env) <= pj.budget) return p;
   }
   return cheapest(m, pj, any(ok), dcfg);
 }
@@ -80,7 +84,7 @@ function decentPick(m, pj, env, dcfg) {
   // Over budget: drop the priciest pick to its next option on the list until it fits.
   const lists = { d: dirs, a1: casts[0], a2: casts[1], a3: casts[2] }, at = { d: 0, a1: 0, a2: 0, a3: 0 };
   const cur = () => ({ g, d: lists.d[at.d], a1: lists.a1[at.a1], a2: lists.a2[at.a2], a3: lists.a3[at.a3], w });
-  for (let i = 0; i < 40 && m.costOf(cur(), dcfg) > pj.budget; i++) {
+  for (let i = 0; i < 40 && m.costOf(cur(), dcfg, env) > pj.budget; i++) {
     const p = cur(), fee = (k) => (k === "d" ? m.D[p.d].fee : m.A[p[k]].fee);
     const k = ["d", "a1", "a2", "a3"].filter((x) => lists[x].slice(at[x] + 1).some((id) => (x === "d" ? m.D[id].fee : m.A[id].fee) < fee(x)))
       .sort((a, b) => fee(b) - fee(a))[0];
@@ -89,7 +93,7 @@ function decentPick(m, pj, env, dcfg) {
     at[k] = next;
   }
   const p = cur();
-  if (m.costOf(p, dcfg) <= pj.budget) return p;
+  if (m.costOf(p, dcfg, env) <= pj.budget) return p;
   return cheapest(m, pj, g, dcfg);
 }
 
@@ -102,8 +106,9 @@ if (!isMainThread) {
   execFileSync(process.execPath, [fileURLToPath(new URL("tools/build_functions.mjs", ROOT))], { stdio: "ignore" });
   const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf8"));
   const ach = JSON.parse(fs.readFileSync(fileURLToPath(new URL("data/achievements.json", ROOT)), "utf8"));
+  const idn = JSON.parse(fs.readFileSync(fileURLToPath(new URL("data/identity.json", ROOT)), "utf8"));
   const jobs = [];
-  for (const policy of (arg("policies", "random,decent")).split(",")) for (let run = 0; run < runs; run++) jobs.push({ cfg, ach, policy, run, films });
+  for (const policy of (arg("policies", "random,decent")).split(",")) for (let run = 0; run < runs; run++) jobs.push({ cfg, ach, idn, policy, run, films });
   const results = [];
   const t0 = Date.now();
   await new Promise((done) => {
@@ -131,6 +136,10 @@ if (!isMainThread) {
     const b = rs.map((r) => r.bailouts), pf = rs.flatMap((r) => r.profits);
     if (rs[0].level) console.log(`  studio level at the end: ${fmt(rs.map((r) => r.level))}`);
     console.log(`  bailouts per campaign: mean ${(b.reduce((a, x) => a + x, 0) / b.length).toFixed(2)}, ${b.filter((x) => x > 0).length} of ${rs.length} campaigns had one`);
+    const gs = rs.flatMap((r) => r.grosses), bo = rs.reduce((a, r) => a + r.breakouts, 0);
+    console.log(`  breakouts: ${(bo / pf.length * 100).toFixed(1)}% of films; grosses over $1B: ${gs.filter((x) => x >= 1000).length} (${(gs.filter((x) => x >= 1000).length / gs.length * 100).toFixed(1)}%), over $2B: ${gs.filter((x) => x >= 2000).length}; biggest $${Math.max(...gs)}M`);
+    const byType = {}; rs.forEach((r) => { (byType[r.type] = byType[r.type] || []).push(r.reached[cfg.boardGoal] || 999); });
+    console.log("  films to the A-list by studio type: " + Object.entries(byType).map(([t, xs]) => `${t} ${q(xs, 0.5)} (n=${xs.length})`).join(", "));
     console.log(`  profit per film: median $${q(pf, 0.5).toFixed(1)}M (p10 ${q(pf, 0.1).toFixed(1)}, p90 ${q(pf, 0.9).toFixed(1)}), flops ${Math.round(pf.filter((x) => x < 0).length / pf.length * 100)}%`);
   }
 }

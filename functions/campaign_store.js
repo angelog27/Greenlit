@@ -3,7 +3,7 @@
 //   campaigns/{uid}/films/{index} one released film, keyed by project index (also the idempotency record)
 //   campaignBoard/{uid}           public row once the studio reaches the board goal (A-tier)
 //   studios/{uid}                 public studio card (look, level, badges, best film), rewritten on every change to them
-// Callables: start, project, release, pass, reroll, upgrade, style, rename.
+// Callables: start, project, release, pass, reroll, pickScript, identity, upgrade, style, rename.
 // Takes `db` (the Admin Firestore, or a stand-in with doc() and runTransaction() in tests) and `files` (Storage:
 // meta(path) -> { contentType, size, generation } or null, head(path) -> first bytes, remove(path)).
 //   studios/{uid}/logo, studios/{uid}/backdrop   the studio's images in Storage, uploaded by the owner
@@ -66,6 +66,14 @@ function makeStore(db, C, files) {
       const st = await load(tx, uid);
       const next = plain(camp.reroll(C, st, uid, data));
       tx.set(ref(uid), next);
+      return { state: next };
+    }),
+    // Studio type from the onboarding answers (once).
+    identity: (uid, data, now) => db.runTransaction(async (tx) => {
+      const st = await load(tx, uid);
+      const next = plain(camp.identity(C, st, uid, data));
+      tx.set(ref(uid), next);
+      card(tx, uid, next, now);
       return { state: next };
     }),
     pickScript: (uid, data) => db.runTransaction(async (tx) => {

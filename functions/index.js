@@ -103,3 +103,4 @@ exports.campaignUpgrade = campaignCall(store.upgrade);
 exports.campaignStyle = campaignCall(store.style, "style");
 exports.campaignReroll = campaignCall(store.reroll);
 exports.campaignPickScript = campaignCall(store.pickScript);
+exports.campaignIdentity = campaignCall(store.identity);

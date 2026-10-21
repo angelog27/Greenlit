@@ -1,0 +1,45 @@
+{
+  "types": [
+    { "id": "blockbuster", "name": "Blockbuster Factory", "icon": "rocket",  "blurb": "Big genres, big budgets, big stars.",
+      "effects": { "genres": { "action": 0.06, "scifi": 0.06, "animation": 0.06, "drama": -0.05, "romance": -0.05 }, "cap": 0.1, "fees": 0.08 },
+      "pros": ["+6% box office on Action, Sci-Fi and Animation", "Budget cap 10% higher"], "cons": ["Talent fees 8% higher", "-5% box office on Drama and Romance"] },
+    { "id": "prestige",    "name": "Prestige House",      "icon": "crown",   "blurb": "Serious stories, awards-season campaigns.",
+      "effects": { "genres": { "drama": 0.08, "thriller": 0.08, "romance": 0.08, "action": -0.06, "comedy": -0.06, "horror": -0.06 }, "marketing": -0.2, "cap": -0.05 },
+      "pros": ["+8% box office on Drama, Thriller and Romance", "Marketing 20% cheaper"], "cons": ["-6% box office on Action, Comedy and Horror", "Budget cap 5% lower"] },
+    { "id": "genre",       "name": "Genre Shop",          "icon": "flame",   "blurb": "Cheap scares, cheap laughs, loud openings.",
+      "effects": { "genres": { "horror": 0.07, "comedy": 0.07, "action": -0.06, "scifi": -0.06, "animation": -0.06 }, "fees": -0.08, "cap": -0.1 },
+      "pros": ["+7% box office on Horror and Comedy", "Talent fees 8% lower"], "cons": ["-6% box office on Action, Sci-Fi and Animation", "Budget cap 10% lower"] },
+    { "id": "talent",      "name": "Talent Agency",       "icon": "heart",   "blurb": "Everyone wants to work with you.",
+      "effects": { "fees": -0.12, "marketing": 0.2, "breakout": 0.03 },
+      "pros": ["Talent fees 12% lower"], "cons": ["Marketing 20% more expensive", "Breakouts slightly harder to trigger (97% of the best film)"] },
+    { "id": "wildcard",    "name": "Wildcard",            "icon": "spark",   "blurb": "Swing for the fences, every time.",
+      "effects": { "breakout": -0.06, "fees": 0.06, "cap": -0.05 },
+      "pros": ["Breakouts much easier to trigger (88% of the best film)"], "cons": ["Talent fees 6% higher", "Budget cap 5% lower"] }
+  ],
+  "questions": [
+    { "id": "make", "text": "What kind of films do you want to make?",
+      "answers": [
+        { "id": "crowd",    "label": "Crowd-pleasers",        "pros": ["The biggest audiences", "Event-movie grosses"], "cons": ["Expensive to make well"], "points": { "blockbuster": 3, "wildcard": 1 } },
+        { "id": "prestige", "label": "Prestige pictures",     "pros": ["Awards-season crowds", "Stories that age well"], "cons": ["Smaller openings"], "points": { "prestige": 3, "talent": 1 } },
+        { "id": "thrills",  "label": "Cheap genre thrills",   "pros": ["Cheap to shoot", "Loud opening weekends"], "cons": ["A ceiling on how big they get"], "points": { "genre": 3, "wildcard": 1 } }
+      ] },
+    { "id": "spend", "text": "How do you spend money?",
+      "answers": [
+        { "id": "lean",     "label": "Lean and mean",         "pros": ["Every dollar works", "Hard to sink the studio"], "cons": ["Smaller budgets"], "points": { "genre": 2, "talent": 1 } },
+        { "id": "balanced", "label": "Balanced books",        "pros": ["Steady, flexible"], "cons": ["No special edge"], "points": { "prestige": 2, "talent": 1 } },
+        { "id": "big",      "label": "Big swings",            "pros": ["Breakout hits come more often", "Room for spectacle"], "cons": ["Pricier talent"], "points": { "blockbuster": 1, "wildcard": 2 } }
+      ] },
+    { "id": "cast", "text": "How do you cast?",
+      "answers": [
+        { "id": "stars",    "label": "Star power",            "pros": ["Names sell tickets"], "cons": ["Stars cost more"], "points": { "blockbuster": 1, "prestige": 2 } },
+        { "id": "fresh",    "label": "Fresh discoveries",     "pros": ["Cheap, hungry talent"], "cons": ["Less pull on the poster"], "points": { "genre": 2, "wildcard": 1 } },
+        { "id": "loyal",    "label": "Loyal regulars",        "pros": ["People love working for you", "Lower fees"], "cons": ["Pricier marketing"], "points": { "talent": 3 } }
+      ] },
+    { "id": "risk", "text": "How do you handle risk?",
+      "answers": [
+        { "id": "steady",   "label": "Slow and steady",       "pros": ["Reliable returns"], "cons": ["Fewer breakout hits"], "points": { "prestige": 2, "talent": 2 } },
+        { "id": "showman",  "label": "Showman",               "pros": ["Big releases, big marketing"], "cons": ["Bigger bills"], "points": { "blockbuster": 2, "genre": 2 } },
+        { "id": "gamble",   "label": "Gambler",               "pros": ["Breakout hits come more often"], "cons": ["Pricier talent", "Smaller budgets"], "points": { "wildcard": 4 } }
+      ] }
+  ]
+}
