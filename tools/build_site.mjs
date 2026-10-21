@@ -12,7 +12,7 @@ const OUT = path.join(ROOT, "dist");
 const copy = (rel) => { fs.mkdirSync(path.dirname(path.join(OUT, rel)), { recursive: true }); fs.copyFileSync(path.join(ROOT, rel), path.join(OUT, rel)); };
 
 fs.rmSync(OUT, { recursive: true, force: true });
-["index.html", "Frontend/greenlight.html", "Frontend/net.js"].forEach(copy);
+["index.html", "Frontend/greenlight.html", "Frontend/net.js", "Frontend/favicon.svg"].forEach(copy);
 fs.readdirSync(path.join(ROOT, "data")).filter((f) => f.endsWith(".json")).forEach((f) => copy("data/" + f));
 
 let cfg = null;

@@ -1,4 +1,19 @@
 {
+  "popcorn": {
+    "mid": 60, "wom": 0.004, "womCap": 0.15,
+    "window": 5, "fans": 0.004, "fansCap": 0.12, "fansMin": 2,
+    "declines": 0.004
+  },
+  "relationships": {
+    "min": -100, "max": 100,
+    "film": { "hit": 6, "breakout": 10, "flop": -6, "audienceHigh": 4, "audienceLow": -4, "highAt": 75, "lowAt": 45 },
+    "events": { "clash": { "a": -15, "b": -15 }, "walkout": { "a": -20 }, "cutfight": { "d": -12 }, "viral": { "a": 8 }, "screening": { "all": 5 }, "overrun": { "d": -5 }, "chemistry": { "a": 10, "b": 10 }, "buzz": { "d": 8 } },
+    "awards": { "person": 15, "picture": 8, "globe": 10 },
+    "friend": 60, "strained": -40, "feud": -60,
+    "friendFee": 0.1, "strainedFee": 0.15,
+    "decline": 0.005, "shortlist": 0.006,
+    "clash": { "strained": 2, "friends": 0.3 }
+  },
   "rotation": { "actor": 0.45, "director": 0.35 },
   "fatigue": { "script": 0.12, "director": 0.03, "actor": 0.015, "genre": 0.03, "masteredGenre": 0.5, "window": 4, "cap": 0.3 },
   "declines": {

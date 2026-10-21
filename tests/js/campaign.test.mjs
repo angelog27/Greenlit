@@ -48,6 +48,7 @@ function bestFilm(st, gid) {
 function filmEnv(pj, film) {
   const e = plain(camp.projectEnv(pj));
   if (film.event) { e.prod = { [film.genre]: film.event.gross }; e.extra = film.event.cost; }
+  if (film.wom) e.wom = { [film.genre]: film.wom };
   if (film.breakout) e.boom = { [film.genre]: film.breakout.x };
   return e;
 }
@@ -844,4 +845,66 @@ test("audience score: 0-100 on every film, lower when audiences are tired of you
   assert.ok(a0 >= 0 && a0 <= 100 && a1 < a0, `${a0} -> ${a1}`);
   const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
   assert.ok(Number.isInteger(out.film.scores.audience) && out.state.recent[0].audience === out.film.scores.audience);
+});
+
+// ---- relationships: films, on-set events and awards move them; they decide who works with you and for how much
+test("relationships: hits and good events raise them, flops and fights lower them, clamped", () => {
+  const E = C.evt, R = E.relationships, p = { d: "d1", a1: "x", a2: "y", a3: "z" };
+  const hit = storiesLib.relDeltas(E, p, 50, 80, null, null);
+  assert.equal(hit.d1, R.film.hit + R.film.audienceHigh);
+  const flop = storiesLib.relDeltas(E, p, -20, 30, null, { id: "clash", a: "x", b: "y", d: "d1" });
+  assert.equal(flop.x, R.film.flop + R.film.audienceLow + R.events.clash.a);
+  assert.equal(flop.z, R.film.flop + R.film.audienceLow);
+  const boom = storiesLib.relDeltas(E, p, 50, 60, { x: 2 }, { id: "chemistry", a: "x", b: "y", d: "d1" });
+  assert.equal(boom.y, R.film.breakout + R.events.chemistry.b);
+  const { rel, changes } = storiesLib.applyRel(E, { x: 95 }, { x: 20, y: -500 });
+  assert.equal(rel.x, R.max); assert.equal(rel.y, R.min); assert.equal(changes.length, 2);
+});
+
+test("relationships: feuds refuse, friends say yes and get a friends rate", () => {
+  const E = C.evt, R = E.relationships, base = studio(0, { index: 300 }), g = playable(base)[0];
+  const gs0 = base.currentProject.genres[g], foe = gs0.pools.a1[0], pal = gs0.dirs[0];
+  const st = { ...base, rel: { [foe]: R.feud - 5, [pal]: R.friend + 10 } };
+  st.currentProject = plain(camp.makeProject(C, st, "u1", DATE, false));
+  const gs = st.currentProject.genres[g];
+  const all = [...gs.pools.a1, ...gs.pools.a2, ...gs.pools.a3];
+  assert.ok(!all.includes(foe), "feuding actor never on the shortlist");
+  const no = gs.declined.find((x) => x.id === foe);
+  if (no) assert.equal(no.feud, true);
+  const env = camp.projectEnv(st.currentProject);
+  if (gs.dirs.includes(pal)) assert.equal(m.talentFee(env, m.D[pal]), Math.round(Math.round(m.D[pal].fee * (1 - ((env.disc && env.disc.talent) || 0))) * (1 - R.friendFee)));
+  assert.equal(env.relFee[foe], 1 + R.strainedFee);
+});
+
+test("relationships: every release moves them for the director and cast", () => {
+  const st = studio(0, { index: 301 }), g = playable(st)[0], p = cheapest(st, g), pj = st.currentProject;
+  const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+  [p.d, p.a1, p.a2, p.a3].forEach((id) => assert.ok(typeof out.state.rel[id] === "number" && out.state.rel[id] !== 0, id));
+  assert.ok(out.events.rel.length >= 4);
+});
+
+// ---- popcorn (audience) score: word of mouth on the film itself, fan base on the next ones
+test("popcorn: word of mouth and fan base follow the audience score, capped", () => {
+  const E = C.evt, P = E.popcorn;
+  assert.equal(storiesLib.womFor(E, P.mid), 1);
+  assert.ok(storiesLib.womFor(E, 90) > 1 && storiesLib.womFor(E, 30) < 1);
+  assert.equal(storiesLib.womFor(E, 1000), Math.round((1 + P.womCap) * 100) / 100);
+  assert.equal(storiesLib.fansFor(E, { popcorn: [90] }), 1, "one film isn't a fan base yet");
+  assert.ok(storiesLib.fansFor(E, { popcorn: [90, 85, 88] }) > 1 && storiesLib.fansFor(E, { popcorn: [30, 35] }) < 1);
+  const st = studio(0, { index: 400 }), g = playable(st)[0], p = cheapest(st, g), pj = st.currentProject, dcfg = m.DIFFS[pj.diff];
+  const env = camp.projectEnv(pj), loved = m.evalFilm({ ...env, fans: 1.1 }, p, dcfg), plainR = m.evalFilm({ ...env, fans: 1 }, p, dcfg);
+  assert.ok(loved.gross > plainR.gross && loved.steps.some((s) => s.k === "Fan base"));
+  const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+  assert.equal(out.state.popcorn[0], out.film.scores.audience);
+  assert.equal(out.film.wom || 1, storiesLib.womFor(E, out.film.scores.audience));
+  // Talent is keener on studios audiences love.
+  let lovedNo = 0, hatedNo = 0;
+  for (let i = 0; i < 20; i++) {
+    const a = { ...studio(0, { index: 500 + i }), popcorn: [95, 95, 95] }, b = { ...studio(0, { index: 500 + i }), popcorn: [20, 20, 20] };
+    [[a, (n) => (lovedNo += n)], [b, (n) => (hatedNo += n)]].forEach(([s, add]) => {
+      const pjx = camp.makeProject(C, s, "u1", DATE, false);
+      Object.values(pjx.genres).forEach((x) => add((x.declined || []).length));
+    });
+  }
+  assert.ok(lovedNo < hatedNo, `${lovedNo} vs ${hatedNo}`);
 });

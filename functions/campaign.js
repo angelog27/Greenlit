@@ -68,9 +68,9 @@ function projectKey(uid, cid, index, salt) { return "camp|" + uid + "|" + cid + 
 // people of that gender from the next tier up fill in and are listed as loans.
 // recent (optional): how often each person appeared in the studio's last films; they drift down the order
 // (events.json rotation), so a studio doesn't see the same faces every project.
-function castPools(C, key, gid, tier, recent) {
-  const m = C.m, sl = C.cfg.shortlist, per = sl.perGender, cap = C.rank(tier), rot = recent && C.evt ? C.evt.rotation.actor : 0;
-  const k = (a) => m.seedOf("pool", { day: key }, gid, a.id) - (m.inGenre(a.g, gid) ? 0.5 : 0) + rot * ((recent && recent[a.id]) || 0);
+function castPools(C, key, gid, tier, recent, rel) {
+  const m = C.m, sl = C.cfg.shortlist, per = sl.perGender, cap = C.rank(tier), rot = recent && C.evt ? C.evt.rotation.actor : 0, rw = rel && C.evt ? C.evt.relationships.shortlist : 0;
+  const k = (a) => m.seedOf("pool", { day: key }, gid, a.id) - (m.inGenre(a.g, gid) ? 0.5 : 0) + rot * ((recent && recent[a.id]) || 0) - rw * ((rel && rel[a.id]) || 0);
   const keyed = (list, f) => list.map((a) => ({ a, id: a.id, k: f(a) })).sort(m.byK).map((o) => o.a);
   const of = (s, test) => m.ACTORS.filter((a) => a.s === s && test(C.rank(C.actorTier[a.id])));
   const fresh = { m: keyed(of("m", (r) => r === cap), k), f: keyed(of("f", (r) => r === cap), k) };
@@ -104,9 +104,9 @@ function castPools(C, key, gid, tier, recent) {
 }
 
 // Director shortlist: up to `directors` from unlocked tiers, freshDirectors of them from the newest tier.
-function crewList(C, key, gid, tier, recent) {
-  const m = C.m, sl = C.cfg.shortlist, cap = C.rank(tier), rot = recent && C.evt ? C.evt.rotation.director : 0;
-  const keyed = (list) => list.map((d) => ({ d, id: d.id, k: m.seedOf("dirs", { day: key }, gid, d.id) - (m.inGenre(d.spec, gid) ? 0.35 : 0) + rot * ((recent && recent[d.id]) || 0) })).sort(m.byK).map((o) => o.d);
+function crewList(C, key, gid, tier, recent, rel) {
+  const m = C.m, sl = C.cfg.shortlist, cap = C.rank(tier), rot = recent && C.evt ? C.evt.rotation.director : 0, rw = rel && C.evt ? C.evt.relationships.shortlist : 0;
+  const keyed = (list) => list.map((d) => ({ d, id: d.id, k: m.seedOf("dirs", { day: key }, gid, d.id) - (m.inGenre(d.spec, gid) ? 0.35 : 0) + rot * ((recent && recent[d.id]) || 0) - rw * ((rel && rel[d.id]) || 0) })).sort(m.byK).map((o) => o.d);
   const fresh = keyed(m.DIRS.filter((d) => C.rank(C.dirTier[d.id]) === cap)).slice(0, sl.freshDirectors);
   const ids = new Set(fresh.map((d) => d.id));
   const rest = keyed(m.DIRS.filter((d) => C.rank(C.dirTier[d.id]) <= cap && !ids.has(d.id)));
@@ -148,17 +148,17 @@ function makeProject(C, st, uid, date, hard, proofs) {
   for (let salt = 0; salt <= f.maxResalts; salt++) {
     const key = projectKey(uid, st.campaignId, st.projectIndex, salt);
     const e = m.makeEnv(date, key);
-    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: masteryBonus(C, st), hist: C.evt ? stories.histFor(C.evt, st) : null, disc: discounts(C, st), ident: identLean(C, st) };
+    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: masteryBonus(C, st), hist: C.evt ? stories.histFor(C.evt, st) : null, relFee: C.evt ? stories.relFees(C.evt, st.rel) : null, fans: C.evt ? stories.fansFor(C.evt, st) : 1, disc: discounts(C, st), ident: identLean(C, st) };
     if (e.gs) env.gs = 1; // genre-aware talent for projects from SKILL_FROM on
     const genres = {}, loans = new Set();
     m.GENRES.forEach((g) => {
       if (!u.genres.includes(g.id)) { genres[g.id] = { state: "locked", at: genreUnlockAt(C, g.id) }; return; }
       const hist = C.evt ? stories.histFor(C.evt, st) : null;
-      const cp = castPools(C, key, g.id, u.actorTier, hist && hist.actors);
+      const cp = castPools(C, key, g.id, u.actorTier, hist && hist.actors, st.rel);
       cp.loans.forEach((id) => loans.add(id));
-      let pools3 = cp.pools, dirs = crewList(C, key, g.id, u.directorTier, hist && hist.dirs), declined = [];
+      let pools3 = cp.pools, dirs = crewList(C, key, g.id, u.directorTier, hist && hist.dirs, st.rel), declined = [];
       // Some of the shortlist pass on the project (events.js); new studios hear "no" more often.
-      if (C.evt) ({ pools: pools3, dirs, declined } = stories.declines(m, C.evt, { level: levelFor(C, st.lifetimeGross || 0), reputation: (st.upgrades || {}).reputation || 0 }, key, g.id, pools3, dirs));
+      if (C.evt) ({ pools: pools3, dirs, declined } = stories.declines(m, C.evt, { level: levelFor(C, st.lifetimeGross || 0), reputation: (st.upgrades || {}).reputation || 0, rel: st.rel, fans: stories.fanAvg(C.evt, st) }, key, g.id, pools3, dirs));
       genres[g.id] = { state: "ok", pools: { a1: pools3[0], a2: pools3[1], a3: pools3[2] }, dirs, declined };
     });
     pj = { index: st.projectIndex, salt, key, date, diff, budget, env, genres, loans: [...loans] };
@@ -303,7 +303,7 @@ function breakoutFor(C, st, pj, env, p, cfg, r) {
 // timestamp; it becomes tier 1).
 const NEW_STATS = { streak: 0, reunions: 0, chemistry: 0, timing: 0, seasons: [], realHits: 0, bailedOut: false, breakouts: 0 };
 function normalize(st) {
-  const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {}, identity: null, genreAcclaim: {}, bonusPoints: 0, recentPicks: [], madeScripts: {} }, st);
+  const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {}, identity: null, genreAcclaim: {}, bonusPoints: 0, recentPicks: [], madeScripts: {}, rel: {}, popcorn: [] }, st);
   // Mastery is capped at two genres (older studios may have earned more under the old rule; the first two stay).
   out.perks = Object.fromEntries(Object.entries(st.perks || {}).slice(0, 2));
   out.stats = Object.assign({}, NEW_STATS, st.stats, { seasons: ((st.stats || {}).seasons || []).slice() });
@@ -364,7 +364,7 @@ function release(C, st, uid, input, date, now) {
   let ev = null;
   if (C.evt) {
     const sc0 = C.awd ? awards.filmScores(m, C.awd, env, p, cfg, r) : { critics: 0 };
-    ev = stories.rollEvent(m, C.evt, uid + "|" + st.campaignId, pj.key, p, { chem: filmFacts(C, st, { p, cfg, env, profit: r.profit }).chem, critics: sc0.critics });
+    ev = stories.rollEvent(m, C.evt, uid + "|" + st.campaignId, pj.key, p, { chem: filmFacts(C, st, { p, cfg, env, profit: r.profit }).chem, critics: sc0.critics, rel: st.rel });
     if (ev) {
       ev.costTotal = ev.cost + Math.round(ev.costShare * r.cost);
       env.prod = { [g]: ev.gross }; env.prodNote = ev.title; env.extra = ev.costTotal;
@@ -372,6 +372,12 @@ function release(C, st, uid, input, date, now) {
   }
   if (boom) env.boom = { [g]: boom.x };
   if (boom || ev) r = m.evalFilm(env, p, cfg);
+  // Word of mouth: the film's popcorn score moves its own box office.
+  let wom = 1;
+  if (C.evt && C.awd) {
+    wom = stories.womFor(C.evt, awards.filmScores(m, C.awd, env, p, cfg, r).audience);
+    if (wom !== 1) { env.wom = { [g]: wom }; r = m.evalFilm(env, p, cfg); }
+  }
   const profit = round1(r.profit);
 
   const before = st, B = C.badges, lifetime = round1(st.lifetimeProfit + Math.max(0, profit));
@@ -395,6 +401,14 @@ function release(C, st, uid, input, date, now) {
   // Award scores for every film; every season.films films the Golden Reel Awards judge the season.
   const scores = C.awd ? awards.filmScores(m, C.awd, env, p, cfg, r) : null;
   if (scores && ev && ev.critics) scores.critics = Math.max(0, Math.min(100, scores.critics + ev.critics));
+  // Relationships: the film, its audience and any on-set event, then any awards this season brought.
+  if (scores) next.popcorn = [scores.audience].concat(st.popcorn || []).slice(0, 10);
+  let relChanges = [];
+  if (C.evt) {
+    const deltas = stories.relDeltas(C.evt, p, profit, scores ? scores.audience : 50, boom, ev);
+    const applied = stories.applyRel(C.evt, st.rel, deltas);
+    next.rel = applied.rel; relChanges = applied.changes;
+  }
   // What this studio has made lately, for audience fatigue on later films.
   next.recentPicks = [{ g, d: p.d, cast: [p.a1, p.a2, p.a3], s: env.plots[g] }].concat(st.recentPicks || []).slice(0, 8);
   next.madeScripts = Object.assign({}, st.madeScripts, { [g + "|" + env.plots[g]]: ((st.madeScripts || {})[g + "|" + env.plots[g]] || 0) + 1 });
@@ -416,6 +430,15 @@ function release(C, st, uid, input, date, now) {
       season.points = season.wins.reduce((a, w) => a + (w.points || 0), 0);
       next.bonusPoints = (st.bonusPoints || 0) + season.points;
       next.trophies = tr;
+      if (C.evt) {
+        const A = C.evt.relationships.awards, deltas = {};
+        season.wins.forEach((w) => {
+          if (w.who) deltas[w.who] = (deltas[w.who] || 0) + A.person;
+          if (w.cat === "picture") (w.people || []).forEach((id) => { deltas[id] = (deltas[id] || 0) + A.picture; });
+        });
+        const applied = stories.applyRel(C.evt, next.rel || st.rel, deltas);
+        next.rel = applied.rel; relChanges = relChanges.concat(applied.changes.map((c) => Object.assign(c, { award: true })));
+      }
       next.awards = season.wins.map((w) => ({ kind: "season", season: n, cat: w.cat, name: w.name, title: w.title, who: w.who, at: now })).concat(st.awards || []).slice(0, 30);
     }
   }
@@ -434,6 +457,7 @@ function release(C, st, uid, input, date, now) {
     gates: newGates, bailout: money.bailout, at: now,
     script: pj.script && pj.script.g === g ? { s: pj.script.s, q: m.scriptQ(env, g), items: pj.script.items } : null,
     breakout: boom, scores, d: p.d, cast: [p.a1, p.a2, p.a3],
+    wom: wom !== 1 ? wom : null,
     event: ev ? { id: ev.id, title: ev.title, text: stories.eventText(m, ev, ev.costTotal), gross: ev.gross, cost: ev.costTotal, critics: ev.critics, a: ev.a, b: ev.b } : null,
   };
   // Highest-grossing film so far, for the public studio card.
@@ -442,7 +466,7 @@ function release(C, st, uid, input, date, now) {
   }
   // The last few films ride along in the studio doc so the HQ needs no extra reads.
   next.recent = [{ no: filmsMade, title: film.title, genre: g, profit, gross: film.gross, audience: scores ? scores.audience : null, at: now }].concat(st.recent || []).slice(0, C.cfg.recentFilms || 5);
-  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout, breakout: boom, season, masterReady: masterNew, event: ev ? ev.id : null,
+  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout, breakout: boom, season, masterReady: masterNew, event: ev ? ev.id : null, rel: relChanges,
     level: lv1 > lv0 ? { from: lv0, to: lv1, points: pointsLeft(C, next) } : null };
   return { state: next, film, events, board };
 }

@@ -115,6 +115,8 @@ function makeStore(db, C, files) {
           const next = Object.assign({}, st, { globes: g, bank: Math.round((st.bank + c.prize) * 10) / 10, badges: Object.assign({}, st.badges), bonusPoints: (st.bonusPoints || 0) + (c.points || 0),
             awards: [{ kind: "weekly", week: weekId, cat: c.id, name: c.name, title: win.title, at: now }].concat(st.awards || []).slice(0, 30) });
           camp.awardBadges(C, st, next, null, now);
+          // The people behind the winning film like working with you more.
+          if (C.evt) next.rel = require("./events").applyRel(C.evt, st.rel, Object.fromEntries((win.people || []).map((id) => [id, C.evt.relationships.awards.globe]))).rel;
           tx.set(ref(win.uid), plain(next));
           card(tx, win.uid, next, now);
         });

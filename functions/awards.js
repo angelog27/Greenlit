@@ -40,7 +40,7 @@ function seasonCeremony(A, films, tier, rnd) {
   A.season.categories.forEach((c) => {
     const best = films.slice().sort((a, b) => b.scores[c.score] - a.scores[c.score])[0];
     const base = c.score === "gross" ? R.gross[tier] : R.score[tier], bar = Math.round(base * (1 - R.spread + 2 * R.spread * rnd()));
-    const row = { cat: c.id, name: c.name, title: best.title, value: best.scores[c.score], bar, who: who(c.score, best) };
+    const row = { cat: c.id, name: c.name, title: best.title, value: best.scores[c.score], bar, who: who(c.score, best), people: [best.d].concat(best.cast || []).filter(Boolean) };
     if (row.value >= bar) { wins.push(Object.assign(row, { prize: c.prize, points: c.points || 0 })); prize += c.prize; } else losses.push(row);
   });
   return { wins, losses, prize };
@@ -64,7 +64,7 @@ function finalizeWeek(A, entries) {
   A.weekly.categories.forEach((c) => {
     const rows = entries.map((e) => {
       const f = e.films.slice().sort((a, b) => b.scores[c.score] - a.scores[c.score] || b.scores.gross - a.scores.gross)[0];
-      return f && { uid: e.uid, studioName: e.studioName, logo: e.logo || null, color: e.color || null, title: f.title, genre: f.genre, value: f.scores[c.score], gross: f.scores.gross, at: e.at };
+      return f && { uid: e.uid, studioName: e.studioName, logo: e.logo || null, color: e.color || null, title: f.title, genre: f.genre, value: f.scores[c.score], gross: f.scores.gross, at: e.at, people: [f.d].concat(f.cast || []).filter(Boolean) };
     }).filter((x) => x && (c.score !== "breakout" || x.value > 1));
     rows.sort((a, b) => b.value - a.value || b.gross - a.gross || a.at - b.at);
     out[c.id] = rows.slice(0, A.weekly.podium);
