@@ -29,6 +29,15 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+    // Greenlight Globes weeks, their results and the submitted films are public; only the functions write.
+    match /awards/{week} {
+      allow read: if true;
+      allow write: if false;
+      match /entries/{uid} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
     // Public studio cards (look, level, badges, best film), written by the functions only.
     match /studios/{uid} {
       allow read: if true;

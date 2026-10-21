@@ -3,6 +3,8 @@
 //   campaigns/{uid}/films/{index} one released film, keyed by project index (also the idempotency record)
 //   campaignBoard/{uid}           public row once the studio reaches the board goal (A-tier)
 //   studios/{uid}                 public studio card (look, level, badges, best film), rewritten on every change to them
+//   awards/{week}                 Greenlight Globes week (status, and the results once final)
+//   awards/{week}/entries/{uid}   a studio's submitted films for that week (public)
 // Callables: start, project, release, pass, reroll, pickScript, identity, upgrade, style, rename.
 // Takes `db` (the Admin Firestore, or a stand-in with doc() and runTransaction() in tests) and `files` (Storage:
 // meta(path) -> { contentType, size, generation } or null, head(path) -> first bytes, remove(path)).
@@ -11,6 +13,7 @@ const crypto = require("crypto");
 const camp = require("./campaign");
 const { Reject } = require("./game");
 const { isImageBytes } = require("./limits");
+const awards = require("./awards");
 
 const utcDay = (t) => new Date(t).toISOString().slice(0, 10);
 const filmId = (i) => String(i).padStart(5, "0");
@@ -68,6 +71,56 @@ function makeStore(db, C, files) {
       tx.set(ref(uid), next);
       return { state: next };
     }),
+    // Greenlight Globes: submit (or replace) up to weekly.maxFilms of this week's films. The server reads the
+    // films from the studio's own history, so only real films released this week can be entered.
+    submitAwards: (uid, data, now) => db.runTransaction(async (tx) => {
+      const A = C.awd, wk = awards.weekOf(now), list = data && data.films;
+      if (!Array.isArray(list) || !list.length || list.length > A.weekly.maxFilms || new Set(list).size !== list.length || !list.every((x) => Number.isInteger(x) && x >= 0))
+        throw new Reject(`Pick 1 to ${A.weekly.maxFilms} different films from this week.`);
+      const st = await load(tx, uid);
+      const snaps = await Promise.all(list.map((i) => tx.get(db.doc(`campaigns/${uid}/films/${filmId(i)}`))));
+      const films = snaps.map((s, k) => {
+        const f = s.exists ? s.data() : null;
+        if (!f || !f.scores) throw new Reject("One of those films can't be entered.");
+        if (f.at < wk.start || f.at >= wk.end) throw new Reject("Only films released this week (Monday to Sunday, UTC) can be entered.");
+        return { projectIndex: list[k], title: f.title, genre: f.genre, d: f.d || null, cast: f.cast || null, scores: f.scores };
+      });
+      const pr = st.profile || {};
+      const entry = { uid, week: wk.id, studioName: st.studioName, logo: pr.logo || null, color: pr.color || null, type: (st.identity && st.identity.type) || null, films, at: now };
+      tx.set(db.doc(`awards/${wk.id}`), { week: wk.id, start: wk.start, end: wk.end, status: "open" }, { merge: true });
+      tx.set(db.doc(`awards/${wk.id}/entries/${uid}`), entry);
+      return { week: wk.id, entry };
+    }),
+    // After a week closes: rank every entry, store the results, pay and credit each category winner. Runs once.
+    finalizeWeek: async (weekId, now) => {
+      const A = C.awd, head = db.doc(`awards/${weekId}`);
+      const entries = (await db.collection(`awards/${weekId}/entries`).get()).docs.map((d) => d.data());
+      const results = awards.finalizeWeek(A, entries);
+      const done = await db.runTransaction(async (tx) => {
+        const h = await tx.get(head);
+        if (h.exists && h.data().status === "final") return false;
+        tx.set(head, { week: weekId, status: "final", results, entries: entries.length, finalizedAt: now }, { merge: true });
+        return true;
+      });
+      if (!done) return { skipped: true };
+      for (const c of A.weekly.categories) {
+        const win = (results[c.id] || [])[0];
+        if (!win) continue;
+        await db.runTransaction(async (tx) => {
+          const s = await tx.get(ref(win.uid));
+          if (!s.exists) return;
+          const st = camp.normalize(s.data()), g = Object.assign({ wins: 0, byCat: {} }, st.globes);
+          g.byCat = Object.assign({}, g.byCat, { [c.id]: (g.byCat[c.id] || 0) + 1 });
+          g.wins++;
+          const next = Object.assign({}, st, { globes: g, bank: Math.round((st.bank + c.prize) * 10) / 10, badges: Object.assign({}, st.badges),
+            awards: [{ kind: "weekly", week: weekId, cat: c.id, name: c.name, title: win.title, at: now }].concat(st.awards || []).slice(0, 30) });
+          camp.awardBadges(C, st, next, null, now);
+          tx.set(ref(win.uid), plain(next));
+          card(tx, win.uid, next, now);
+        });
+      }
+      return { results, entries: entries.length };
+    },
     // Studio type from the onboarding answers (once).
     identity: (uid, data, now) => db.runTransaction(async (tx) => {
       const st = await load(tx, uid);

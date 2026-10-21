@@ -6,6 +6,7 @@
 const fs = require("fs");
 const path = require("path");
 const { Reject } = require("./game");
+const awards = require("./awards");
 
 const own = (o, k) => typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k);
 const round1 = (x) => Math.round(x * 10) / 10;
@@ -13,18 +14,18 @@ const ROLES = ["a1", "a2", "a3"];
 
 function loadCampaign(game, dir = path.join(__dirname, "gen", "data")) {
   const rd = (n) => JSON.parse(fs.readFileSync(path.join(dir, n + ".json"), "utf8"));
-  return makeCampaign(game, rd("campaign"), rd("achievements"), rd("identity"));
+  return makeCampaign(game, rd("campaign"), rd("achievements"), rd("identity"), rd("awards"));
 }
 
 // Tiers are derived from stats: the highest tier whose minimum the person meets.
-function makeCampaign(game, cfg, ach, idn) {
+function makeCampaign(game, cfg, ach, idn, awd) {
   const m = game.m, order = cfg.tiers.order;
   const tierOf = (v, mins) => order.reduce((t, x) => (v >= mins[x] - 1e-9 ? x : t), order[0]);
   const actorTier = {}, dirTier = {};
   m.ACTORS.forEach((a) => { actorTier[a.id] = tierOf(a.star, cfg.tiers.actorMinStar); });
   m.DIRS.forEach((d) => { dirTier[d.id] = tierOf(d.skill, cfg.tiers.directorMinSkill); });
   const badges = Object.fromEntries(ach.badges.map((b) => [b.id, b]));
-  return { game, m, cfg, ach, idn: idn || { types: [], questions: [] }, badges, order, rank: (t) => order.indexOf(t), actorTier, dirTier };
+  return { game, m, cfg, ach, idn: idn || { types: [], questions: [] }, awd: awd || null, badges, order, rank: (t) => order.indexOf(t), actorTier, dirTier };
 }
 
 // What a lifetime profit has unlocked: the last tier each ladder step names, every genre named so far.
@@ -284,7 +285,8 @@ function publicStudio(C, uid, st, now) {
     lifetimeGross: st.lifetimeGross || 0, lifetimeProfit: st.lifetimeProfit, aTierFilms: st.aTierFilms,
     profile: { color: pr.color || null, tagline: pr.tagline || "", city: pr.city || "", logo: pr.logo || null, backdrop: pr.backdrop || null },
     badges: Object.fromEntries(Object.entries(st.badges || {}).map(([k, v]) => [k, typeof v === "number" ? 1 : v.tier])),
-    bestFilm: st.bestFilm || null, type: (st.identity && st.identity.type) || null, updatedAt: now,
+    bestFilm: st.bestFilm || null, type: (st.identity && st.identity.type) || null,
+    trophies: (st.trophies || {}).total || 0, globes: (st.globes || {}).wins || 0, updatedAt: now,
   };
 }
 
@@ -343,6 +345,23 @@ function release(C, st, uid, input, date, now) {
   const perks = profit > 0 && next.genreHits[g] >= B.genre_master.films && !own(st.perks, g) ? [g] : [];
   perks.forEach((x) => { next.perks[x] = B.genre_master.bonus; });
   const facts = Object.assign(filmFacts(C, before, { p, cfg, env, profit }), { boom });
+  // Award scores for every film; every season.films films the Golden Reel Awards judge the season.
+  const scores = C.awd ? awards.filmScores(m, C.awd, env, p, cfg, r) : null;
+  let season = null;
+  if (C.awd) {
+    next.season = (st.season || []).concat([{ no: filmsMade, title: m.plotFor(env, g).title, genre: g, d: p.d, cast: [p.a1, p.a2, p.a3], scores }]);
+    if (next.season.length >= C.awd.season.films) {
+      const n = (st.seasonNo || 0) + 1, rnd = m.rng(m.hash(uid + "|" + st.campaignId + "|season|" + n));
+      season = Object.assign({ n, name: C.awd.season.name }, awards.seasonCeremony(C.awd, next.season, u.actorTier, rnd));
+      next.seasonNo = n; next.season = [];
+      next.bank = round1(next.bank + season.prize); // prize money: the bank only, never lifetime profit
+      const tr = Object.assign({ total: 0, byCat: {} }, st.trophies);
+      tr.byCat = Object.assign({}, tr.byCat);
+      season.wins.forEach((w) => { tr.total++; tr.byCat[w.cat] = (tr.byCat[w.cat] || 0) + 1; });
+      next.trophies = tr;
+      next.awards = season.wins.map((w) => ({ kind: "season", season: n, cat: w.cat, name: w.name, title: w.title, who: w.who, at: now })).concat(st.awards || []).slice(0, 30);
+    }
+  }
   updateStats(next.stats, facts, money.bailout);
   let board = null;
   if (newGates.includes(C.cfg.boardGoal) && next.aTierFilms === null) {
@@ -357,7 +376,7 @@ function release(C, st, uid, input, date, now) {
     profit, gross: Math.round(r.gross), cost: r.cost, budget: pj.budget, badges, perks,
     gates: newGates, bailout: money.bailout, at: now,
     script: pj.script && pj.script.g === g ? { s: pj.script.s, q: m.scriptQ(env, g), items: pj.script.items } : null,
-    breakout: boom,
+    breakout: boom, scores, d: p.d, cast: [p.a1, p.a2, p.a3],
   };
   // Highest-grossing film so far, for the public studio card.
   if (!st.bestFilm || film.gross > st.bestFilm.gross) {
@@ -365,7 +384,7 @@ function release(C, st, uid, input, date, now) {
   }
   // The last few films ride along in the studio doc so the HQ needs no extra reads.
   next.recent = [{ no: filmsMade, title: film.title, genre: g, profit, gross: film.gross, at: now }].concat(st.recent || []).slice(0, C.cfg.recentFilms || 5);
-  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout, breakout: boom,
+  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout, breakout: boom, season,
     level: lv1 > lv0 ? { from: lv0, to: lv1, points: pointsLeft(C, next) } : null };
   return { state: next, film, events, board };
 }
@@ -408,6 +427,9 @@ function badgeValue(C, id, before, st, film) {
     hit_streak: s.streak, reunion: s.reunions, chemistry: s.chemistry, perfect_timing: s.timing,
     year_round: s.seasons.length, opening_weekend: s.realHits, breakout: s.breakouts || 0,
     iron_studio: st.aTierFilms !== null && st.bailouts === 0 ? 1 : 0, fast_track: st.aTierFilms,
+    awards: ((st.trophies || {}).total || 0) + ((st.globes || {}).wins || 0),
+    best_picture: (st.trophies && st.trophies.byCat && st.trophies.byCat.picture) || ((st.globes || {}).byCat || {}).picture ? 1 : 0,
+    globe: (st.globes || {}).wins ? 1 : 0,
   };
   if (own(studio, id)) return studio[id];
   if (!film) return undefined;

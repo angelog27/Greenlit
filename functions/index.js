@@ -5,6 +5,7 @@
 //   boards/{board}/entries/{uid}   public leaderboard row (board = "r3-<type>-<diff>_<day>")
 //   users/{uid}/runs/{board}       the same row, private to the player (their progression)
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
@@ -104,3 +105,10 @@ exports.campaignStyle = campaignCall(store.style, "style");
 exports.campaignReroll = campaignCall(store.reroll);
 exports.campaignPickScript = campaignCall(store.pickScript);
 exports.campaignIdentity = campaignCall(store.identity);
+exports.campaignSubmitAwards = campaignCall(store.submitAwards);
+// Greenlight Globes: every Monday 00:15 UTC, crown last week's winners.
+const { weekOf } = require("./awards");
+exports.weeklyAwards = onSchedule({ schedule: "15 0 * * 1", timeZone: "Etc/UTC" }, async () => {
+  const out = await store.finalizeWeek(weekOf(Date.now() - 86400000).id, Date.now());
+  console.log("weeklyAwards", JSON.stringify({ entries: out.entries, skipped: !!out.skipped }));
+});

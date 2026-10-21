@@ -60,6 +60,8 @@ function fakeDb() {
   return {
     docs,
     doc: (path) => ({ path }),
+    // Direct children of a collection path, like the Admin SDK's collection(path).get().
+    collection: (path) => ({ get: async () => ({ docs: [...docs.entries()].filter(([k]) => k.startsWith(path + "/") && !k.slice(path.length + 1).includes("/")).map(([, v]) => ({ data: () => structuredClone(v) })) }) }),
     async runTransaction(fn) {
       const writes = [];
       const tx = {
@@ -651,4 +653,75 @@ test("raising a ladder threshold never takes an unlock away from a studio that r
   assert.equal(out.state.unlocked.hard, true);
   assert.deepEqual(out.events.gates, [], "no unlock fires again");
   assert.equal(camp.unlocksFor(C, below).actorTier !== "A", true, "without the reached gates it would have dropped");
+});
+
+// ---- awards
+const awardsLib = require("../../functions/awards.js");
+test("award scores: 0-100, and a director who fits the story scores higher than one who doesn't", () => {
+  const env = m.makeEnv("2026-11-02"), g = "horror", cfgE = m.DIFFS.medium, pl = m.poolsFor(env, g);
+  const p = { g, d: "peele", a1: pl[0][0], a2: pl[1][0], a3: pl[2][0], w: "hallow" };
+  const sc = awardsLib.filmScores(m, C.awd, env, p, cfgE, m.evalFilm(env, p, cfgE));
+  for (const k of ["critics", "director", "lead", "supporting", "villain", "screenplay", "ensemble"]) assert.ok(sc[k] >= 0 && sc[k] <= 100, k + " " + sc[k]);
+  const off = awardsLib.filmScores(m, C.awd, env, { ...p, d: "chu" }, cfgE, m.evalFilm(env, { ...p, d: "chu" }, cfgE));
+  assert.ok(sc.director > off.director, "a horror specialist directs horror better than a rom-com director");
+});
+
+test("Golden Reel Awards: every season of films faces rival bars; wins pay the bank, not lifetime profit", () => {
+  let st = { ...studio(0, { films: 0, index: 0 }), identity: { type: "genre" } }, ceremony = null, before = null;
+  for (let i = 0; i < C.awd.season.films; i++) {
+    const g = playable(st)[0];
+    before = st;
+    const out = camp.release(C, st, "u1", { index: st.currentProject.index, pick: bestFilm(st, g) }, DATE, NOW + i);
+    assert.ok(out.film.scores && out.film.scores.critics >= 0);
+    if (out.events.season) ceremony = { out, before };
+    else assert.equal(out.state.season.length, i + 1);
+    st = plain(out.state);
+  }
+  assert.ok(ceremony, "the season ends with a ceremony");
+  const { out } = ceremony, sea = out.events.season;
+  assert.equal(sea.wins.length + sea.losses.length, C.awd.season.categories.length);
+  assert.equal(sea.prize, sea.wins.reduce((a, w) => a + w.prize, 0));
+  assert.equal(out.state.season.length, 0, "the next season starts empty");
+  assert.equal(out.state.trophies ? out.state.trophies.total : 0, sea.wins.length);
+  const filmMoney = Math.max(cfg.start.floor, Math.round((ceremony.before.bank + out.film.profit) * 10) / 10);
+  assert.equal(out.state.bank, Math.round((filmMoney + sea.prize) * 10) / 10, "prize money goes to the bank");
+  assert.equal(out.state.lifetimeProfit, Math.round((ceremony.before.lifetimeProfit + Math.max(0, out.film.profit)) * 10) / 10, "lifetime profit only counts the film");
+  // Same studio, same season: the same ceremony (seeded).
+  assert.deepEqual(plain(camp.release(C, ceremony.before, "u1", { index: ceremony.before.currentProject.index, pick: out.film.pick }, DATE, NOW).events.season), plain(sea));
+});
+
+test("Greenlight Globes: submit this week's films, the week closes, winners are paid once", async () => {
+  const db = fakeDb(), store = makeStore(db, C, fakeFiles({}));
+  const wk = awardsLib.weekOf(NOW), players = ["g1", "g2", "g3"];
+  for (const uid of players) {
+    let st = (await store.start(uid, { studioName: "Studio " + uid }, NOW)).state;
+    const idx = [];
+    for (let i = 0; i < 2; i++) {
+      const g = playable(st)[0], o = await store.release(uid, { index: st.currentProject.index, pick: uid === "g2" ? bestFilm(st, g) : cheapest(st, g) }, NOW + i);
+      idx.push(o.film.projectIndex); st = o.state;
+    }
+    await assert.rejects(store.submitAwards(uid, { films: [] }, NOW), /Pick 1 to/);
+    await assert.rejects(store.submitAwards(uid, { films: [0, 0] }, NOW), /different films/);
+    await assert.rejects(store.submitAwards(uid, { films: [99] }, NOW), /can't be entered/);
+    await assert.rejects(store.submitAwards(uid, { films: idx }, wk.end + 1000), /released this week/);
+    const r = await store.submitAwards(uid, { films: idx }, NOW + 5000);
+    assert.equal(r.week, wk.id);
+    assert.equal(db.docs.get(`awards/${wk.id}/entries/${uid}`).films.length, 2);
+  }
+  const bankBefore = Object.fromEntries(players.map((u) => [u, db.docs.get(`campaigns/${u}`).bank]));
+  const res = await store.finalizeWeek(wk.id, NOW + 7 * 86400000);
+  assert.equal(res.entries, 3);
+  const head = db.docs.get(`awards/${wk.id}`);
+  assert.equal(head.status, "final");
+  const pic = head.results.picture;
+  assert.ok(pic.length >= 1 && pic.length <= C.awd.weekly.podium);
+  assert.ok(pic.every((x, i) => i === 0 || x.value <= pic[i - 1].value), "ranked best first");
+  const winner = pic[0].uid, w = db.docs.get(`campaigns/${winner}`);
+  assert.ok(w.globes.wins >= 1 && w.globes.byCat.picture === 1);
+  assert.ok(w.bank > bankBefore[winner], "prize money paid");
+  assert.ok(w.badges.globe, "Globe Winner badge");
+  assert.equal(db.docs.get(`studios/${winner}`).globes, w.globes.wins, "on the public card");
+  const again = await store.finalizeWeek(wk.id, NOW + 8 * 86400000);
+  assert.ok(again.skipped, "a week is finalised once");
+  assert.equal(db.docs.get(`campaigns/${winner}`).globes.wins, w.globes.wins, "no double prize");
 });

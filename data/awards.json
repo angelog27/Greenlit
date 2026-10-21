@@ -1,0 +1,40 @@
+{
+  "season": {
+    "name": "Golden Reel Awards",
+    "films": 6,
+    "categories": [
+      { "id": "picture",    "name": "Best Picture",        "score": "critics",    "prize": 20 },
+      { "id": "director",   "name": "Best Director",       "score": "director",   "prize": 8 },
+      { "id": "lead",       "name": "Best Lead",           "score": "lead",       "prize": 8 },
+      { "id": "supporting", "name": "Best Supporting",     "score": "supporting", "prize": 6 },
+      { "id": "villain",    "name": "Best Villain",        "score": "villain",    "prize": 6 },
+      { "id": "screenplay", "name": "Best Screenplay",     "score": "screenplay", "prize": 6 },
+      { "id": "boxoffice",  "name": "Box Office Champion", "score": "gross",      "prize": 10 }
+    ],
+    "rivals": {
+      "score": { "D": 62, "C": 68, "B": 74, "A": 80 },
+      "gross": { "D": 300, "C": 550, "B": 950, "A": 1600 },
+      "spread": 0.12
+    }
+  },
+  "weekly": {
+    "name": "Greenlight Globes",
+    "maxFilms": 5,
+    "podium": 3,
+    "categories": [
+      { "id": "picture",  "name": "Best Picture",         "score": "critics",  "prize": 30 },
+      { "id": "boxoffice","name": "Box Office Champion",  "score": "gross",    "prize": 20 },
+      { "id": "profit",   "name": "Most Profitable",      "score": "profit",   "prize": 20 },
+      { "id": "director", "name": "Best Director",        "score": "director", "prize": 15 },
+      { "id": "ensemble", "name": "Best Ensemble",        "score": "ensemble", "prize": 15 },
+      { "id": "breakout", "name": "Breakout of the Week", "score": "breakout", "prize": 15 }
+    ]
+  },
+  "scores": {
+    "director":   { "base": 40, "fit": [0, 12, 25], "tone": 8, "skill": 100 },
+    "role":       { "base": 30, "star": 3, "genre": 12, "tone": 18 },
+    "screenplay": { "base": 50, "script": 250, "timing": 12, "tone": 4 },
+    "critics":    { "director": 0.35, "lead": 0.2, "supporting": 0.1, "villain": 0.1, "screenplay": 0.25 },
+    "ensemble":   { "chemistry": 25, "reunion": 15 }
+  }
+}
