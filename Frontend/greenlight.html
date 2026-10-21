@@ -473,6 +473,37 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 .draft.cur{border-color:var(--accent)}
 .offer-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 10px}
 /* clickable studio rows and the studio card */
+/* onboarding: answer cards with upsides and downsides */
+.ans{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin:0 0 6px}
+.ansc{display:grid;gap:10px;align-content:start;padding:18px 20px;background:var(--panel);border:1px solid var(--line);text-align:left;transition:border-color .25s var(--ease),transform .35s var(--ease)}
+.ansc:hover{border-color:var(--line2);transform:translateY(-2px)}
+.ansc[aria-pressed="true"]{border-color:var(--accent);background:var(--panel2)}
+.ansc b{font-family:var(--display);font-weight:900;font-size:28px;line-height:.95;text-transform:uppercase}
+.pc{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13.5px}
+.pc li{display:grid;grid-template-columns:16px 1fr;gap:6px;align-items:start}
+.pc li::before{font-weight:700}
+.pc .up{color:var(--ink)} .pc .up::before{content:"+";color:var(--accent)}
+.pc .dn{color:var(--muted)} .pc .dn::before{content:"−";color:var(--bad)}
+.onb-steps{display:flex;gap:6px;margin:0 0 14px}
+.onb-steps i{width:28px;height:4px;background:var(--line2)}
+.onb-steps i.on{background:var(--accent)}
+.typeb{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--studio,var(--accent));border:1px solid currentColor;padding:4px 10px;margin-top:8px}
+.typeb svg{width:15px;height:15px}
+.typehero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+.typehero .medal{width:84px;height:84px;--tc:var(--accent)} .typehero .medal svg{width:40px;height:40px}
+.tally{display:grid;gap:6px;margin-top:6px}
+.tally div{display:grid;grid-template-columns:150px 1fr 28px;gap:10px;align-items:center;font-size:13px}
+.tally .bk{height:8px;background:var(--line);overflow:hidden}
+.tally .bk i{display:block;height:100%;background:var(--accent)}
+/* breakout wheel: flat slices, a pointer on top, spun to the server's slot */
+.boom{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center;padding:14px;border:1px solid var(--gold);border-left-width:4px;background:var(--panel2)}
+.boom h4{font-family:var(--display);font-weight:900;font-size:clamp(26px,2.6vw,38px);line-height:.9;text-transform:uppercase;margin:0;color:var(--gold)}
+.wheel{position:relative;width:150px;height:150px}
+.wheel .spin{width:100%;height:100%;transition:transform 3.4s cubic-bezier(.12,.75,.12,1)}
+.wheel svg{width:100%;height:100%;display:block}
+.wheel .ptr{position:absolute;left:50%;top:-6px;width:0;height:0;margin-left:-9px;border-left:9px solid transparent;border-right:9px solid transparent;border-top:16px solid var(--ink);z-index:1}
+.wheel text{font-family:var(--display);font-weight:900;font-size:15px;fill:#0A0B0A}
+@media (max-width:640px){.boom{grid-template-columns:1fr}.wheel{margin:0 auto}}
 .lb tr.click{cursor:pointer}
 .lb tr.film td{padding-top:0;font-size:12.5px;color:var(--muted)}
 .lb tr.film td b{color:var(--ink);font-weight:600}
@@ -1258,7 +1289,7 @@ function drawResult(){
   var res=state.result;if(!res){$("#result").innerHTML="";return}
   var r=res.r,p=res.p,env=state.env,cfg=res.cfg,plot=plotFor(env,p.g),wid=winId(p,cfg),max=Math.max.apply(null,r.steps.map(function(s){return s.run||s.abs||0}));
   var post=res.post||{},rank=post.status==="ok"?post.rank:0;
-  var cl=state.ceil&&state.ceil.k===res.ck?state.ceil.best:null,effic=cl&&cl.profit>0?Math.round(r.profit/cl.profit*100):null;
+  var cl=state.ceil&&state.ceil.k===res.ck?state.ceil.best:null,effic=cl&&cl.profit>0?Math.round((res.r0||r).profit/cl.profit*100):null;
   var when=cfg.real?prettyDate(p.w):W[wid].name,share="GREENLIGHT "+state.day+" · "+modeLabel()+"\n"+plot.title+" · "+G[p.g].name+" · "+when+"\nBox office "+money(r.gross)+" · Profit "+money(r.profit)+" · Cost "+money(r.cost)+" of $"+env.budget+"M\n"+(rank?"Rank #"+rank+" of "+post.total+" today · ":"")+"Attempt "+state.attempt+"\nCan you beat it?";
   var wf=r.steps.map(function(s,i){var run=s.run||s.abs;return '<div><span>'+esc(s.k)+'</span><span class="bk"><i style="--i:'+i+';width:'+Math.max(2,run/max*100)+'%"></i></span><span class="mono" style="text-align:right">'+(s.abs!==undefined?"$"+s.abs+"M":x2(s.x))+'</span></div>'}).join("");
   var camp=!!res.camp,best=camp?null:state.days[dkey()],isBest=best&&Math.round(best.profit*10)===Math.round(r.profit*10);
@@ -1481,7 +1512,7 @@ function introSeen(){try{return localStorage.getItem(IKEY)==="1"}catch(e){return
 // ---- campaign: one studio per account, all of it on the server (functions/campaign.js). The page reads the
 // studio once per load (NET.campaignLoad); every change goes through a campaign* callable, which returns the new
 // studio. Shortlists, budget and visibility come from the server's current project; the page only draws them.
-var CAMPCFG=null,ACH=null;
+var CAMPCFG=null,ACH=null,IDN=null;
 var CAMP={st:null,loaded:false,loading:false,err:"",note:"",busy:"",history:null,passArm:false};
 function campProject(){return CAMP.st&&CAMP.st.currentProject}
 // The stored project in the shape the model expects (Firestore can't hold nested arrays).
@@ -1598,7 +1629,7 @@ function studioHead(st,rules){
   var pr=st.profile||{},uid=state.me.uid,bd=studioImg(uid,"backdrop",pr.backdrop),pj=st.currentProject;
   return '<section class="studio tint" style="'+tintStyle(pr.color)+'">'+(bd?'<div class="bd"><img src="'+esc(bd)+'" alt=""></div>':"")+'<div class="in"><div class="who">'+
     '<p class="lbl">Studio HQ · Level '+campLevel(st)+' · Film #'+(st.filmsMade+1)+' next</p>'+
-    '<div class="id">'+logoHtml(uid,st.studioName,pr)+'<div><h2>'+esc(st.studioName)+'</h2>'+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+'</div></div>'+
+    '<div class="id">'+logoHtml(uid,st.studioName,pr)+'<div><h2>'+esc(st.studioName)+'</h2>'+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+(st.identity?typeBadge(st.identity.type):"")+'</div></div>'+
     badgeStrip(st)+
     '<p>Next project: <b>$'+pj.budget+'M budget</b> · '+esc(rules)+'.</p>'+(CAMP.note?'<p class="bail">'+esc(CAMP.note)+'</p>':"")+(st.bailouts?'<p class="note">Bailed out '+st.bailouts+' time'+(st.bailouts>1?"s":"")+'.</p>':"")+
     '<div class="row"><button class="btn sm" data-act="campedit">'+icon("edit")+'Customize studio</button></div></div>'+
@@ -1644,7 +1675,7 @@ function cardHtml(c,uid){
   if(!c)return head+'<p class="note">This studio hasn\'t opened its doors yet.</p>';
   var pr=c.profile||{},bd=studioImg(uid,"backdrop",pr.backdrop),b=c.bestFilm,fake={badges:Object.fromEntries(Object.keys(c.badges||{}).map(function(k){return [k,{tier:c.badges[k]}]}))};
   var stud='<section class="studio tint" style="'+tintStyle(pr.color)+'">'+(bd?'<div class="bd"><img src="'+esc(bd)+'" alt=""></div>':"")+'<div class="in" style="grid-template-columns:1fr"><div class="who">'+
-    '<div class="id">'+logoHtml(uid,c.studioName,pr)+'<div>'+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+
+    '<div class="id">'+logoHtml(uid,c.studioName,pr)+'<div>'+(c.type?typeBadge(c.type):"")+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+
     '<p class="city">Level '+c.level+' · '+c.filmsMade+' film'+(c.filmsMade===1?"":"s")+' · '+money(c.lifetimeGross)+' lifetime box office'+(c.aTierFilms?' · A-list in '+c.aTierFilms+' films':"")+'</p></div></div>'+badgeStrip(fake).replace(/data-act="campach"/g,"")+'</div></div></section>';
   var best=b?'<div><p class="lbl" style="margin-bottom:8px">Highest-grossing film</p><div class="best"><span class="media wide">'+pic(stillUrl(b.genre,"w300"),G[b.genre]?G[b.genre].name:b.title)+'</span><div><b>'+esc(b.title)+'</b>'+
     '<p class="note">'+(G[b.genre]?esc(G[b.genre].name)+' · ':"")+'Film #'+b.no+'</p><p><span class="pos mono">'+money(b.gross)+'</span> box office · '+money(b.profit)+' profit</p>'+
@@ -1693,7 +1724,8 @@ function tierChips(st){
   return '<dl class="kv"><dt class="lbl">Cast</dt><dd>'+tag(u.actorTier+"-list","ok")+'</dd><dt class="lbl">Directors</dt><dd>'+tag(u.directorTier+"-list","ok")+'</dd>'+
     '<dt class="lbl">Genres</dt><dd>'+u.genres.map(function(g){return tag(G[g].name,st.perks&&st.perks[g]?"ok":"")}).join("")+'</dd>'+
     (Object.keys(st.perks||{}).length?'<dt class="lbl">Perks</dt><dd>'+Object.keys(st.perks).map(function(g){return tag("Genre Master: "+G[g].name+" +"+Math.round(st.perks[g]*100)+"%","ok")}).join("")+'</dd>':"")+
-    (u.hard?'<dt class="lbl">Calendar</dt><dd>'+tag("Real release dates","ok")+'</dd>':"")+'</dl>';
+    (u.hard?'<dt class="lbl">Calendar</dt><dd>'+tag("Real release dates","ok")+'</dd>':"")+
+    (st.identity&&typeDef(st.identity.type)?'<dt class="lbl">Studio type</dt><dd style="display:block">'+esc(typeDef(st.identity.type).name)+pcList(typeDef(st.identity.type).pros,typeDef(st.identity.type).cons)+'</dd>':"")+'</dl>';
 }
 function ladderHtml(life){
   var l=ladderAt(life);
@@ -1704,6 +1736,30 @@ function filmRows(list){
   if(!list.length)return '<p class="note">No films yet. Your first project is waiting.</p>';
   return '<div class="scroll"><table><thead><tr><th>#</th><th>Film</th><th class="n">Box office</th><th class="n">Profit</th></tr></thead><tbody>'+list.map(function(f){
     return '<tr><td class="mono">'+f.no+'</td><td><b>'+esc(f.title)+'</b><small>'+(G[f.genre]?G[f.genre].name:"")+'</small></td><td class="n">'+money(f.gross)+'</td><td class="n '+(f.profit>=0?"pos":"neg")+'">'+money(f.profit)+'</td></tr>'}).join("")+'</tbody></table></div>';
+}
+// ---- studio type onboarding (data/identity.json): four questions, each answer showing its upsides and
+// downsides; the points pick one of five types (same rule as the server, which decides). Chosen once.
+var ONB={k:0,ans:[]};
+function typeDef(id){return IDN&&IDN.types.filter(function(t){return t.id===id})[0]}
+function onbTally(){var pts={};IDN.types.forEach(function(t){pts[t.id]=0});
+  ONB.ans.forEach(function(id,k){var a=IDN.questions[k].answers.filter(function(x){return x.id===id})[0];Object.keys(a.points).forEach(function(t){pts[t]+=a.points[t]})});return pts}
+function onbType(){var pts=onbTally(),last=IDN.questions[IDN.questions.length-1].answers.filter(function(x){return x.id===ONB.ans[ONB.ans.length-1]})[0].points;
+  return IDN.types.map(function(t){return t.id}).sort(function(x,y){return pts[y]-pts[x]||(last[y]||0)-(last[x]||0)})[0]}
+function pcList(pros,cons){return '<ul class="pc">'+pros.map(function(x){return '<li class="up">'+esc(x)+'</li>'}).join("")+cons.map(function(x){return '<li class="dn">'+esc(x)+'</li>'}).join("")+'</ul>'}
+function typeBadge(id){var t=typeDef(id);return t?'<span class="typeb">'+icon(t.icon)+esc(t.name)+'</span>':""}
+function onboardHtml(st){
+  var qs=IDN.questions,k=ONB.k,steps='<div class="onb-steps" aria-hidden="true">'+qs.map(function(_,i){return '<i class="'+(i<=k?"on":"")+'"></i>'}).join("")+'<i class="'+(k>=qs.length?"on":"")+'"></i></div>';
+  if(k<qs.length){var q=qs[k],sel=ONB.ans[k];
+    return '<div class="hq">'+hero({eyebrow:"Define your studio · Question "+(k+1)+" of "+qs.length,title:q.text,text:steps+'<p>Every answer has an upside and a downside. Your four answers decide what kind of studio <b>'+esc(st.studioName)+'</b> becomes, and that shapes every film it makes.</p>'})+
+      '<div class="ans anim">'+q.answers.map(function(a,i){return '<button class="ansc" style="--i:'+i+'" data-act="onbpick" data-id="'+a.id+'" aria-pressed="'+(sel===a.id)+'"><b>'+esc(a.label)+'</b>'+pcList(a.pros,a.cons)+'</button>'}).join("")+'</div>'+
+      '<div class="nav">'+(k?'<button class="btn" data-act="onbback">Back</button>':"<span></span>")+'<button class="btn go" data-act="onbnext"'+(sel?"":" disabled")+'>'+(k===qs.length-1?"See my studio type":"Next")+'</button></div></div>';
+  }
+  var id=onbType(),t=typeDef(id),pts=onbTally(),mx=Math.max.apply(null,IDN.types.map(function(x){return pts[x.id]}))||1;
+  return '<div class="hq"><section class="hero flat"><div class="copy"><p class="lbl">Define your studio · Your studio type</p>'+steps+
+    '<div class="typehero">'+medal({icon:t.icon},3,"")+'<div><h2>'+esc(t.name)+'</h2><p>'+esc(t.blurb)+'</p></div></div>'+pcList(t.pros,t.cons)+
+    '<p class="lbl" style="margin-top:10px">How your answers added up</p><div class="tally">'+IDN.types.map(function(x){return '<div><span>'+esc(x.name)+'</span><span class="bk"><i style="width:'+(pts[x.id]/mx*100)+'%'+(x.id===id?"":";background:var(--line2)")+'"></i></span><span class="mono">'+pts[x.id]+'</span></div>'}).join("")+'</div>'+
+    '<p class="note">This is permanent for this studio: its perks and drawbacks apply to every film from now on.</p>'+(CAMP.err?'<p class="neg" role="alert">'+esc(CAMP.err)+'</p>':"")+
+    '<div class="row"><button class="btn go" data-act="onblock"'+(CAMP.busy?" disabled":"")+'>'+(CAMP.busy==="identity"?"Locking it in…":"Lock it in")+'</button><button class="btn" data-act="onbredo">Change my answers</button></div></div></section></div>';
 }
 function hqHtml(){
   var intro='<p>Run one studio over many films. Start small with a few cheap genres and D-list talent; every profitable film adds to your lifetime profit, which unlocks better talent, bigger budgets and new genres. A flop never takes an unlock away.</p>';
@@ -1716,6 +1772,7 @@ function hqHtml(){
     '<p>You open with <b>$'+CAMPCFG.start.bank+'M</b> in the bank. Each film\'s profit goes back into it, and your next budget is the bank, up to a cap that grows as you unlock tiers. If the bank ever drops below $'+CAMPCFG.start.floor+'M, the studio is bailed out back to $'+CAMPCFG.start.floor+'M; the run never ends.</p>'+
     '<form class="mform" id="campform" style="max-width:420px;margin-top:6px"><label class="field"><span>Studio name (shown on the campaign board, optional)</span><input name="name" maxlength="30" autocomplete="off" placeholder="Studio '+esc(state.me.uid.slice(0,5).toUpperCase())+'"></label>'+err+
     '<button class="btn go" type="submit"'+(busy?" disabled":"")+'>'+(busy==="start"?"Opening…":"Open the studio")+'</button></form>'});
+  if(!st.identity&&IDN)return onboardHtml(st);
   var pj=st.currentProject,life=st.lifetimeProfit,l=ladderAt(life),pct=ladderPct(life);
   var rules=pj.diff==="easy"?"Training wheels: every number on screen":pj.diff==="hard"?"Real calendar, numbers hidden":"Numbers hidden until release";
   var h='<div class="hq">'+studioHead(st,rules);
@@ -1740,7 +1797,8 @@ function campResultHtml(res){
   var c=res.camp,btn='<div class="row"><button class="btn go" data-act="camphq">Back to HQ</button></div>';
   if(c.status==="pending")return '<section class="panel camp-res"><h3>Studio report</h3><p class="note">Sending your film to the studio…</p></section>';
   if(c.status==="error")return '<section class="panel camp-res"><h3>Studio report</h3><p class="neg">'+esc(c.msg)+'</p><div class="row"><button class="btn" data-act="campretryrel">Try again</button><button class="btn" data-act="camphq">Back to HQ</button></div></section>';
-  var f=c.film,ev=c.events,b0=c.before,b1=CAMP.st,h='<section class="panel camp-res"><h3>Studio report</h3>';
+  var f=c.film,ev=c.events,b0=c.before,b1=CAMP.st,h='<section class="panel camp-res"><h3>Studio report</h3>'+(c.spin?boomHtml(res):"");
+  if(c.spin&&!c.spin.done)return h+'</section>';
   if(ev.bailout)h+='<p class="bail"><b>The studio was bailed out.</b> The bank fell below $'+CAMPCFG.start.floor+'M, so investors topped it back up to $'+CAMPCFG.start.floor+'M. Your unlocks are safe.</p>';
   h+='<div class="money2"><div><span class="lbl">Bank</span><b class="mono">'+money(b0.bank)+' → '+money(b1.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="mono pos">'+money(b1.lifetimeProfit)+'</b></div></div>';
   var l=ladderAt(b1.lifetimeProfit),from=ev.gates.length?0:ladderPct(b0.lifetimeProfit);
@@ -1754,9 +1812,33 @@ function campResultHtml(res){
   ev.perks.forEach(function(g){h+='<p class="note"><b class="pos">Genre Master:</b> your '+esc(G[g].name)+' films earn +'+Math.round(b1.perks[g]*100)+'% at the box office from now on.</p>'});
   return h+btn+'</section>';
 }
+// ---- breakout wheel: slices sized by their odds (data/campaign.json breakout.wheel); spun to the slot the
+// server chose, then the box office grows by the multiplier.
+var WHEELC=["var(--line2)","var(--bronze)","var(--silver)","var(--gold)"];
+function wheelSvg(){
+  var W=CAMPCFG.breakout.wheel,tot=W.reduce(function(s,x){return s+x.w},0),a=0,h="";
+  W.forEach(function(x,i){var a0=a,a1=a+x.w/tot*360;a=a1;
+    var p=function(d){var r=(d-90)*Math.PI/180;return (75+70*Math.cos(r)).toFixed(2)+" "+(75+70*Math.sin(r)).toFixed(2)},mid=(a0+a1)/2,mr=(mid-90)*Math.PI/180;
+    h+='<path d="M75 75 L'+p(a0)+' A70 70 0 '+(a1-a0>180?1:0)+' 1 '+p(a1)+' Z" style="fill:'+WHEELC[i%WHEELC.length]+';stroke:var(--panel);stroke-width:2"/>'+
+      '<text x="'+(75+44*Math.cos(mr)).toFixed(1)+'" y="'+(75+44*Math.sin(mr)+5).toFixed(1)+'" text-anchor="middle">×'+x.x+'</text>'});
+  return '<svg viewBox="0 0 150 150" aria-hidden="true">'+h+'<circle cx="75" cy="75" r="9" style="fill:var(--panel)"/></svg>';
+}
+function wheelAngle(slot){var W=CAMPCFG.breakout.wheel,tot=W.reduce(function(s,x){return s+x.w},0),a=0;for(var i=0;i<slot;i++)a+=W[i].w/tot*360;return 360*6+(360-(a+W[slot].w/tot*180))}
+function boomHtml(res){
+  var s=res.camp.spin,b=res.camp.film.breakout;
+  return '<div class="boom"><div class="wheel"><span class="ptr"></span><div class="spin" id="wheel" style="transform:rotate('+(s.done?wheelAngle(b.slot):0)+'deg)">'+wheelSvg()+'</div></div>'+
+    '<div><span class="lbl" style="color:var(--gold)">Breakout!</span><h4>'+(s.done?"×"+b.x+" box office":"Spinning…")+'</h4><p class="note">This film reached '+Math.round(b.share*100)+'% of the best film this project allowed (you needed '+Math.round(b.need*100)+'%). '+
+    (s.done?'Audiences kept coming back: the box office grew to '+money(res.camp.film.gross)+'.':'Audiences are coming back for more…')+'</p></div></div>';
+}
+function startSpin(res){
+  var s=res.camp.spin,b=res.camp.film.breakout;
+  function land(){s.done=true;res.r=s.boosted;if(state.result!==res)return;drawResult();if(!REDUCED){countUp($("#grossnum"),res.r.gross);countUp($("#bignum"),res.r.profit)}}
+  if(REDUCED){land();return}
+  requestAnimationFrame(function(){requestAnimationFrame(function(){var w=$("#wheel");if(w)w.style.transform="rotate("+wheelAngle(b.slot)+"deg)";setTimeout(land,3600)})});
+}
 function campRelease(){
   var cfg=CFG(),p=curPick(),pj=campProject(),r=evalFilm(state.env,p,cfg),title=plotFor(state.env,p.g).title,ck="camp|"+pj.key+"|"+p.g;
-  var res=state.result={p:p,r:r,title:title,cfg:cfg,ck:ck,camp:{status:"pending",before:CAMP.st,index:pj.index},script:pj.script||null};
+  var res=state.result={p:p,r:r,title:title,cfg:cfg,ck:ck,camp:{status:"pending",before:CAMP.st,index:pj.index},script:pj.script||null,env:state.env};
   swap(function(){state.stage="result";drawAll();window.scrollTo(0,0)});
   campSend(res);
   if(!state.ceil||state.ceil.k!==ck){var env=state.env;bestPossibleAsync(env,p.g,cfg,function(b){if(!state.result||state.result.ck!==ck)return;state.ceil={k:ck,best:b};drawResult()})}
@@ -1766,7 +1848,9 @@ function campSend(res){
   res.camp.status="pending";if(state.result===res)drawResult();
   NET.campaign("campaignRelease",{index:res.camp.index,pick:res.p}).then(function(o){
     CAMP.st=o.state;CAMP.history=null;res.camp={status:"ok",before:res.camp.before,index:res.camp.index,film:o.film,events:o.events};
-    if(state.result===res){drawResult();drawHead()}
+    // A breakout: the same film re-scored with the server's multiplier, revealed when the wheel stops.
+    if(o.film.breakout){res.r0=res.r;var benv=Object.assign({},res.env);benv.boom={};benv.boom[res.p.g]=o.film.breakout.x;res.camp.spin={done:false,boosted:evalFilm(benv,res.p,res.cfg)}}
+    if(state.result===res){drawResult();drawHead();if(res.camp.spin)startSpin(res)}
   },function(e){res.camp.status="error";res.camp.msg=NET.errorText(e,"campaign");if(state.result===res)drawResult()});
 }
 
@@ -1819,6 +1903,11 @@ document.addEventListener("click",function(e){
   else if(a==="campretry")campLoad();
   else if(a==="campretryrel"){if(state.result&&state.result.camp)campSend(state.result)}
   else if(a==="campedit")openEditor();
+  else if(a==="onbpick"){ONB.ans[ONB.k]=id;drawHQ()}
+  else if(a==="onbnext"){if(ONB.ans[ONB.k]){ONB.k++;state.enter=true;drawHQ();window.scrollTo(0,0)}}
+  else if(a==="onbback"){if(ONB.k>0){ONB.k--;state.enter=true;drawHQ()}}
+  else if(a==="onbredo"){ONB={k:0,ans:[]};state.enter=true;drawHQ();window.scrollTo(0,0)}
+  else if(a==="onblock")campCall("campaignIdentity",{answers:ONB.ans},"identity",function(o){if(o){ONB={k:0,ans:[]};newGame()}});
   else if(a==="campview"){state.lb.campView=t.dataset.m;watchBoard()}
   else if(a==="lbrow"){state.lb.open=state.lb.open===id?null:id;drawBoard()}
   else if(a==="lbmore"){state.lb.limit=(state.lb.limit||50)+50;watchBoard()}
@@ -1913,8 +2002,8 @@ function loadData(){
 }
 // Optional: the game runs without images.json (initials stand in).
 function loadCampaignData(){
-  return Promise.all(["campaign","achievements"].map(function(n){return fetch(DATA_URL+n+".json").then(function(r){if(!r.ok)throw new Error(n);return r.json()})}))
-    .then(function(v){CAMPCFG=v[0];ACH=v[1]},function(){CAMPCFG=ACH=null});
+  return Promise.all(["campaign","achievements","identity"].map(function(n){return fetch(DATA_URL+n+".json").then(function(r){if(!r.ok)throw new Error(n);return r.json()})}))
+    .then(function(v){CAMPCFG=v[0];ACH=v[1];IDN=v[2]},function(){CAMPCFG=ACH=IDN=null});
 }
 function loadImages(){return fetch(DATA_URL+"images.json").then(function(r){return r.ok?r.json():{}}).catch(function(){return {}})}
 (async function boot(){

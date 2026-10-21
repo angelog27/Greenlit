@@ -102,7 +102,9 @@ A self-paced solo career, separate from the daily modes. Pick **Campaign** in th
 - Shuffling (Basic) or rerolling (Campaign) lays out three scripts to choose from. One draft has real upside: it shows on Easy, otherwise you find out after release. The Daily Challenge keeps one shared story and allows one film per player per day.
 - Click a studio on the campaign board to see its card and highest-grossing film; "Biggest studios" lists every studio by lifetime box office.
 - A **studio level** grows with lifetime box office (every film teaches you something, flops included). Each level gives an upgrade point: scouting that shows who fits the genre and the part, reunions and chemistry, story notes, market research, test screenings, and Reputation and Marketing Deals discounts.
-- 20 achievements, most with bronze, silver and gold tiers, shown as a medal row under your studio name; new ones animate in. Genre Master (3 profitable films in one genre) adds +3% box office in that genre.
+- When you found a studio you answer four questions (each answer has an upside and a downside); they decide your **studio type**, which leans your studio toward some genres and changes fees, budgets and breakout odds for good.
+- **Breakouts:** a film within 94% of the best film its project allowed spins a roulette wheel (×1.3 up to a ×3 jackpot) on its box office. That's where the $1-2B films come from.
+- 22 achievements, most with bronze, silver and gold tiers, shown as a medal row under your studio name; new ones animate in. Genre Master (3 profitable films in one genre) adds +3% box office in that genre.
 - Customize your studio: logo and backdrop images (uploaded to Firebase Storage), a colour, a tagline and a home city. Your logo, name and colour show on the campaign board.
 - The campaign board ranks studios by how few films they needed to reach the A-list (then fewer bailouts, then more lifetime profit), shown by studio name.
 
@@ -110,7 +112,7 @@ Everything is decided on the server: the `campaignStart`, `campaignProject`, `ca
 
 ### Tuning
 
-All campaign numbers are in `data/campaign.json` (bank, floor, caps, tier thresholds, unlock ladder, passes, levels, upgrades) and `data/achievements.json` (gate names, badges and their numbers). Every field is described in [`data/README.md`](data/README.md). After changing them:
+All campaign numbers are in `data/campaign.json` (bank, floor, caps, tier thresholds, unlock ladder, passes, levels, upgrades, breakout wheel), `data/identity.json` (onboarding questions and studio types) and `data/achievements.json` (gate names, badges and their numbers). Every field is described in [`data/README.md`](data/README.md). After changing them:
 
 ```sh
 node tools/campaign_report.mjs                 # how many actors/directors each tier has, loans needed per step

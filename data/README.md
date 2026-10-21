@@ -114,6 +114,7 @@ The campaign (solo career mode) reads two files. The server enforces them; the p
 | `shortlist` | `perGender` per role (3 men, 3 women), `freshPerRole` from the newest unlocked tier when there are enough, `directors` on a shortlist, `freshDirectors` from the newest director tier |
 | `feasibility` | Every playable genre needs a film within budget that makes at least `margin` $M profit; otherwise it shows as too pricey. If no genre makes it, the project seed is salted again, up to `maxResalts` times |
 | `pass` | A pass skips the current pitches for `fee` $M. A studio starts with `start` passes and earns one every `every` films, holding at most `cap` |
+| `breakout` | `threshold`: share of the best film the project allowed (in that genre) a film must reach to break out; `wheel`: the roulette slots, `x` (box-office multiplier) and `w` (weight) |
 | `rerolls` | Story rerolls per project by studio level: `{ level, count }`, the highest level reached wins |
 | `levels` | Lifetime box office ($M, every film counts) needed for each studio level, starting with level 1 at 0. Each level after the first gives one upgrade point. Keep at least as many levels as the upgrades cost in total |
 | `profile` | Limits for the studio look: `taglineMax`, `cityMax` (characters), `logoKB`, `backdropKB` (upload caps; keep `storage.rules` in step, it can't read this file) |
@@ -131,3 +132,7 @@ Tuning tips: the ladder sets the pace (the simulation reports films to each step
 | `badges` | `id` (fixed; the server's rule for each badge is keyed on it), `name`, `icon` (an icon name in the page), `text` (`{n}` is the tier's number, `(s)` becomes "s" unless it is 1), optional `tiers` (thresholds, lowest first; `atMost: true` when lower is better, as for Fast Track), `unit` (`money` or `percent` for display), and the numbers some rules use: `sleeper_hit.profit` and `costShare`, `genre_master.films` and `bonus` (the gross boost in that genre), `full_house.tier` and `after` |
 
 A badge without `tiers` has one step. Each studio stores `{ tier, at }` per badge, and a badge fires again only when a higher tier is reached. Genre Master also adds its `bonus` to every later film in that genre (the server applies it as a multiplier step in the scoring).
+
+### identity.json
+
+The studio-type onboarding. `questions`: four, each with three `answers` (`id`, `label`, `pros`, `cons` shown to the player, and `points` added to studio types). `types`: `id`, `name`, `icon`, `blurb`, the `pros`/`cons` shown on the result, and `effects`: `genres` (box-office lean per plain genre, e.g. 0.06 = +6%; blends average their halves), `fees` and `marketing` (+0.08 = 8% dearer, -0.2 = 20% cheaper), `cap` (budget cap), `breakout` (added to the breakout threshold). The type with the most points wins; ties go to the type the last (risk) answer gives the most points. Keep the pros/cons text in step with the effects, and check with `node tools/campaign_sim.mjs` that no type races ahead.
