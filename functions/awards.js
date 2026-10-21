@@ -25,7 +25,11 @@ function filmScores(m, A, env, p, cfg, r) {
   for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) if (m.CHEM.some((c) => m.pairKey(c[0], c[1]) === m.pairKey(ids[i], ids[j]))) chem++;
   const reunions = m.LOYAL.filter((l) => l[0] === p.d && ids.includes(l[1])).length;
   const ensemble = clamp((lead + supporting + villain) / 3 + S.ensemble.chemistry * chem + S.ensemble.reunion * reunions - 20);
-  return { critics, director, lead, supporting, villain, screenplay, ensemble, gross: Math.round(r.gross), profit: Math.round(r.profit * 10) / 10, breakout: m.boomQ(env, p.g) };
+  // Audience score: did people love it? The cast's fit, the script and the critics, pulled down by audience
+  // fatigue and moved twice as hard as the box office by on-set news.
+  const prod = m.prodQ ? m.prodQ(env, p.g) : 1, fat = m.fatigueQ ? m.fatigueQ(env, p) : 1;
+  const audience = clamp((0.4 * (lead + supporting + villain) / 3 + 0.3 * screenplay + 0.3 * critics) * fat * (1 + 2 * (prod - 1)));
+  return { critics, director, lead, supporting, villain, screenplay, ensemble, audience, gross: Math.round(r.gross), profit: Math.round(r.profit * 10) / 10, breakout: m.boomQ(env, p.g) };
 }
 
 // The season's ceremony: for each category, the season's best film against a rival bar for the studio's tier.

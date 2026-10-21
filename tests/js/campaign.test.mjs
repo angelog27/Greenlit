@@ -762,3 +762,86 @@ test("Genre Master: earned with hits and acclaim, claimed by choice, at most two
   const r0 = studio(0, { films: 0, index: 21 }), gg = playable(r0)[0], out = camp.release(C, r0, "u1", { index: r0.currentProject.index, pick: bestFilm(r0, gg) }, DATE, NOW);
   assert.equal(out.state.genreAcclaim[gg] || 0, out.film.profit > 0 && out.film.scores.critics >= GM.critics ? 1 : 0);
 });
+
+// ---- campaign stories: fatigue, declines, traits and events, rotation, audience score
+const storiesLib = require("../../functions/events.js");
+test("audience fatigue: repeating a script, director, actors or genre costs box office (capped)", () => {
+  const E = C.evt, st = studio(0, { index: 5 }), g = playable(st)[0], p = cheapest(st, g), pj = st.currentProject, dcfg = m.DIFFS[pj.diff];
+  const base = camp.projectEnv(pj), fresh = m.evalFilm({ ...base, hist: null }, p, dcfg);
+  const hist = (picks, made) => storiesLib.histFor(E, { recentPicks: picks, madeScripts: made || {}, perks: {} });
+  const same = { g, d: p.d, cast: [p.a1, p.a2, p.a3], s: base.plots[g] };
+  const tired = m.evalFilm({ ...base, hist: hist([same, same], { [g + "|" + base.plots[g]]: 2 }) }, p, dcfg);
+  assert.ok(tired.gross < fresh.gross && tired.steps.some((s) => s.k === "Audience fatigue"));
+  const q = m.fatigueQ({ ...base, hist: hist([same, same, same, same], { [g + "|" + base.plots[g]]: 9 }) }, p);
+  assert.equal(q, Math.round((1 - E.fatigue.cap) * 100) / 100, "capped");
+  assert.equal(m.fatigueQ({ ...base, hist: hist([]) }, p), 1, "nothing recent, no fatigue");
+  // The release remembers what you made.
+  const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+  assert.equal(out.state.recentPicks[0].d, p.d);
+  assert.equal(out.state.madeScripts[g + "|" + base.plots[g]], 1);
+});
+
+test("talent declines: new studios hear no more often, enough people always stay, declined people can't be cast", () => {
+  const D = C.evt.declines;
+  let newNo = 0, vetNo = 0, n = 0;
+  for (let i = 0; i < 30; i++) {
+    const fresh = studio(0, { index: 100 + i }), vet = { ...studio(0, { index: 100 + i }), lifetimeGross: cfg.levels[8], upgrades: { reputation: 3 } };
+    vet.currentProject = plain(camp.makeProject(C, vet, "u1", DATE, false));
+    for (const g of playable(fresh)) {
+      const gs = fresh.currentProject.genres[g];
+      newNo += gs.declined.length; n++;
+      ["a1", "a2", "a3"].forEach((r) => assert.ok(gs.pools[r].length >= D.keepPerRole, "enough left per role"));
+      assert.ok(gs.dirs.length >= Math.min(D.keepDirectors, gs.dirs.length + gs.declined.filter((x) => x.role === "d").length));
+      gs.declined.forEach((x) => assert.ok(!gs.pools.a1.includes(x.id) && !gs.dirs.includes(x.id) && D.reasons.includes(x.reason)));
+      if (vet.currentProject.genres[g] && vet.currentProject.genres[g].declined) vetNo += vet.currentProject.genres[g].declined.length;
+    }
+  }
+  assert.ok(newNo > vetNo, `new studios turned down more (${newNo} vs ${vetNo})`);
+  const st = studio(0, { index: 101 }), g = playable(st)[0], gs = st.currentProject.genres[g], no = gs.declined.find((x) => x.role === "a1");
+  if (no) rejects(() => camp.release(C, st, "u1", { index: st.currentProject.index, pick: { ...cheapest(st, g), a1: no.id } }, DATE, NOW), /shortlist/);
+});
+
+test("on-set events: about the configured share of films, seeded, and they move box office, cost or critics", () => {
+  let withEv = 0, n = 0;
+  const seen = new Set();
+  for (let i = 0; i < 80; i++) {
+    const st = studio(0, { index: 200 + i }), g = playable(st)[0], p = cheapest(st, g), pj = st.currentProject;
+    const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+    n++;
+    if (out.film.event) {
+      withEv++; seen.add(out.film.event.id);
+      const ev = out.film.event;
+      assert.ok(ev.text && !/\{[abd]\}/.test(ev.text), "names filled in");
+      if (ev.gross !== 1) assert.ok(m.evalFilm(filmEnv(pj, out.film), p, m.DIFFS[pj.diff]).steps.some((s) => s.k === "On set"));
+      assert.deepEqual(plain(camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW).film.event), plain(ev), "seeded");
+    }
+  }
+  const share = withEv / n;
+  assert.ok(share > C.evt.chance - 0.2 && share < C.evt.chance + 0.2, "event share " + share.toFixed(2));
+  assert.ok(seen.size >= 4, "a variety of events: " + [...seen].join(","));
+  // Traits differ between studios (seeded per campaign).
+  const t1 = m.ACTORS.map((a) => (storiesLib.traitOf(m, C.evt, "u1|c1", a.id) || {}).id).join(), t2 = m.ACTORS.map((a) => (storiesLib.traitOf(m, C.evt, "u2|c9", a.id) || {}).id).join();
+  assert.notEqual(t1, t2);
+});
+
+test("shortlist rotation: people you hired recently show up less often", () => {
+  // At C-list there are more people than slots (at D-list every D-list woman is always needed).
+  const u = camp.unlocksFor(C, cfg.ladder[1].at), g = u.genres[0];
+  let base = 0, after = 0;
+  const target = camp.castPools(C, "rot|0", g, u.actorTier).pools[0][0];
+  for (let i = 0; i < 120; i++) {
+    if (camp.castPools(C, "rot|" + i, g, u.actorTier).pools.flat().includes(target)) base++;
+    if (camp.castPools(C, "rot|" + i, g, u.actorTier, { [target]: 2 }).pools.flat().includes(target)) after++;
+  }
+  assert.ok(after < base, `${target}: ${base} -> ${after} of 120 shortlists`);
+});
+
+test("audience score: 0-100 on every film, lower when audiences are tired of you", () => {
+  const st = studio(0, { index: 7 }), g = playable(st)[0], p = cheapest(st, g), pj = st.currentProject, dcfg = m.DIFFS[pj.diff], env = camp.projectEnv(pj);
+  const a0 = awardsLib.filmScores(m, C.awd, { ...env, hist: null }, p, dcfg, m.evalFilm(env, p, dcfg)).audience;
+  const tiredEnv = { ...env, hist: storiesLib.histFor(C.evt, { recentPicks: [{ g, d: p.d, cast: [p.a1, p.a2, p.a3] }, { g, d: p.d, cast: [p.a1, p.a2, p.a3] }], madeScripts: { [g + "|" + env.plots[g]]: 2 }, perks: {} }) };
+  const a1 = awardsLib.filmScores(m, C.awd, tiredEnv, p, dcfg, m.evalFilm(tiredEnv, p, dcfg)).audience;
+  assert.ok(a0 >= 0 && a0 <= 100 && a1 < a0, `${a0} -> ${a1}`);
+  const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+  assert.ok(Number.isInteger(out.film.scores.audience) && out.state.recent[0].audience === out.film.scores.audience);
+});

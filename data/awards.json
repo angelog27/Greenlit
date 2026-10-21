@@ -27,7 +27,8 @@
       { "id": "profit",   "name": "Most Profitable",      "score": "profit",   "prize": 20, "points": 1 },
       { "id": "director", "name": "Best Director",        "score": "director", "prize": 15, "points": 1 },
       { "id": "ensemble", "name": "Best Ensemble",        "score": "ensemble", "prize": 15, "points": 1 },
-      { "id": "breakout", "name": "Breakout of the Week", "score": "breakout", "prize": 15, "points": 1 }
+      { "id": "breakout", "name": "Breakout of the Week", "score": "breakout", "prize": 15, "points": 1 },
+      { "id": "audience", "name": "Audience Award",       "score": "audience", "prize": 15, "points": 1 }
     ]
   },
   "scores": {
