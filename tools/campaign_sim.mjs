@@ -32,7 +32,7 @@ function simulate({ cfg, ach, idn, awd, evt, policy, run, films }) {
   let seasons = 0, wins = 0;
   for (let n = 1; n <= films; n++) {
     const pj = st.currentProject, dcfg = m.DIFFS[pj.diff], env = camp.projectEnv(pj);
-    const pick = (policy === "random" ? randomPick : decentPick)(m, pj, env, dcfg, any);
+    const pick = (policy === "random" ? randomPick : decentPick)(m, pj, env, dcfg, any, st);
     const out = plain(camp.release(C, st, uid, { index: pj.index, pick }, DATE, n));
     profits.push(out.film.profit);
     grosses.push(out.film.gross);
@@ -71,11 +71,16 @@ function cheapest(m, pj, g, dcfg) {
   return { g, d: lo(gs.dirs, m.D), a1: lo(gs.pools.a1, m.A), a2: lo(gs.pools.a2, m.A), a3: lo(gs.pools.a3, m.A), w };
 }
 
-function decentPick(m, pj, env, dcfg) {
-  const ok = Object.keys(pj.genres).filter((g) => pj.genres[g].state === "ok");
-  const g = ok.slice().sort((a, b) => (m.G[b].base - m.G[b].cost) - (m.G[a].base - m.G[a].cost))[0];
+// A decent player also mixes things up, as a real one would: no third film in a row in one genre (unless it's
+// the only one playable), and people they hired lately rank lower.
+function decentPick(m, pj, env, dcfg, any, st) {
+  const ok = Object.keys(pj.genres).filter((g) => pj.genres[g].state === "ok"), rp = (st && st.recentPicks) || [];
+  const streak = rp.length >= 2 && rp[0].g === rp[1].g ? rp[0].g : null;
+  const pool = ok.length > 1 && streak ? ok.filter((g) => g !== streak) : ok;
+  const g = pool.slice().sort((a, b) => (m.G[b].base - m.G[b].cost) - (m.G[a].base - m.G[a].cost))[0];
+  const recent = {}; rp.slice(0, 4).forEach((f) => [f.d].concat(f.cast || []).forEach((id) => { recent[id] = (recent[id] || 0) + 1; }));
   const gs = pj.genres[g], plot = m.plotFor(env, g), roleT = [plot.lead.t, plot.side.t, plot.anta.t];
-  const byScore = (ids, score, M) => ids.slice().sort((a, b) => score(b) - score(a) || M[b].fee - M[a].fee);
+  const byScore = (ids, score, M) => ids.slice().sort((a, b) => (score(b) - (recent[b] || 0)) - (score(a) - (recent[a] || 0)) || M[b].fee - M[a].fee);
   const dirs = byScore(gs.dirs, (id) => (m.inGenre(m.D[id].spec, g) ? 2 : 0) + m.D[id].tone.filter((t) => plot.tones.includes(t)).length, m.D);
   const d = dirs[0];
   const fit = (id, k) => (m.inGenre(m.A[id].g, g) ? 2 : 0) + (m.A[id].tone.includes(roleT[k]) ? 2 : 0) + (m.LOYAL.some((l) => l[0] === d && l[1] === id) ? 1 : 0);

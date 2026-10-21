@@ -8,10 +8,10 @@
   },
   "ladder": [
     { "id": "open",   "at": 0,    "actors": "D", "directors": "D", "genres": ["horror", "comedy", "drama", "horrorcomedy"] },
-    { "id": "c_cast", "at": 450,  "actors": "C" },
-    { "id": "c_crew", "at": 1100, "directors": "C", "genres": ["thriller", "romance", "romcom"] },
-    { "id": "b_tier", "at": 2700, "actors": "B", "directors": "B", "genres": ["action", "scifi", "actioncomedy", "scifithriller", "scifihorror"] },
-    { "id": "a_tier", "at": 5800, "actors": "A", "directors": "A", "genres": ["animation"], "hard": true }
+    { "id": "c_cast", "at": 350,  "actors": "C" },
+    { "id": "c_crew", "at": 800,  "directors": "C", "genres": ["thriller", "romance", "romcom"] },
+    { "id": "b_tier", "at": 1800, "actors": "B", "directors": "B", "genres": ["action", "scifi", "actioncomedy", "scifithriller", "scifihorror"] },
+    { "id": "a_tier", "at": 3800, "actors": "A", "directors": "A", "genres": ["animation"], "hard": true }
   ],
   "boardGoal": "a_tier",
   "trainingFilms": 3,

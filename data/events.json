@@ -1,8 +1,8 @@
 {
   "rotation": { "actor": 0.45, "director": 0.35 },
-  "fatigue": { "script": 0.12, "director": 0.04, "actor": 0.02, "genre": 0.03, "masteredGenre": 0.5, "window": 4, "cap": 0.35 },
+  "fatigue": { "script": 0.12, "director": 0.03, "actor": 0.015, "genre": 0.03, "masteredGenre": 0.5, "window": 4, "cap": 0.3 },
   "declines": {
-    "base": 0.35, "perLevel": 0.03, "min": 0.04, "max": 0.6, "star": 0.03, "reputation": 0.06,
+    "base": 0.28, "perLevel": 0.03, "min": 0.04, "max": 0.6, "star": 0.03, "reputation": 0.06,
     "keepPerRole": 3, "keepDirectors": 4,
     "reasons": ["Booked on another film", "Didn't love the script", "Not taking meetings right now", "Wants a bigger studio", "On a family break", "Asked for too much money"]
   },
