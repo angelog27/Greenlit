@@ -145,7 +145,7 @@ function makeProject(C, st, uid, date, hard, proofs) {
   for (let salt = 0; salt <= f.maxResalts; salt++) {
     const key = projectKey(uid, st.campaignId, st.projectIndex, salt);
     const e = m.makeEnv(date, key);
-    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: Object.assign({}, st.perks), disc: discounts(C, st), ident: identLean(C, st) };
+    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: masteryBonus(C, st), disc: discounts(C, st), ident: identLean(C, st) };
     if (e.gs) env.gs = 1; // genre-aware talent for projects from SKILL_FROM on
     const genres = {}, loans = new Set();
     m.GENRES.forEach((g) => {
@@ -194,7 +194,35 @@ function levelFor(C, gross) { return C.cfg.levels.filter((x) => gross >= x).leng
 function upgradeDef(C, id) { return C.cfg.upgrades.find((u) => u.id === id) || null; }
 function pointsLeft(C, st) {
   const spent = C.cfg.upgrades.reduce((s, u) => s + (st.upgrades[u.id] || 0) * u.cost, 0);
-  return levelFor(C, st.lifetimeGross) - 1 - spent;
+  return levelFor(C, st.lifetimeGross) - 1 + (st.bonusPoints || 0) - spent;
+}
+
+// ---- Genre Master (achievements.json genre_master): earned with `films` profitable films in a genre, `acclaimed` of
+// them scoring `critics`+ with the critics; then the player chooses to claim it, at most `max` genres. A mastered
+// genre earns `bonus`; once you have one, every film outside your mastered genres takes `offGenre` (a blend with a
+// mastered half is neutral). Applied through env.bonus (the model's Genre Master step).
+function masteryBonus(C, st) {
+  const B = C.badges.genre_master, M = Object.keys(st.perks || {}), out = {};
+  if (!M.length) return out;
+  C.m.GENRES.forEach((g) => {
+    if (M.includes(g.id)) out[g.id] = B.bonus;
+    else if (!(g.mix || []).some((h) => M.includes(h))) out[g.id] = B.offGenre;
+  });
+  return out;
+}
+function masterReady(C, st) {
+  const B = C.badges.genre_master, M = Object.keys(st.perks || {});
+  if (M.length >= B.max) return [];
+  return C.m.GENRES.map((g) => g.id).filter((g) => !M.includes(g) && (st.genreHits[g] || 0) >= B.films && ((st.genreAcclaim || {})[g] || 0) >= B.acclaimed);
+}
+function master(C, st, uid, input, now) {
+  st = normalize(st);
+  const B = C.badges.genre_master, g = input && input.genre;
+  if (Object.keys(st.perks).length >= B.max) throw new Reject(`You can master at most ${B.max} genres.`);
+  if (typeof g !== "string" || !masterReady(C, st).includes(g)) throw new Reject("Your studio hasn't earned mastery of that genre yet.");
+  const next = Object.assign({}, st, { perks: Object.assign({}, st.perks, { [g]: now || 1 }), badges: Object.assign({}, st.badges) });
+  next.currentProject = makeProject(C, next, uid, st.currentProject.date, st.currentProject.diff === "hard");
+  return { state: next, badges: awardBadges(C, st, next, null, now || 0) };
 }
 // Fee and marketing discounts from upgrades, combined with the studio type's fees/marketing (a positive type
 // value makes things dearer): the model charges fee * (1 - discount).
@@ -268,7 +296,9 @@ function breakoutFor(C, st, pj, env, p, cfg, r) {
 // timestamp; it becomes tier 1).
 const NEW_STATS = { streak: 0, reunions: 0, chemistry: 0, timing: 0, seasons: [], realHits: 0, bailedOut: false, breakouts: 0 };
 function normalize(st) {
-  const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {}, identity: null }, st);
+  const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {}, identity: null, genreAcclaim: {}, bonusPoints: 0 }, st);
+  // Mastery is capped at two genres (older studios may have earned more under the old rule; the first two stay).
+  out.perks = Object.fromEntries(Object.entries(st.perks || {}).slice(0, 2));
   out.stats = Object.assign({}, NEW_STATS, st.stats, { seasons: ((st.stats || {}).seasons || []).slice() });
   out.badges = Object.fromEntries(Object.entries(st.badges || {}).map(([k, v]) => [k, typeof v === "number" ? { tier: 1, at: v } : v]));
   // Studios from before the public card: their best film so far is the biggest of their recent ones.
@@ -341,12 +371,14 @@ function release(C, st, uid, input, date, now) {
   newGates.forEach((x) => { next.gates[x] = now; });
   if (filmsMade % C.cfg.pass.every === 0) next.passesAvailable = Math.min(C.cfg.pass.cap, st.passesAvailable + 1);
   if (profit > 0) next.genreHits[g] = (st.genreHits[g] || 0) + 1;
-  // Genre Master perk: the genre's films earn more from now on.
-  const perks = profit > 0 && next.genreHits[g] >= B.genre_master.films && !own(st.perks, g) ? [g] : [];
-  perks.forEach((x) => { next.perks[x] = B.genre_master.bonus; });
+  const perks = []; // mastery is claimed (master()), never automatic
   const facts = Object.assign(filmFacts(C, before, { p, cfg, env, profit }), { boom });
   // Award scores for every film; every season.films films the Golden Reel Awards judge the season.
   const scores = C.awd ? awards.filmScores(m, C.awd, env, p, cfg, r) : null;
+  const ready0 = masterReady(C, st);
+  next.genreAcclaim = Object.assign({}, st.genreAcclaim);
+  if (profit > 0 && scores && scores.critics >= B.genre_master.critics) next.genreAcclaim[g] = (next.genreAcclaim[g] || 0) + 1;
+  const masterNew = masterReady(C, next).filter((x) => !ready0.includes(x));
   let season = null;
   if (C.awd) {
     next.season = (st.season || []).concat([{ no: filmsMade, title: m.plotFor(env, g).title, genre: g, d: p.d, cast: [p.a1, p.a2, p.a3], scores }]);
@@ -358,6 +390,8 @@ function release(C, st, uid, input, date, now) {
       const tr = Object.assign({ total: 0, byCat: {} }, st.trophies);
       tr.byCat = Object.assign({}, tr.byCat);
       season.wins.forEach((w) => { tr.total++; tr.byCat[w.cat] = (tr.byCat[w.cat] || 0) + 1; });
+      season.points = season.wins.reduce((a, w) => a + (w.points || 0), 0);
+      next.bonusPoints = (st.bonusPoints || 0) + season.points;
       next.trophies = tr;
       next.awards = season.wins.map((w) => ({ kind: "season", season: n, cat: w.cat, name: w.name, title: w.title, who: w.who, at: now })).concat(st.awards || []).slice(0, 30);
     }
@@ -384,7 +418,7 @@ function release(C, st, uid, input, date, now) {
   }
   // The last few films ride along in the studio doc so the HQ needs no extra reads.
   next.recent = [{ no: filmsMade, title: film.title, genre: g, profit, gross: film.gross, at: now }].concat(st.recent || []).slice(0, C.cfg.recentFilms || 5);
-  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout, breakout: boom, season,
+  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout, breakout: boom, season, masterReady: masterNew,
     level: lv1 > lv0 ? { from: lv0, to: lv1, points: pointsLeft(C, next) } : null };
   return { state: next, film, events, board };
 }
@@ -455,7 +489,12 @@ function awardBadges(C, before, next, film, now) {
   const out = [];
   C.ach.badges.forEach((b) => {
     const tier = tierFor(b, badgeValue(C, b.id, before, next, film)), have = (next.badges[b.id] || {}).tier || 0;
-    if (tier > have) { next.badges[b.id] = { tier, at: now }; out.push({ id: b.id, tier }); }
+    if (tier > have) {
+      const R = C.ach.rewards || { tiers: [], single: 0 }, reward = (b.tiers ? R.tiers[tier - 1] : R.single) || 0;
+      next.badges[b.id] = { tier, at: now };
+      next.bank = round1((next.bank || 0) + reward);
+      out.push({ id: b.id, tier, reward });
+    }
   });
   return out;
 }
@@ -544,5 +583,5 @@ module.exports = {
   loadCampaign, makeCampaign, unlocksFor, nextGate, budgetFor, settle, castPools, crewList, projectEnv,
   makeProject, feasible, awardBadges, badgeValue, tierFor, filmFacts, newCampaign, release, pass, setHard, rename, defaultName, cleanName, projectKey,
   levelFor, pointsLeft, discounts, upgrade, normalize, style, rerollsFor, reroll, pickScript, publicStudio,
-  identity, typeFor, typeEffects, identLean, breakoutFor,
+  identity, typeFor, typeEffects, identLean, breakoutFor, master, masterReady, masteryBonus,
 };

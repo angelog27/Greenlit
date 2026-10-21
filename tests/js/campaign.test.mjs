@@ -317,10 +317,8 @@ test("badges and gates: first hit, genre master perk, comeback, unlock events an
     st = plain(out.state);
   }
   assert.ok(seen.has("first_hit:1"));
-  assert.ok(perkGenre, "three hits in one genre grant Genre Master");
-  assert.ok(st.badges.genre_master && st.badges.genre_master.tier >= 1);
-  assert.equal(st.perks[perkGenre], C.badges.genre_master.bonus);
-  assert.equal(st.currentProject.env.bonus[perkGenre], C.badges.genre_master.bonus, "perk reaches the next project's env");
+  assert.equal(perkGenre, null, "mastery is never automatic");
+  assert.deepEqual(st.perks, {});
   assert.ok(Object.values(st.badges).every((x) => x.tier >= 1 && typeof x.at === "number"), "badges carry a tier and a timestamp");
   assert.ok(st.stats.streak >= 1 && st.stats.seasons.length >= 1, "running stats are kept");
   assert.ok(events.some((e) => e.gates.length), "an unlock fired");
@@ -405,7 +403,8 @@ test("upgrades: bought with points, rank by rank, with level gates and caps", ()
   // Buying ranks earns Well Equipped.
   let eq = { ...base, lifetimeGross: cfg.levels[cfg.levels.length - 1] }, got = [];
   for (const id of ["scout", "scout", "casting"]) { const o = camp.upgrade(C, eq, "u1", { id }, NOW); eq = o.state; got = got.concat(o.badges); }
-  assert.deepEqual(got.filter((b) => b.id === "well_equipped"), [{ id: "well_equipped", tier: 1 }]);
+  assert.deepEqual(got.filter((b) => b.id === "well_equipped").map((b) => ({ id: b.id, tier: b.tier })), [{ id: "well_equipped", tier: 1 }]);
+  assert.equal(got.find((b) => b.id === "well_equipped").reward, C.ach.rewards.tiers[0], "a badge tier pays its reward");
 });
 
 test("Reputation and Marketing Deals discount the current project's costs through the model", () => {
@@ -684,7 +683,9 @@ test("Golden Reel Awards: every season of films faces rival bars; wins pay the b
   assert.equal(out.state.season.length, 0, "the next season starts empty");
   assert.equal(out.state.trophies ? out.state.trophies.total : 0, sea.wins.length);
   const filmMoney = Math.max(cfg.start.floor, Math.round((ceremony.before.bank + out.film.profit) * 10) / 10);
-  assert.equal(out.state.bank, Math.round((filmMoney + sea.prize) * 10) / 10, "prize money goes to the bank");
+  const badgeCash = out.film.badges.reduce((a, b) => a + b.reward, 0);
+  assert.equal(out.state.bank, Math.round((filmMoney + sea.prize + badgeCash) * 10) / 10, "prize money (and badge rewards) go to the bank");
+  assert.equal(out.state.bonusPoints || 0, sea.wins.reduce((a, w) => a + (w.points || 0), 0), "Best Picture gives an upgrade point");
   assert.equal(out.state.lifetimeProfit, Math.round((ceremony.before.lifetimeProfit + Math.max(0, out.film.profit)) * 10) / 10, "lifetime profit only counts the film");
   // Same studio, same season: the same ceremony (seeded).
   assert.deepEqual(plain(camp.release(C, ceremony.before, "u1", { index: ceremony.before.currentProject.index, pick: out.film.pick }, DATE, NOW).events.season), plain(sea));
@@ -724,4 +725,35 @@ test("Greenlight Globes: submit this week's films, the week closes, winners are 
   const again = await store.finalizeWeek(wk.id, NOW + 8 * 86400000);
   assert.ok(again.skipped, "a week is finalised once");
   assert.equal(db.docs.get(`campaigns/${winner}`).globes.wins, w.globes.wins, "no double prize");
+});
+
+test("Genre Master: earned with hits and acclaim, claimed by choice, at most two; a bonus inside, a cost outside", () => {
+  const GM = C.badges.genre_master, base = studio(0, { index: 3 });
+  rejects(() => camp.master(C, base, "u1", { genre: "horror" }), /hasn't earned/);
+  const ready = { ...base, genreHits: { horror: GM.films, comedy: GM.films, drama: GM.films }, genreAcclaim: { horror: GM.acclaimed, comedy: GM.acclaimed, drama: GM.acclaimed - 1 } };
+  assert.deepEqual(camp.masterReady(C, ready).sort(), ["comedy", "horror"], "drama lacks acclaim");
+  rejects(() => camp.master(C, ready, "u1", { genre: "drama" }), /hasn't earned/);
+  rejects(() => camp.master(C, ready, "u1", { genre: "__proto__" }), /hasn't earned/);
+  let st = plain(camp.master(C, ready, "u1", { genre: "horror" }, NOW).state);
+  assert.ok(st.perks.horror && st.badges.genre_master.tier === 1);
+  const env = st.currentProject.env;
+  assert.equal(env.bonus.horror, GM.bonus, "mastered genre up");
+  assert.equal(env.bonus.drama, GM.offGenre, "outside your mastery: down");
+  assert.equal(env.bonus.horrorcomedy, undefined, "a blend with a mastered half is neutral");
+  st = plain(camp.master(C, { ...st, genreHits: ready.genreHits, genreAcclaim: ready.genreAcclaim }, "u1", { genre: "comedy" }, NOW).state);
+  assert.equal(Object.keys(st.perks).length, 2);
+  rejects(() => camp.master(C, { ...st, genreHits: { ...ready.genreHits, drama: 9 }, genreAcclaim: { ...ready.genreAcclaim, drama: 9 } }, "u1", { genre: "drama" }), /at most 2/);
+  assert.deepEqual(camp.masterReady(C, st), [], "nothing more to claim at the cap");
+  // The penalty is real in the score: an off-specialty film earns less than the same film without mastery.
+  const g = ["drama", "romance", "comedy"].find((x) => st.currentProject.genres[x] && st.currentProject.genres[x].state === "ok") || "drama";
+  if (st.currentProject.genres[g] && st.currentProject.genres[g].state === "ok" && !st.perks[g]) {
+    const p = cheapest(st, g), dcfg = m.DIFFS[st.currentProject.diff];
+    const withM = m.evalFilm(camp.projectEnv(st.currentProject), p, dcfg), without = m.evalFilm({ ...camp.projectEnv(st.currentProject), bonus: {} }, p, dcfg);
+    assert.ok(withM.gross < without.gross && withM.steps.some((x) => x.k === "Off your specialty"));
+  }
+  // Older studios with more than two masteries keep the first two.
+  assert.equal(Object.keys(camp.normalize({ ...base, perks: { horror: 1, comedy: 1, drama: 1 } }).perks).length, 2);
+  // Acclaimed hits are counted at release.
+  const r0 = studio(0, { films: 0, index: 21 }), gg = playable(r0)[0], out = camp.release(C, r0, "u1", { index: r0.currentProject.index, pick: bestFilm(r0, gg) }, DATE, NOW);
+  assert.equal(out.state.genreAcclaim[gg] || 0, out.film.profit > 0 && out.film.scores.critics >= GM.critics ? 1 : 0);
 });

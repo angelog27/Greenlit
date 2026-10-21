@@ -815,7 +815,7 @@ function evalFilm(env,p,cfg,luck){
   push("Star power",cm,cast.map(function(a){return a.name+" ★"+a.star}).join(", "));m*=cm;steps[steps.length-1].run=m;
   var syn=synergies(env,p,cfg),sum=0;syn.forEach(function(s){sum+=s[1]});
   var sm=Math.round((1+sum)*100)/100;push("Synergies",sm,syn.length?"":"No synergies this time");m*=sm;steps[steps.length-1].run=m;
-  var gb=genreBonus(env,g.id);if(gb!==1){push("Genre Master",gb,"Your studio's track record in "+g.name);m*=gb;steps[steps.length-1].run=m}
+  var gb=genreBonus(env,g.id);if(gb!==1){push(gb>1?"Genre Master":"Off your specialty",gb,gb>1?"Your studio's track record in "+g.name:"Audiences know your studio for other genres");m*=gb;steps[steps.length-1].run=m}
   var sq=scriptQ(env,g.id);if(sq!==1){push("Script potential",sq,sq>=SCRIPT_Q[0]?"The strongest draft":sq>1?"A solid draft":"A weaker draft");m*=sq;steps[steps.length-1].run=m}
   var iq=identQ(env,g.id);if(iq!==1){push("Studio type",iq,"Your studio's lean toward "+g.name);m*=iq;steps[steps.length-1].run=m}
   out.syn=syn.map(function(s){return s[0]+" +"+Math.round(s[1]*100)+"%"});

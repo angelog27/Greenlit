@@ -37,7 +37,7 @@ function seasonCeremony(A, films, tier, rnd) {
     const best = films.slice().sort((a, b) => b.scores[c.score] - a.scores[c.score])[0];
     const base = c.score === "gross" ? R.gross[tier] : R.score[tier], bar = Math.round(base * (1 - R.spread + 2 * R.spread * rnd()));
     const row = { cat: c.id, name: c.name, title: best.title, value: best.scores[c.score], bar, who: who(c.score, best) };
-    if (row.value >= bar) { wins.push(Object.assign(row, { prize: c.prize })); prize += c.prize; } else losses.push(row);
+    if (row.value >= bar) { wins.push(Object.assign(row, { prize: c.prize, points: c.points || 0 })); prize += c.prize; } else losses.push(row);
   });
   return { wins, losses, prize };
 }

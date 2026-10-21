@@ -7,13 +7,14 @@
     { "id": "a_tier", "name": "A-List Studio",     "text": "A-list cast and directors, Animation, and real release dates on any project." }
   ],
   "tierNames": ["Bronze", "Silver", "Gold"],
+  "rewards": { "tiers": [5, 10, 20], "single": 10 },
   "badges": [
     { "id": "first_hit",       "name": "First Hit",         "icon": "star",     "text": "Make a profit on a film." },
     { "id": "blockbuster",     "name": "Blockbuster",       "icon": "trophy",   "unit": "money", "tiers": [100, 200, 350], "text": "Earn {n} profit on one film." },
     { "id": "sleeper_hit",     "name": "Sleeper Hit",       "icon": "piggy",    "profit": 15, "costShare": 0.6, "text": "Earn $15M profit while spending at most 60% of the budget." },
     { "id": "reunion",         "name": "Reunion",           "icon": "link",     "tiers": [1, 3, 6], "text": "Reunite a director with an actor they've worked with, in {n} film(s)." },
     { "id": "comeback",        "name": "Comeback",          "icon": "rise",     "text": "Make a hit right after a flop." },
-    { "id": "genre_master",    "name": "Genre Master",      "icon": "crown",    "tiers": [1, 3, 6], "films": 3, "bonus": 0.03, "text": "Master {n} genre(s) (three profitable films in each). Every mastered genre earns +3% at the box office." },
+    { "id": "genre_master",    "name": "Genre Master",      "icon": "crown",    "tiers": [1, 2], "films": 5, "acclaimed": 2, "critics": 75, "max": 2, "bonus": 0.08, "offGenre": -0.05, "text": "Master {n} genre(s): five profitable films in a genre, two of them acclaimed by critics (75+), then claim it. Mastered genres earn +8%; everything else -5%." },
     { "id": "full_house",      "name": "Full House",        "icon": "house",    "tier": "D", "after": "C", "text": "Make a hit with only D-list talent after C-list actors unlock." },
     { "id": "perfect_timing",  "name": "Perfect Timing",    "icon": "clock",    "tiers": [1, 5, 15], "text": "Release {n} film(s) in a window the story suits." },
     { "id": "hit_streak",      "name": "Hot Streak",        "icon": "flame",    "tiers": [3, 5, 10], "text": "Make {n} profitable films in a row." },

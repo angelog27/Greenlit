@@ -112,7 +112,7 @@ function makeStore(db, C, files) {
           const st = camp.normalize(s.data()), g = Object.assign({ wins: 0, byCat: {} }, st.globes);
           g.byCat = Object.assign({}, g.byCat, { [c.id]: (g.byCat[c.id] || 0) + 1 });
           g.wins++;
-          const next = Object.assign({}, st, { globes: g, bank: Math.round((st.bank + c.prize) * 10) / 10, badges: Object.assign({}, st.badges),
+          const next = Object.assign({}, st, { globes: g, bank: Math.round((st.bank + c.prize) * 10) / 10, badges: Object.assign({}, st.badges), bonusPoints: (st.bonusPoints || 0) + (c.points || 0),
             awards: [{ kind: "weekly", week: weekId, cat: c.id, name: c.name, title: win.title, at: now }].concat(st.awards || []).slice(0, 30) });
           camp.awardBadges(C, st, next, null, now);
           tx.set(ref(win.uid), plain(next));
@@ -121,6 +121,14 @@ function makeStore(db, C, files) {
       }
       return { results, entries: entries.length };
     },
+    // Claim a Genre Master the studio has earned (at most two).
+    master: (uid, data, now) => db.runTransaction(async (tx) => {
+      const st = await load(tx, uid);
+      const out = plain(camp.master(C, st, uid, data, now));
+      tx.set(ref(uid), out.state);
+      card(tx, uid, out.state, now);
+      return out;
+    }),
     // Studio type from the onboarding answers (once).
     identity: (uid, data, now) => db.runTransaction(async (tx) => {
       const st = await load(tx, uid);

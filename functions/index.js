@@ -106,6 +106,7 @@ exports.campaignReroll = campaignCall(store.reroll);
 exports.campaignPickScript = campaignCall(store.pickScript);
 exports.campaignIdentity = campaignCall(store.identity);
 exports.campaignSubmitAwards = campaignCall(store.submitAwards);
+exports.campaignMaster = campaignCall(store.master);
 // Greenlight Globes: every Monday 00:15 UTC, crown last week's winners.
 const { weekOf } = require("./awards");
 exports.weeklyAwards = onSchedule({ schedule: "15 0 * * 1", timeZone: "Etc/UTC" }, async () => {
