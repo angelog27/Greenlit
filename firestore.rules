@@ -29,6 +29,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+    // Public studio cards (look, level, badges, best film), written by the functions only.
+    match /studios/{uid} {
+      allow read: if true;
+      allow write: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

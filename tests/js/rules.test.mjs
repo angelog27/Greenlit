@@ -68,6 +68,15 @@ test("the campaign board is public to read", { skip }, async () => {
   assert.equal(snap.size, 1);
 });
 
+test("public studio cards: anyone reads, nobody writes", { skip }, async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => { await ctx.firestore().doc("studios/alice").set({ studioName: "Alice Films" }); });
+  const anon = env.unauthenticatedContext().firestore(), alice = env.authenticatedContext("alice").firestore();
+  await T.assertSucceeds(anon.doc("studios/alice").get());
+  await T.assertSucceeds(anon.collection("studios").get());
+  await T.assertFails(alice.doc("studios/alice").set({ studioName: "Hacked", lifetimeGross: 1e9 }));
+  await T.assertFails(alice.doc("studios/bob").set({ studioName: "Fake" }));
+});
+
 test("daily boards keep their rules", { skip }, async () => {
   const alice = env.authenticatedContext("alice").firestore();
   await T.assertSucceeds(alice.collection("boards/r3-basic-easy_2026-10-20/entries").get());

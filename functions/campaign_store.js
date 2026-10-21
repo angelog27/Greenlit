@@ -2,6 +2,7 @@
 //   campaigns/{uid}               the player's studio (bank, unlocks, badges, current project); owner reads only
 //   campaigns/{uid}/films/{index} one released film, keyed by project index (also the idempotency record)
 //   campaignBoard/{uid}           public row once the studio reaches the board goal (A-tier)
+//   studios/{uid}                 public studio card (look, level, badges, best film), rewritten on every change to them
 // Callables: start, project, release, pass, reroll, upgrade, style, rename.
 // Takes `db` (the Admin Firestore, or a stand-in with doc() and runTransaction() in tests) and `files` (Storage:
 // meta(path) -> { contentType, size, generation } or null, head(path) -> first bytes, remove(path)).
@@ -20,6 +21,7 @@ const IMAGE = /^image\/(jpeg|png|webp)$/;
 
 function makeStore(db, C, files) {
   const ref = (uid) => db.doc(`campaigns/${uid}`);
+  const card = (tx, uid, st, now) => tx.set(db.doc(`studios/${uid}`), plain(camp.publicStudio(C, uid, camp.normalize(st), now || Date.now())));
   const load = async (tx, uid) => {
     const s = await tx.get(ref(uid));
     if (!s.exists) throw new Reject("Start your studio first.");
@@ -33,6 +35,7 @@ function makeStore(db, C, files) {
       const cid = crypto.randomBytes(6).toString("hex");
       const st = plain(camp.newCampaign(C, uid, cid, data && data.studioName, utcDay(now), now));
       tx.set(ref(uid), st);
+      card(tx, uid, st, now);
       return { state: st, created: true };
     }),
     // The current project; { hard } switches it to real release dates and back (A-tier only).
@@ -53,6 +56,7 @@ function makeStore(db, C, files) {
       }
       const out = plain(camp.release(C, st, uid, data, utcDay(now), now));
       tx.set(ref(uid), out.state);
+      card(tx, uid, out.state, now);
       tx.set(db.doc(`campaigns/${uid}/films/${filmId(out.film.projectIndex)}`), Object.assign({}, out.film, { events: out.events }));
       if (out.board) tx.set(db.doc(`campaignBoard/${uid}`), out.board);
       return { state: out.state, film: out.film, events: out.events, replay: false };
@@ -61,6 +65,12 @@ function makeStore(db, C, files) {
     reroll: (uid, data) => db.runTransaction(async (tx) => {
       const st = await load(tx, uid);
       const next = plain(camp.reroll(C, st, uid, data));
+      tx.set(ref(uid), next);
+      return { state: next };
+    }),
+    pickScript: (uid, data) => db.runTransaction(async (tx) => {
+      const st = await load(tx, uid);
+      const next = plain(camp.pickScript(C, st, uid, data));
       tx.set(ref(uid), next);
       return { state: next };
     }),
@@ -75,6 +85,7 @@ function makeStore(db, C, files) {
       const st = await load(tx, uid);
       const out = plain(camp.upgrade(C, st, uid, data, now));
       tx.set(ref(uid), out.state);
+      card(tx, uid, out.state, now);
       return out;
     }),
     // Colour, tagline, city, and logo/backdrop: true = "I uploaded a new one, check it", false = remove it.
@@ -100,6 +111,7 @@ function makeStore(db, C, files) {
         const board = st.aTierFilms !== null ? await tx.get(db.doc(`campaignBoard/${uid}`)) : null;
         const next = plain(camp.style(C, st, x, images));
         tx.set(ref(uid), next);
+        card(tx, uid, next, now);
         if (board && board.exists) tx.set(db.doc(`campaignBoard/${uid}`), Object.assign({}, board.data(), { logo: next.profile.logo || null, color: next.profile.color || null }));
         return { state: next };
       });
@@ -110,6 +122,7 @@ function makeStore(db, C, files) {
       const board = st.aTierFilms !== null ? await tx.get(db.doc(`campaignBoard/${uid}`)) : null;
       const next = camp.rename(st, data && data.name);
       tx.set(ref(uid), next);
+      card(tx, uid, next);
       if (board && board.exists) tx.set(db.doc(`campaignBoard/${uid}`), Object.assign({}, board.data(), { displayName: next.studioName }));
       return { state: next };
     }),

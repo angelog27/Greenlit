@@ -664,6 +664,20 @@ function plotFor(env,gid){return PLOTS[gid][env.plots[gid]]}
 // earlier day's puzzle. A shuffle or reroll swaps in another of these for one genre (envWithPlot).
 function plotChoices(day,gid){var ok=[];PLOTS[gid].forEach(function(p,i){if(!p.from||p.from<=day)ok.push(i)});return ok}
 function envWithPlot(env,gid,s){var e=Object.assign({},env);e.plots=Object.assign({},env.plots);e.plots[gid]=s;return e}
+// Script offers: a shuffle (Basic) or reroll (Campaign) lays out three scripts. Each set has one strong draft,
+// one middling and one weak; their potential multiplies the gross ("Script potential"). Game numbers, tunable.
+// A film made from the day's or project's own story has no script step (×1), so daily scores never change.
+var SCRIPT_Q=[1.12,1.02,0.94];
+function scriptOffer(seed,choices){
+  var r=rng(hash(seed)),pool=choices.slice(),out=[];
+  while(out.length<3&&pool.length)out.push(pool.splice(Math.floor(r()*pool.length),1)[0]);
+  var q=SCRIPT_Q.slice(0,out.length);for(var i=q.length-1;i>0;i--){var j=Math.floor(r()*(i+1)),t=q[i];q[i]=q[j];q[j]=t}
+  return out.map(function(s,i){return {s:s,q:q[i]}});
+}
+// Basic: the n-th offer for a genre on a day (any n; the server recomputes it from the same seed).
+function basicOffer(day,gid,n){return scriptOffer("offer|"+day+"|"+gid+"|"+n,plotChoices(day,gid))}
+function envWithScript(env,gid,s,q){var e=envWithPlot(env,gid,s);e.quality=Object.assign({},env.quality);e.quality[gid]=q;return e}
+function scriptQ(env,gid){return env.quality&&env.quality[gid]?env.quality[gid]:1}
 function winId(p,cfg){return cfg.real?(p.w?seasonOf(p.w):null):p.w}
 function luckOf(env,p,cfg){var ids=cfg.roles?p.a1+"|"+p.a2+"|"+p.a3:[p.a1,p.a2].sort().join("|")+"|"+p.a3;return 0.92+0.16*rng(hash(env.day+"|"+p.g+"|"+p.d+"|"+ids+"|"+p.w))()}
 function genreBonus(env,gid){return env.bonus&&env.bonus[gid]?Math.round((1+env.bonus[gid])*100)/100:1}
@@ -716,6 +730,7 @@ function evalFilm(env,p,cfg,luck){
   var syn=synergies(env,p,cfg),sum=0;syn.forEach(function(s){sum+=s[1]});
   var sm=Math.round((1+sum)*100)/100;push("Synergies",sm,syn.length?"":"No synergies this time");m*=sm;steps[steps.length-1].run=m;
   var gb=genreBonus(env,g.id);if(gb!==1){push("Genre Master",gb,"Your studio's track record in "+g.name);m*=gb;steps[steps.length-1].run=m}
+  var sq=scriptQ(env,g.id);if(sq!==1){push("Script potential",sq,sq>=SCRIPT_Q[0]?"The strongest draft":sq>1?"A solid draft":"A weaker draft");m*=sq;steps[steps.length-1].run=m}
   out.syn=syn.map(function(s){return s[0]+" +"+Math.round(s[1]*100)+"%"});
   var lk=luck===undefined?luckOf(env,p,cfg):luck;push("Hidden luck",Math.round(lk*100)/100,"Seeded by today's date and your slate");m*=lk;steps[steps.length-1].run=m;
   out.luck=lk;out.gross=m;out.share=m*SHARE;out.profit=out.share-out.cost;
@@ -756,6 +771,7 @@ function evalFast(env,p,cfg,pre){
   var syn=synergies(env,p,cfg),sum=0;for(var q=0;q<syn.length;q++)sum+=syn[q][1];
   m*=Math.round((1+sum)*100)/100;
   m*=genreBonus(env,g.id);
+  m*=scriptQ(env,g.id);
   m*=luckOf(env,p,cfg);
   var cost=costOf(p,cfg,env);
   return {gross:m,cost:cost,profit:m*SHARE-cost};

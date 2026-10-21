@@ -207,7 +207,22 @@ function normalize(st) {
   const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {} }, st);
   out.stats = Object.assign({}, NEW_STATS, st.stats, { seasons: ((st.stats || {}).seasons || []).slice() });
   out.badges = Object.fromEntries(Object.entries(st.badges || {}).map(([k, v]) => [k, typeof v === "number" ? { tier: 1, at: v } : v]));
+  // Studios from before the public card: their best film so far is the biggest of their recent ones.
+  if (out.bestFilm === undefined) out.bestFilm = (st.recent || []).reduce((b, f) => (!b || f.gross > b.gross ? { title: f.title, genre: f.genre, gross: f.gross, profit: f.profit, no: f.no } : b), null);
   return out;
+}
+
+// The studio's public card (studios/{uid}): what other players see when they click it on a board. Only the look,
+// progress, badge tiers and the highest-grossing film; never the bank, the current project or private history.
+function publicStudio(C, uid, st, now) {
+  const pr = st.profile || {};
+  return {
+    uid, studioName: st.studioName, level: levelFor(C, st.lifetimeGross || 0), filmsMade: st.filmsMade,
+    lifetimeGross: st.lifetimeGross || 0, lifetimeProfit: st.lifetimeProfit, aTierFilms: st.aTierFilms,
+    profile: { color: pr.color || null, tagline: pr.tagline || "", city: pr.city || "", logo: pr.logo || null, backdrop: pr.backdrop || null },
+    badges: Object.fromEntries(Object.entries(st.badges || {}).map(([k, v]) => [k, typeof v === "number" ? 1 : v.tier])),
+    bestFilm: st.bestFilm || null, updatedAt: now,
+  };
 }
 
 // Buy the next rank of an upgrade with points. A discount takes effect on the current project at once
@@ -275,7 +290,12 @@ function release(C, st, uid, input, date, now) {
     no: filmsMade, projectIndex: pj.index, title: m.plotFor(env, g).title, genre: g, pick: p, diff: pj.diff,
     profit, gross: Math.round(r.gross), cost: r.cost, budget: pj.budget, badges, perks,
     gates: newGates, bailout: money.bailout, at: now,
+    script: pj.script && pj.script.g === g ? { s: pj.script.s, q: m.scriptQ(env, g), items: pj.script.items } : null,
   };
+  // Highest-grossing film so far, for the public studio card.
+  if (!st.bestFilm || film.gross > st.bestFilm.gross) {
+    next.bestFilm = { title: film.title, genre: g, gross: film.gross, profit, no: filmsMade, d: p.d, cast: [p.a1, p.a2, p.a3] };
+  }
   // The last few films ride along in the studio doc so the HQ needs no extra reads.
   next.recent = [{ no: filmsMade, title: film.title, genre: g, profit, gross: film.gross, at: now }].concat(st.recent || []).slice(0, C.cfg.recentFilms || 5);
   const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout,
@@ -349,9 +369,10 @@ function awardBadges(C, before, next, film, now) {
   return out;
 }
 
-// Story rerolls: from the studio levels in data/campaign.json `rerolls`, a number per project. A reroll swaps
-// one playable genre's pitch for another of its pitches (seeded by the project, so it can't be fished for),
-// skipping any pitch that would leave no film within budget clearing the feasibility margin.
+// Story rerolls: from the studio levels in data/campaign.json `rerolls`, a number per project. A reroll lays out
+// three scripts for one playable genre (scriptOffer, seeded by the project and the reroll count so it can't be
+// fished for): one strong draft, one middling, one weak. Drafts with no film over the feasibility margin are
+// marked unavailable. The player then takes one with pickScript; the project keeps the offer for the result.
 function rerollsFor(C, st) {
   const lv = levelFor(C, st.lifetimeGross);
   return (C.cfg.rerolls || []).reduce((n, r) => (lv >= r.level ? r.count : n), 0);
@@ -363,15 +384,21 @@ function reroll(C, st, uid, input) {
   if (!allowed) throw new Reject(`Story rerolls unlock at studio level ${C.cfg.rerolls[0].level}.`);
   if (used >= allowed) throw new Reject("No story rerolls left on this project.");
   if (!own(pj.genres, g) || pj.genres[g].state !== "ok") throw new Reject("You can only reroll the story of a playable genre.");
-  const cur = pj.env.plots[g], env0 = projectEnv(pj), cfg = m.DIFFS[pj.diff];
-  const order = m.plotChoices(pj.date, g).filter((i) => i !== cur)
-    .map((i) => ({ i, k: m.rng(m.hash(pj.key + "|reroll|" + g + "|" + used + "|" + i))() })).sort((a, b) => a.k - b.k);
-  for (const { i } of order) {
-    if (!feasible(C, m.envWithPlot(env0, g, i), g, cfg)) continue;
-    const env = Object.assign({}, pj.env, { plots: Object.assign({}, pj.env.plots, { [g]: i }) });
-    return Object.assign({}, st, { currentProject: Object.assign({}, pj, { env, rerolls: used + 1 }) });
-  }
-  throw new Reject("No other story for that genre works within this budget.");
+  const env0 = projectEnv(pj), cfg = m.DIFFS[pj.diff];
+  const items = m.scriptOffer(pj.key + "|offer|" + g + "|" + used, m.plotChoices(pj.date, g))
+    .map((x) => ({ s: x.s, q: x.q, ok: !!feasible(C, m.envWithScript(env0, g, x.s, x.q), g, cfg) }));
+  if (!items.some((x) => x.ok)) throw new Reject("No script for that genre works within this budget.");
+  return Object.assign({}, st, { currentProject: Object.assign({}, pj, { rerolls: used + 1, offer: { g, items } }) });
+}
+function pickScript(C, st, uid, input) {
+  st = normalize(st);
+  checkIndex(st, input && input.index);
+  const pj = st.currentProject, o = pj.offer, x = input || {};
+  if (!o || o.g !== x.g) throw new Reject("There's no script offer for that genre. Reroll first.");
+  const item = o.items.find((it) => it.s === x.s);
+  if (!item || !item.ok) throw new Reject("That script isn't one you can pick.");
+  const env = Object.assign({}, pj.env, { plots: Object.assign({}, pj.env.plots, { [o.g]: item.s }), quality: Object.assign({}, pj.env.quality, { [o.g]: item.q }) });
+  return Object.assign({}, st, { currentProject: Object.assign({}, pj, { env, offer: null, script: { g: o.g, s: item.s, items: o.items } }) });
 }
 
 // Skip the current pitches: costs the development fee, uses a pass, moves to the next project index.
@@ -425,5 +452,5 @@ function rename(st, name) {
 module.exports = {
   loadCampaign, makeCampaign, unlocksFor, nextGate, budgetFor, settle, castPools, crewList, projectEnv,
   makeProject, feasible, awardBadges, badgeValue, tierFor, filmFacts, newCampaign, release, pass, setHard, rename, defaultName, cleanName, projectKey,
-  levelFor, pointsLeft, discounts, upgrade, normalize, style, rerollsFor, reroll,
+  levelFor, pointsLeft, discounts, upgrade, normalize, style, rerollsFor, reroll, pickScript, publicStudio,
 };

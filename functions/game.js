@@ -20,9 +20,10 @@ class Reject extends Error {}
 const own = (o, k) => typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k);
 const utcDay = (t) => new Date(t).toISOString().slice(0, 10);
 
-// input: { type: "basic" | "daily", diff: "easy" | "medium" | "hard", day: "YYYY-MM-DD", pick: { g, d, a1, a2, a3, w, s? } }
-// s is the pitch (index in plots.json) when a Basic player shuffled the story; it must be one of that genre's
-// pitches for the day. The Daily Challenge always uses the day's shared pitch.
+// input: { type: "basic" | "daily", diff: "easy" | "medium" | "hard", day: "YYYY-MM-DD", pick: { g, d, a1, a2, a3, w, s?, n? } }
+// Basic players can swap the story: n is the script offer they picked from (basicOffer(day, g, n), rebuilt here
+// from the same seed) and s the script in it, scored with that draft's potential. s without n (older pages)
+// is any of the genre's pitches for the day at ×1. The Daily Challenge always uses the day's shared story.
 function check(game, input, now = Date.now()) {
   const m = game.m;
   const { type, diff, day, pick } = input || {};
@@ -33,13 +34,19 @@ function check(game, input, now = Date.now()) {
   const today = utcDay(now);
   if (day !== today && day !== m.addDays(today, -1)) throw new Reject("That day's puzzle is closed. Reload to play today's.");
   if (!pick || typeof pick !== "object") throw new Reject("No film in the request.");
-  const { g, d, a1, a2, a3, w, s } = pick;
+  const { g, d, a1, a2, a3, w, s, n } = pick;
 
   let env = m.makeEnv(day);
   const cfg = m.DIFFS[diff];
   if (!own(m.G, g)) throw new Reject("Unknown genre.");
   if (type === "daily" && g !== env.daily) throw new Reject("That isn't today's Daily Challenge genre.");
-  if (s !== undefined && s !== null && s !== env.plots[g]) {
+  if (n !== undefined && n !== null) {
+    if (type === "daily") throw new Reject("The Daily Challenge uses today's shared story.");
+    if (!Number.isInteger(n) || n < 0 || n > 9999) throw new Reject("That script offer isn't valid.");
+    const item = m.basicOffer(day, g, n).find((x) => x.s === s);
+    if (!item) throw new Reject("That script wasn't in that offer.");
+    env = m.envWithScript(env, g, item.s, item.q);
+  } else if (s !== undefined && s !== null && s !== env.plots[g]) {
     if (type === "daily") throw new Reject("The Daily Challenge uses today's shared story.");
     if (!Number.isInteger(s) || !m.plotChoices(day, g).includes(s)) throw new Reject("That story isn't available for this genre today.");
     env = m.envWithPlot(env, g, s);
@@ -49,7 +56,7 @@ function check(game, input, now = Date.now()) {
   if (!pools[0].includes(a1) || !pools[1].includes(a2) || !pools[2].includes(a3)) throw new Reject("Someone in that cast isn't on today's shortlist for their part.");
   if (cfg.real ? !env.dates.includes(w) : !(own(m.W, w) && !m.W[w].hardOnly)) throw new Reject("That release slot isn't available.");
 
-  const p = { g, d, a1, a2, a3, w, s: env.plots[g] };
+  const p = { g, d, a1, a2, a3, w, s: env.plots[g], q: m.scriptQ(env, g), n: Number.isInteger(n) ? n : null };
   const cost = m.costOf(p, cfg);
   if (cost > env.budget) throw new Reject("That film is over today's budget.");
   const r = m.evalFilm(env, p, cfg);

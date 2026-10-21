@@ -508,27 +508,65 @@ test("studio style reaches the campaign board row once the studio is on it", asy
   assert.equal(row.filmsToATier, 15);
 });
 
-test("story rerolls: unlocked by studio level, a few per project, seeded, never to an unplayable story", () => {
+test("story rerolls: three scripts per reroll, one strongest, pick one; unlocked by level, a few per project", () => {
   const R = cfg.rerolls, st0 = studio(0, { index: 4 });
   rejects(() => camp.reroll(C, st0, "u1", { index: st0.currentProject.index, g: playable(st0)[0] }), /unlock at studio level/);
   let st = { ...st0, lifetimeGross: cfg.levels[R[0].level - 1] };
   assert.equal(camp.rerollsFor(C, st), R[0].count);
   assert.equal(camp.rerollsFor(C, { ...st, lifetimeGross: cfg.levels[R[1].level - 1] }), R[1].count);
-  const g = playable(st)[0], before = st.currentProject.env.plots[g];
-  rejects(() => camp.reroll(C, st, "u1", { index: st.currentProject.index, g: "action" }), /playable genre/);
-  rejects(() => camp.reroll(C, st, "u1", { index: st.currentProject.index + 1, g }), /no longer current/);
-  const a = plain(camp.reroll(C, st, "u1", { index: st.currentProject.index, g }));
-  assert.notEqual(a.currentProject.env.plots[g], before, "a new story");
-  assert.ok(m.plotChoices(a.currentProject.date, g).includes(a.currentProject.env.plots[g]));
+  const g = playable(st)[0], idx = st.currentProject.index;
+  rejects(() => camp.reroll(C, st, "u1", { index: idx, g: "action" }), /playable genre/);
+  rejects(() => camp.pickScript(C, st, "u1", { index: idx, g, s: 0 }), /no script offer/);
+  const a = plain(camp.reroll(C, st, "u1", { index: idx, g }));
+  const offer = a.currentProject.offer;
+  assert.equal(offer.g, g);
+  assert.equal(offer.items.length, Math.min(3, m.plotChoices(a.currentProject.date, g).length));
+  assert.equal(offer.items.filter((x) => x.q === m.SCRIPT_Q[0]).length, 1, "exactly one strongest draft");
   assert.equal(a.currentProject.rerolls, 1);
-  assert.deepEqual(plain(camp.reroll(C, st, "u1", { index: st.currentProject.index, g })), a, "seeded: same reroll, same story");
-  // The rerolled story is the one the film is scored with, and it still has a film clearing the margin.
-  const env = camp.projectEnv(a.currentProject);
-  assert.ok(camp.feasible(C, env, g, m.DIFFS[a.currentProject.diff]));
-  const p = bestFilm(a, g), out = camp.release(C, a, "u1", { index: a.currentProject.index, pick: p }, DATE, NOW);
-  assert.equal(out.film.title, m.PLOTS[g][a.currentProject.env.plots[g]].title);
-  assert.ok(!out.state.currentProject.rerolls, "a new project starts with fresh rerolls");
+  assert.deepEqual(a.currentProject.env.plots, st.currentProject.env.plots, "nothing changes until a script is picked");
+  assert.deepEqual(plain(camp.reroll(C, st, "u1", { index: idx, g })), a, "seeded: same reroll, same offer");
+  rejects(() => camp.pickScript(C, a, "u1", { index: idx, g, s: 999 }), /isn't one you can pick/);
+  rejects(() => camp.pickScript(C, a, "u1", { index: idx, g: "drama", s: offer.items[0].s }), /no script offer/);
+  // Pick the strongest draft: it becomes the project's story with its potential, and the film is scored with it.
+  const best = offer.items.find((x) => x.q === m.SCRIPT_Q[0] && x.ok) || offer.items.find((x) => x.ok);
+  const b = plain(camp.pickScript(C, a, "u1", { index: idx, g, s: best.s }));
+  assert.equal(b.currentProject.env.plots[g], best.s);
+  assert.equal(b.currentProject.env.quality[g], best.q);
+  assert.equal(b.currentProject.offer, null, "the offer is used up");
+  const env = camp.projectEnv(b.currentProject);
+  assert.equal(m.scriptQ(env, g), best.q);
+  const p = bestFilm(b, g), out = camp.release(C, b, "u1", { index: idx, pick: p }, DATE, NOW);
+  assert.equal(out.film.title, m.PLOTS[g][best.s].title);
+  assert.equal(out.film.script.q, best.q);
+  assert.equal(out.film.script.items.length, offer.items.length, "the film remembers the drafts it was chosen from");
+  assert.ok(!out.state.currentProject.rerolls && !out.state.currentProject.env.quality, "a new project starts fresh");
   st = a;
-  for (let i = 1; i < R[0].count; i++) st = plain(camp.reroll(C, st, "u1", { index: st.currentProject.index, g }));
-  rejects(() => camp.reroll(C, st, "u1", { index: st.currentProject.index, g }), /No story rerolls left/);
+  for (let i = 1; i < R[0].count; i++) st = plain(camp.reroll(C, st, "u1", { index: idx, g }));
+  rejects(() => camp.reroll(C, st, "u1", { index: idx, g }), /No story rerolls left/);
+});
+
+test("public studio card: written on every change, shows the biggest film, never the bank or the project", async () => {
+  const objects = {}, db = fakeDb(), store = makeStore(db, C, fakeFiles(objects));
+  let st = (await store.start("c1", { studioName: "Card Films" }, NOW)).state;
+  let pub = db.docs.get("studios/c1");
+  assert.equal(pub.studioName, "Card Films");
+  assert.equal(pub.bestFilm, null);
+  for (const k of ["bank", "currentProject", "campaignId", "stats", "upgrades", "recent", "passesAvailable"]) assert.ok(!(k in pub), "no " + k + " on the public card");
+  const grosses = [];
+  for (let i = 0; i < 3; i++) {
+    const g = playable(st)[0], o = await store.release("c1", { index: st.currentProject.index, pick: i === 1 ? bestFilm(st, g) : cheapest(st, g) }, NOW + i);
+    grosses.push(o.film.gross); st = o.state;
+  }
+  pub = db.docs.get("studios/c1");
+  assert.equal(pub.bestFilm.gross, Math.max(...grosses), "the highest-grossing film");
+  assert.equal(pub.filmsMade, 3);
+  assert.equal(pub.level, camp.levelFor(C, st.lifetimeGross));
+  assert.ok(Object.values(pub.badges).every((t) => Number.isInteger(t)), "badges as tiers");
+  await store.style("c1", { tagline: "Big screams", color: "teal" }, NOW);
+  assert.equal(db.docs.get("studios/c1").profile.tagline, "Big screams");
+  await store.rename("c1", { name: "Card Pictures" });
+  assert.equal(db.docs.get("studios/c1").studioName, "Card Pictures");
+  // Studios from before the card: the best of their recent films.
+  const old = camp.normalize({ ...st, bestFilm: undefined, recent: [{ title: "A", genre: "horror", gross: 300, profit: 50, no: 1 }, { title: "B", genre: "comedy", gross: 500, profit: 80, no: 2 }] });
+  assert.equal(old.bestFilm.title, "B");
 });

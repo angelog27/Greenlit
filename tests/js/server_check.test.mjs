@@ -151,3 +151,33 @@ test("rate limits and the image byte check", () => {
   assert.ok(!isImageBytes(Buffer.from("GIF89a...........")));
   assert.ok(!isImageBytes(null));
 });
+
+test("script offers: three drafts, one strongest; the server rebuilds the offer and scores the draft's potential", () => {
+  const page = loadModel(new URL("Frontend/greenlight.html", root));
+  page.initModel(JSON.parse(JSON.stringify({ genres: m.GENRES, directors: m.DIRS, actors: m.ACTORS, plots: m.PLOTS, windows: m.WINDOWS,
+    loyal: m.LOYAL.map(([director, actor, bonus, films]) => ({ director, actor, bonus, films })), chem: m.CHEM.map(([a, b, bonus, films]) => ({ a, b, bonus, films })),
+    slate: m.SLATE_RAW.map(([date, title, genre, strength]) => ({ date, title, genre, strength })) })));
+  for (let n = 0; n < 20; n++) {
+    const offer = JSON.parse(JSON.stringify(m.basicOffer(DAY, G0, n)));
+    assert.equal(new Set(offer.map((x) => x.s)).size, offer.length, "three different scripts");
+    assert.equal(offer.filter((x) => x.q === m.SCRIPT_Q[0]).length, 1, "exactly one strongest draft");
+    assert.deepEqual(JSON.parse(JSON.stringify(m.basicOffer(DAY, G0, n))), offer, "deterministic");
+  }
+  const base = { type: "basic", diff: "medium", day: DAY }, pick = honest(G0, "medium"), offer = m.basicOffer(DAY, G0, 3);
+  for (const it of offer) {
+    const out = check(game, { ...base, pick: { ...pick, s: it.s, n: 3 } }, NOW);
+    const want = page.evalFilm(page.envWithScript(page.makeEnv(DAY), G0, it.s, it.q), pick, page.DIFFS.medium);
+    assert.equal(out.profit, want.profit);
+    assert.equal(out.p.q, it.q);
+    assert.ok(want.steps.some((st) => st.k === "Script potential"), "the draft shows as a step");
+  }
+  const strong = check(game, { ...base, pick: { ...pick, s: offer.find((x) => x.q === m.SCRIPT_Q[0]).s, n: 3 } }, NOW);
+  const weak = check(game, { ...base, pick: { ...pick, s: offer.find((x) => x.q === Math.min(...m.SCRIPT_Q)).s, n: 3 } }, NOW);
+  assert.ok(strong.gross > weak.gross || offer.length < 3, "the strong draft has more upside");
+  const outside = m.plotChoices(DAY, G0).find((i) => !offer.some((x) => x.s === i));
+  if (outside !== undefined) rejects({ ...base, pick: { ...pick, s: outside, n: 3 } }, /wasn't in that offer/);
+  rejects({ ...base, pick: { ...pick, s: offer[0].s, n: -1 } }, /offer isn't valid/);
+  rejects({ ...base, pick: { ...pick, s: offer[0].s, n: "3" } }, /offer isn't valid/);
+  rejects({ type: "daily", diff: "hard", day: DAY, pick: { ...honest(env.daily, "hard"), s: 0, n: 0 } }, /shared story/);
+  assert.equal(check(game, { ...base, pick }, NOW).p.q, 1, "the day's own story has no script step");
+});
