@@ -506,6 +506,13 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 @media (max-width:640px){.boom{grid-template-columns:1fr}.wheel{margin:0 auto}}
 /* awards */
 .trophies{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.hq-tro{display:flex;flex-wrap:wrap;gap:6px;align-items:center;text-align:left}
+.hq-tro small{flex-basis:100%;font-size:12px;color:var(--muted)}
+.hq-tro:hover .trophy{border-color:var(--ink)}
+.gmrow{display:grid;grid-template-columns:120px 1fr 1fr auto;gap:10px;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line)}
+.gmrow .bk{height:6px;background:var(--line);overflow:hidden}
+.gmrow .bk i{display:block;height:100%;background:var(--gold)}
+.reward{color:var(--gold);font-weight:700}
 .trophy{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--gold);color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .trophy svg{width:14px;height:14px}
 .trophy.off{border-color:var(--line2);color:var(--dim)}
@@ -1554,7 +1561,7 @@ function gateInfo(id){return ACH.gates.filter(function(x){return x.id===id})[0]|
 function ladderAt(life){var o={prev:CAMPCFG.ladder[0],next:null};CAMPCFG.ladder.forEach(function(s){if(s.at<=life)o.prev=s;else if(!o.next)o.next=s});return o}
 // Studio level from lifetime box office, and points left (the server re-checks every purchase).
 function campLevel(st){return CAMPCFG.levels.filter(function(x){return (st.lifetimeGross||0)>=x}).length}
-function campPoints(st){var u=st.upgrades||{};return campLevel(st)-1-CAMPCFG.upgrades.reduce(function(s,x){return s+(u[x.id]||0)*x.cost},0)}
+function campPoints(st){var u=st.upgrades||{};return campLevel(st)-1+(st.bonusPoints||0)-CAMPCFG.upgrades.reduce(function(s,x){return s+(u[x.id]||0)*x.cost},0)}
 function levelHtml(st){
   var lv=campLevel(st),L=CAMPCFG.levels,next=L[lv],prev=L[lv-1],g=st.lifetimeGross||0,pts=campPoints(st),u=st.upgrades||{},busy=CAMP.busy;
   var pct=next===undefined?100:Math.max(0,Math.min(100,(g-prev)/(next-prev)*100));
@@ -1638,7 +1645,7 @@ function earnHtml(e,i){
   var b=badgeDef(e.id);if(!b)return "";
   var sparks="";for(var k=0;k<8;k++)sparks+='<i class="spk" style="--a:'+(k*45)+'deg"></i>';
   return '<div class="earn '+medalCls(b,e.tier)+'" style="--d:'+(i*0.25)+'s"><span class="medal '+medalCls(b,e.tier)+'" aria-hidden="true">'+icon(b.icon)+'<span class="ring"></span><span class="shine"></span>'+sparks+'</span>'+
-    '<div><span class="tn">'+(b.tiers?ACH.tierNames[e.tier-1]+" badge":"New badge")+'</span><b>'+esc(b.name)+'</b><small>'+esc(badgeText(b,e.tier-1))+'</small></div></div>';
+    '<div><span class="tn">'+(b.tiers?ACH.tierNames[e.tier-1]+" badge":"New badge")+'</span><b>'+esc(b.name)+'</b><small>'+esc(badgeText(b,e.tier-1))+'</small>'+(e.reward?'<small class="reward">+'+money(e.reward)+' to the bank</small>':"")+'</div></div>';
 }
 var toastT=null;
 function toastBadges(list){
@@ -1654,6 +1661,12 @@ function logoHtml(uid,name,pr,cls){
   var u=studioImg(uid,"logo",pr&&pr.logo);
   return '<span class="logo tint'+(cls||"")+'" style="'+tintStyle(pr&&pr.color)+'">'+(u?'<img src="'+esc(u)+'" alt="">':esc(initials(name)))+'</span>';
 }
+// Awards at a glance in the studio header: trophy counts and the latest win; clicking jumps to the Awards panel.
+function headTrophies(st){
+  var tr=(st.trophies||{}).total||0,gl=(st.globes||{}).wins||0,last=(st.awards||[])[0];
+  return '<button class="hq-tro" data-act="gotoawards" aria-label="Awards: '+tr+' Golden Reels, '+gl+' Globes"><span class="trophy'+(tr?"":" off")+'">'+icon("trophy")+tr+' Golden Reel'+(tr===1?"":"s")+'</span><span class="trophy'+(gl?"":" off")+'">'+icon("star")+gl+' Globe'+(gl===1?"":"s")+'</span>'+
+    (last?'<small>Latest: '+esc(last.name)+' · '+esc(last.title)+'</small>':'<small>No awards yet. Every 6 films is an awards season.</small>')+'</button>';
+}
 function studioHead(st,rules){
   var pr=st.profile||{},uid=state.me.uid,bd=studioImg(uid,"backdrop",pr.backdrop),pj=st.currentProject;
   return '<section class="studio tint" style="'+tintStyle(pr.color)+'">'+(bd?'<div class="bd"><img src="'+esc(bd)+'" alt=""></div>':"")+'<div class="in"><div class="who">'+
@@ -1662,7 +1675,7 @@ function studioHead(st,rules){
     badgeStrip(st)+
     '<p>Next project: <b>$'+pj.budget+'M budget</b> · '+esc(rules)+'.</p>'+(CAMP.note?'<p class="bail">'+esc(CAMP.note)+'</p>':"")+(st.bailouts?'<p class="note">Bailed out '+st.bailouts+' time'+(st.bailouts>1?"s":"")+'.</p>':"")+
     '<div class="row"><button class="btn sm" data-act="campedit">'+icon("edit")+'Customize studio</button></div></div>'+
-    '<div class="side"><div><span class="lbl">Bank</span><b class="big mono">'+money(st.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="big2 mono pos">'+money(st.lifetimeProfit)+'</b></div></div></div></section>';
+    '<div class="side"><div><span class="lbl">Bank</span><b class="big mono">'+money(st.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="big2 mono pos">'+money(st.lifetimeProfit)+'</b></div>'+headTrophies(st)+'</div></div></section>';
 }
 // Studio editor: images are cropped and shrunk in the browser, uploaded to Storage, then campaignStyle checks them.
 var EDIT=null;
@@ -1752,7 +1765,7 @@ function tierChips(st){
   var u=st.unlocked;
   return '<dl class="kv"><dt class="lbl">Cast</dt><dd>'+tag(u.actorTier+"-list","ok")+'</dd><dt class="lbl">Directors</dt><dd>'+tag(u.directorTier+"-list","ok")+'</dd>'+
     '<dt class="lbl">Genres</dt><dd>'+u.genres.map(function(g){return tag(G[g].name,st.perks&&st.perks[g]?"ok":"")}).join("")+'</dd>'+
-    (Object.keys(st.perks||{}).length?'<dt class="lbl">Perks</dt><dd>'+Object.keys(st.perks).map(function(g){return tag("Genre Master: "+G[g].name+" +"+Math.round(st.perks[g]*100)+"%","ok")}).join("")+'</dd>':"")+
+    (Object.keys(st.perks||{}).length?'<dt class="lbl">Perks</dt><dd>'+Object.keys(st.perks).map(function(g){return tag("Genre Master: "+G[g].name+" +"+Math.round(badgeDef("genre_master").bonus*100)+"%","ok")}).join("")+'</dd>':"")+
     (u.hard?'<dt class="lbl">Calendar</dt><dd>'+tag("Real release dates","ok")+'</dd>':"")+
     (st.identity&&typeDef(st.identity.type)?'<dt class="lbl">Studio type</dt><dd style="display:block">'+esc(typeDef(st.identity.type).name)+pcList(typeDef(st.identity.type).pros,typeDef(st.identity.type).cons)+'</dd>':"")+'</dl>';
 }
@@ -1797,14 +1810,26 @@ function weekOfPage(t){var d=new Date(t),day=(d.getUTCDay()+6)%7,start=Date.UTC(
   var thu=new Date(start+3*86400000),y=thu.getUTCFullYear(),jan4=Date.UTC(y,0,4),w1=jan4-((new Date(jan4).getUTCDay()+6)%7)*86400000,n=Math.round((start-w1)/(7*86400000))+1;
   return {id:y+"-W"+String(n).padStart(2,"0"),start:start,end:start+7*86400000}}
 function catName(list,id){var c=list.filter(function(x){return x.id===id})[0];return c?c.name:id}
+// Genre Master: earned per genre (hits + acclaimed films), claimed by choice, at most `max`. Shows what it costs.
+function masteryPanel(st){
+  var GM=badgeDef("genre_master"),M=Object.keys(st.perks||{}),hits=st.genreHits||{},acc=st.genreAcclaim||{};
+  var ready=M.length>=GM.max?[]:GENRES.map(function(g){return g.id}).filter(function(g){return M.indexOf(g)<0&&(hits[g]||0)>=GM.films&&(acc[g]||0)>=GM.acclaimed});
+  var rows=GENRES.filter(function(g){return M.indexOf(g.id)>-1||(hits[g.id]||0)>0}).map(function(g){var h=Math.min(hits[g.id]||0,GM.films),a=Math.min(acc[g.id]||0,GM.acclaimed),mine=M.indexOf(g.id)>-1,ok=ready.indexOf(g.id)>-1;
+    return '<div class="gmrow"><b>'+esc(g.name)+'</b><span title="Profitable films"><span class="bk"><i style="width:'+(h/GM.films*100)+'%"></i></span><small class="note">'+h+'/'+GM.films+' hits</small></span><span title="Acclaimed films"><span class="bk"><i style="width:'+(a/GM.acclaimed*100)+'%"></i></span><small class="note">'+a+'/'+GM.acclaimed+' acclaimed</small></span>'+
+      (mine?tag("Mastered","ok"):ok?'<button class="btn sm go" data-act="master" data-id="'+g.id+'"'+(CAMP.busy?" disabled":"")+'>'+(CAMP.masterArm===g.id?"Confirm":"Claim")+'</button>':"<span></span>")+'</div>'}).join("");
+  return '<section class="panel"><div class="sech"><h3>Genre Master</h3><span class="note">'+M.length+' of '+GM.max+' claimed</span></div>'+
+    '<p class="note">Master a genre with '+GM.films+' profitable films in it, '+GM.acclaimed+' of them acclaimed by critics ('+GM.critics+'+). A mastered genre earns <b class="pos">+'+Math.round(GM.bonus*100)+'%</b> at the box office, but once you claim one, every film outside your mastered genres takes <b class="neg">'+Math.round(GM.offGenre*100)+'%</b>: audiences know you for your specialty. You can master at most '+GM.max+' genres, and a claim is permanent.</p>'+
+    (CAMP.masterArm?'<p class="bail">Claiming <b>'+esc(G[CAMP.masterArm].name)+'</b> is permanent: +'+Math.round(GM.bonus*100)+'% on '+esc(G[CAMP.masterArm].name)+' films, '+Math.round(GM.offGenre*100)+'% on films outside your mastered genres. Press Confirm to claim.</p>':"")+
+    (rows||'<p class="note">Make some hits to start your progress.</p>')+'</section>';
+}
 function awardsPanel(st){
   if(!AWD)return "";
   var n=(st.season||[]).length,S=AWD.season.films,tr=st.trophies||{total:0,byCat:{}},gl=st.globes||{wins:0,byCat:{}};
   var cab=AWD.season.categories.map(function(c){var k=tr.byCat&&tr.byCat[c.id]||0;return '<span class="trophy'+(k?"":" off")+'">'+icon("trophy")+esc(c.name)+(k>1?" ×"+k:"")+'</span>'}).join("");
   var recent=(st.awards||[]).slice(0,6).map(function(a){return '<div><span class="w">'+icon("trophy")+'</span><span>'+esc(a.name)+' · <b>'+esc(a.title)+'</b><small>'+(a.kind==="weekly"?"Greenlight Globes "+esc(a.week):"Golden Reels, season "+a.season)+'</small></span><span></span></div>'}).join("");
-  return '<section class="panel"><div class="sech"><h3>Awards</h3><span class="note">'+tr.total+' Golden Reel'+(tr.total===1?"":"s")+' · '+(gl.wins||0)+' Globe'+((gl.wins||0)===1?"":"s")+'</span></div>'+
+  return '<section class="panel" id="awardspanel"><div class="sech"><h3>Awards</h3><span class="note">'+tr.total+' Golden Reel'+(tr.total===1?"":"s")+' · '+(gl.wins||0)+' Globe'+((gl.wins||0)===1?"":"s")+'</span></div>'+
     '<p class="lbl" style="margin-top:6px">'+esc(AWD.season.name)+' · season '+((st.seasonNo||0)+1)+'</p><div class="season-pips" aria-label="'+n+' of '+S+' films this season">'+Array.from({length:S},function(_,i){return '<i class="'+(i<n?"on":"")+'"></i>'}).join("")+'</div>'+
-    '<p class="note">'+(S-n)+' more film'+(S-n===1?"":"s")+' until the ceremony. Your season\'s best films take on rival studios in '+AWD.season.categories.length+' categories; every win pays prize money into the bank.</p>'+
+    '<p class="note">'+(S-n)+' more film'+(S-n===1?"":"s")+' until the ceremony. Your season\'s best films take on rival studios in '+AWD.season.categories.length+' categories; every win pays prize money into the bank, and Best Picture (or any Globes win) adds an upgrade point.</p>'+
     '<div class="trophies">'+cab+'</div>'+(recent?'<div class="cer" style="margin-top:12px">'+recent+'</div>':"")+
     '<div class="row" style="margin-top:14px"><button class="btn" data-act="globes">'+icon("star")+(GLB?"Hide the Greenlight Globes":"Greenlight Globes: this week")+'</button></div>'+(GLB?globesHtml(st):"")+'</section>';
 }
@@ -1847,9 +1872,9 @@ function loadGlobes(){
 }
 function ceremonyHtml(s){
   return '<div class="unlock pop flash" style="border-color:var(--gold)"><span class="lbl" style="color:var(--gold)">'+esc(s.name)+' · season '+s.n+'</span><h4>'+s.wins.length+' award'+(s.wins.length===1?"":"s")+'</h4>'+
-    '<div class="cer">'+s.wins.map(function(w){return '<div><span class="w">'+icon("trophy")+'</span><span><b>'+esc(w.name)+'</b> · '+esc(w.title)+'<small>Scored '+fmtVal(w.cat==="boxoffice"?"gross":"score",w.value)+' against the rival\'s '+fmtVal(w.cat==="boxoffice"?"gross":"score",w.bar)+'</small></span><span class="pos mono">+'+money(w.prize)+'</span></div>'}).join("")+
+    '<div class="cer">'+s.wins.map(function(w){return '<div><span class="w">'+icon("trophy")+'</span><span><b>'+esc(w.name)+'</b> · '+esc(w.title)+'<small>Scored '+fmtVal(w.cat==="boxoffice"?"gross":"score",w.value)+' against the rival\'s '+fmtVal(w.cat==="boxoffice"?"gross":"score",w.bar)+'</small></span><span class="pos mono">+'+money(w.prize)+(w.points?' · +'+w.points+' pt':"")+'</span></div>'}).join("")+
     s.losses.map(function(w){return '<div><span class="l">·</span><span>'+esc(w.name)+' · '+esc(w.title)+'<small>'+fmtVal(w.cat==="boxoffice"?"gross":"score",w.value)+' fell short of the rival\'s '+fmtVal(w.cat==="boxoffice"?"gross":"score",w.bar)+'</small></span><span></span></div>'}).join("")+'</div>'+
-    (s.prize?'<p class="note">Prize money: <b class="pos">'+money(s.prize)+'</b> into the bank.</p>':'<p class="note">No awards this season. Fit, script and timing count as much as money with the judges.</p>')+'</div>';
+    (s.prize?'<p class="note">Prize money: <b class="pos">'+money(s.prize)+'</b> into the bank'+(s.points?', and <b class="pos">+'+s.points+' upgrade point'+(s.points===1?"":"s")+'</b>':"")+'.</p>':'<p class="note">No awards this season. Fit, script and timing count as much as money with the judges.</p>')+'</div>';
 }
 function hqHtml(){
   var intro='<p>Run one studio over many films. Start small with a few cheap genres and D-list talent; every profitable film adds to your lifetime profit, which unlocks better talent, bigger budgets and new genres. A flop never takes an unlock away.</p>';
@@ -1874,6 +1899,7 @@ function hqHtml(){
     '<section class="panel"><div class="sech"><h3>'+(CAMP.history?"All films":"Recent films")+'</h3>'+(st.filmsMade>(st.recent||[]).length||CAMP.history?'<button class="btn sm" data-act="camphistory">'+(CAMP.history?"Recent only":"All films")+'</button>':"")+'</div>'+
       (CAMP.history==="loading"?'<p class="note">Loading…</p>':filmRows(Array.isArray(CAMP.history)?CAMP.history:st.recent||[]))+'</section></div>';
   h+=awardsPanel(st);
+  h+=masteryPanel(st);
   h+=achHtml(st);
   var hard=st.unlocked.hard?'<label class="switch"><input type="checkbox" data-act="camphard"'+(pj.diff==="hard"?" checked":"")+(busy?" disabled":"")+'> Real release dates for this project</label>':"";
   h+='<div class="hqbar">'+(err||'<span>'+passBtn()+'</span>')+'<div class="row">'+hard+'<button class="btn go" data-act="campnext"'+(busy?" disabled":"")+'>'+(busy==="hard"?"Updating the calendar…":busy==="pass"?"Passing…":"Start next project")+'</button></div></div></div>';
@@ -1901,7 +1927,7 @@ function campResultHtml(res){
   if(ev.season)h+=ceremonyHtml(ev.season);
   if(ev.level)h+='<div class="unlock pop flash" style="--i:'+ev.gates.length+'"><span class="lbl">Level up!</span><h4>Studio level '+ev.level.to+'</h4><p class="note">Your studio learned from this release. You have '+ev.level.points+' upgrade point'+(ev.level.points===1?"":"s")+' to spend at HQ.</p></div>';
   if(ev.badges.length)h+='<div style="display:grid;gap:8px"><p class="lbl">New badge'+(ev.badges.length>1?"s":"")+'</p>'+ev.badges.map(function(e,i){return earnHtml(typeof e==="string"?{id:e,tier:1}:e,i+ev.gates.length)}).join("")+'</div>';
-  ev.perks.forEach(function(g){h+='<p class="note"><b class="pos">Genre Master:</b> your '+esc(G[g].name)+' films earn +'+Math.round(b1.perks[g]*100)+'% at the box office from now on.</p>'});
+  (ev.masterReady||[]).forEach(function(g){h+='<p class="bail"><b>Genre Master unlocked:</b> you can now claim mastery of '+esc(G[g].name)+' at HQ. Think it over: it boosts '+esc(G[g].name)+' but costs you everywhere else.</p>'});
   return h+btn+'</section>';
 }
 // ---- breakout wheel: slices sized by their odds (data/campaign.json breakout.wheel); spun to the slot the
@@ -1995,6 +2021,8 @@ document.addEventListener("click",function(e){
   else if(a==="campretry")campLoad();
   else if(a==="campretryrel"){if(state.result&&state.result.camp)campSend(state.result)}
   else if(a==="campedit")openEditor();
+  else if(a==="gotoawards"){var ap=$("#awardspanel");if(ap)ap.scrollIntoView({behavior:REDUCED?"auto":"smooth",block:"start"})}
+  else if(a==="master"){if(CAMP.masterArm!==id){CAMP.masterArm=id;drawHQ()}else{CAMP.masterArm=null;campCall("campaignMaster",{genre:id},"master",function(o){if(o){newGame();toastBadges(o.badges)}})}}
   else if(a==="globes"){if(GLB){GLB=null;drawHQ()}else loadGlobes()}
   else if(a==="globesubmit")campCall("campaignSubmitAwards",{films:GLB.sel},"globes",function(o){if(o)loadGlobes()});
   else if(a==="onbpick"){ONB.ans[ONB.k]=id;drawHQ()}
