@@ -1,6 +1,7 @@
 // GREENLIGHT Cloud Functions (campaign callables at the end).
 // release: a signed-in player submits today's film; the server checks and re-scores it (game.js), then keeps
-// that player's best film of the day on the board and in their own history.
+// that player's best film of the day on the board and in their own history. The Daily Challenge allows one
+// film per player per day: the first one stands, later ones are refused with it (already: true).
 //   boards/{board}/entries/{uid}   public leaderboard row (board = "r3-<type>-<diff>_<day>")
 //   users/{uid}/runs/{board}       the same row, private to the player (their progression)
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
@@ -41,6 +42,7 @@ exports.release = onCall(async (req) => {
   const out = await db.runTransaction(async (tx) => {
     const cur = await tx.get(entryRef);
     const prev = cur.exists ? cur.data() : null;
+    if (prev && run.type === "daily") return { best: Object.fromEntries(KEEP.map((k) => [k, prev[k]])), attempts: prev.attempts || 1, better: false, already: true };
     const better = !prev || film.profit > prev.profit;
     const best = better ? film : Object.fromEntries(KEEP.map((k) => [k, prev[k]]));
     const attempts = ((prev && prev.attempts) || 0) + 1;
@@ -53,7 +55,7 @@ exports.release = onCall(async (req) => {
 
   const entries = db.collection(`boards/${run.board}/entries`);
   const [ahead, total] = await Promise.all([entries.where("profit", ">", out.best.profit).count().get(), entries.count().get()]);
-  return { board: run.board, film, best: out.best, better: out.better, attempts: out.attempts, rank: ahead.data().count + 1, total: total.data().count };
+  return { board: run.board, film: out.already ? out.best : film, best: out.best, better: out.better, attempts: out.attempts, already: !!out.already, rank: ahead.data().count + 1, total: total.data().count };
 });
 
 // Campaign (solo career): every write goes through these callables; the rules live in campaign.js and the

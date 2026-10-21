@@ -91,11 +91,15 @@ async function start() {
       const q = Fs.query(Fs.collection(db, "campaignBoard"), Fs.orderBy("filmsToATier", "asc"), Fs.orderBy("bailouts", "asc"), Fs.orderBy("lifetimeProfit", "desc"), Fs.limit(25));
       return Fs.onSnapshot(q, { includeMetadataChanges: true }, (s) => cb(s.docs.map((d) => Object.assign({ uid: d.id }, d.data())), s.metadata.fromCache), err);
     },
-    // Top of one day's board, live.
-    watchBoard(boardId, cb, err) {
-      const q = Fs.query(Fs.collection(db, "boards", boardId, "entries"), Fs.orderBy("profit", "desc"), Fs.limit(25));
+    // One day's board, live, best first (the page asks for more 50 at a time).
+    watchBoard(boardId, cb, err, limit = 50) {
+      const q = Fs.query(Fs.collection(db, "boards", boardId, "entries"), Fs.orderBy("profit", "desc"), Fs.limit(limit));
       // fromCache with no rows means the server hasn't answered yet (offline or still connecting).
       return Fs.onSnapshot(q, { includeMetadataChanges: true }, (s) => cb(s.docs.map((d) => d.data()), s.metadata.fromCache), err);
+    },
+    // How many players are on a board today (one aggregation read).
+    async countBoard(boardId) {
+      return (await Fs.getCountFromServer(Fs.collection(db, "boards", boardId, "entries"))).data().count;
     },
     // The signed-in player's own best runs (their progression), newest days first.
     watchRuns(cb, err) {

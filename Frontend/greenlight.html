@@ -474,6 +474,9 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 .offer-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 10px}
 /* clickable studio rows and the studio card */
 .lb tr.click{cursor:pointer}
+.lb tr.film td{padding-top:0;font-size:12.5px;color:var(--muted)}
+.lb tr.film td b{color:var(--ink);font-weight:600}
+.lbmore{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
 .lb tr.click:hover td{background:var(--panel2)}
 .lb tr.click td:first-child button{font:inherit;color:inherit}
 .scard .studio{margin:0}
@@ -1077,6 +1080,17 @@ function scriptNote(res){
   if(!best||!mine)return "";
   return '<p class="note" style="margin-top:12px"><b>Script:</b> '+(mine.q===best.q?"you picked the strongest of the three drafts ("+x2(best.q)+").":"the strongest draft was “"+esc(PLOTS[sc.g][best.s].title)+"” ("+x2(best.q)+"); yours played at "+x2(mine.q)+".")+'</p>';
 }
+// The Daily Challenge is one film per player per day (the server keeps the first). Once played, the wizard
+// gives way to the film you made and a countdown to the next puzzle at midnight UTC.
+function dailyDone(){return state.type==="daily"&&!!state.days[dkey()]}
+function untilMidnight(){var now=Date.now(),next=Date.UTC(new Date(now).getUTCFullYear(),new Date(now).getUTCMonth(),new Date(now).getUTCDate()+1),m=Math.max(1,Math.round((next-now)/60000));
+  return (m>=60?Math.floor(m/60)+" h ":"")+(m%60)+" min"}
+function doneHtml(){
+  var e=state.days[dkey()];
+  return hero({eyebrow:"Daily Challenge · "+esc(prettyDate(state.day)),title:"Today's film is in",text:'<p>Everyone gets one Daily Challenge film a day. Yours was <b>'+esc(e.title||"your film")+'</b>'+(e.genre&&G[e.genre]?" ("+esc(G[e.genre].name)+")":"")+': '+money(e.gross||0)+' at the box office, <b class="'+(e.profit>=0?"pos":"neg")+'">'+money(e.profit)+'</b> profit.</p>'+
+    '<p>The next Daily Challenge opens in <b>'+untilMidnight()+'</b> (midnight UTC). Until then, see how everyone else did, or keep playing Basic.</p>'+
+    '<div class="row" style="margin-top:8px"><button class="btn go" data-act="lb">See today\'s board</button><button class="btn" data-act="type" data-m="basic">Play Basic</button></div>'});
+}
 function nav(label,ok,act){
   var l=stepList(),i=l.indexOf(state.step);
   return '<div class="nav">'+(i>0?'<button class="btn" data-act="back">Back</button>':"<span></span>")+
@@ -1191,7 +1205,7 @@ function drawStage(){
   if(play){
     var a=document.activeElement,fid=a&&a.closest&&a.closest("#page [data-id]")?a.dataset.id:null;
     var tr=$("#page .track"),sl=tr?tr.scrollLeft:0,fresh=state.enter;
-    var el=$("#page");el.className="page"+(state.enter?" enter":"");el.innerHTML=stepHtml();state.enter=false;
+    var el=$("#page");el.className="page"+(state.enter?" enter":"");el.innerHTML=dailyDone()?doneHtml():stepHtml();state.enter=false;
     tr=$("#page .track");
     if(tr){var sel=tr.querySelector('[aria-pressed="true"]');tr.scrollLeft=fresh?(sel?sel.offsetLeft-4:0):sl;reelState(tr)}
     if(fid){var f=el.querySelector('[data-id="'+(window.CSS&&CSS.escape?CSS.escape(fid):fid)+'"]');if(f)f.focus({preventScroll:true})}
@@ -1226,6 +1240,7 @@ function boardId(type,diff,day){return "r3-"+type+"-"+diff+"_"+day}
 function postLine(post){
   if(!post||!post.status)return "";
   if(post.status==="pending")return '<span class="note">Posting to the leaderboard…</span>';
+  if(post.status==="already")return '<span class="note neg">You had already made today\'s Daily Challenge film, so this one wasn\'t counted. Your first film stands: '+esc(post.best.title||"")+' ('+money(post.best.profit)+').</span>';
   if(post.status==="ok")return '<span class="note"><b class="pos">Rank #'+post.rank+'</b> of '+post.total+' on today\'s board'+(post.better?"":". Your earlier film still counts")+'</span>';
   if(post.status==="signedout")return '<span class="note">Saved on this device. <button class="link" data-act="signin">Sign in</button> to post it to the leaderboard.</span>';
   if(post.status==="offline")return '<span class="note">Saved on this device. The online leaderboard isn\'t available here.</span>';
@@ -1253,7 +1268,7 @@ function drawResult(){
    '<div class="rgrid"><div><section class="panel"><h3>Box office build</h3><div class="wf">'+wf+'</div><p class="note" style="margin-top:12px">Worldwide gross '+money(r.gross)+'. Studio share '+Math.round(SHARE*100)+'%: '+money(r.share)+'. Costs: '+money(r.cost)+'. Luck this run: '+x2(r.luck)+'.</p>'+
      '<p class="lbl" style="margin-top:16px">Bonuses you earned</p>'+(r.syn.length?'<ul class="bon">'+r.syn.map(function(s){return '<li>'+esc(s)+'</li>'}).join("")+'</ul>':'<p class="note">None this time.</p>')+
      '<p class="note" style="margin-top:12px">This pitch wanted: '+esc(wanted)+'. '+(cfg.roles?'The lead called for a '+esc(plot.lead.t)+' presence, the supporting role for a '+esc(plot.side.t)+' one and the antagonist for a '+esc(plot.anta.t)+' one':'The antagonist called for a '+esc(plot.anta.t)+' presence')+'.</p>'+scriptNote(res)+rv+'</section></div>'+
-   '<div>'+(camp?campResultHtml(res)+cdiv:cdiv+'<section class="panel"><h3>Share it</h3><pre id="share">'+esc(share)+'</pre><div class="row"><button class="btn go" data-act="copy" id="copy">Copy result</button><button class="btn" data-act="again">Tweak and rerelease</button><button class="btn" data-act="new">New film</button><button class="btn" data-act="lb">Leaderboard</button></div></section>')+'</div></div></div>';
+   '<div>'+(camp?campResultHtml(res)+cdiv:cdiv+'<section class="panel"><h3>Share it</h3><pre id="share">'+esc(share)+'</pre><div class="row"><button class="btn go" data-act="copy" id="copy">Copy result</button>'+(state.type==="daily"?"":'<button class="btn" data-act="again">Tweak and rerelease</button><button class="btn" data-act="new">New film</button>')+'<button class="btn" data-act="lb">Leaderboard</button></div>'+(state.type==="daily"?'<p class="note" style="margin-top:10px">That\'s your Daily Challenge film for today. The next one opens in '+untilMidnight()+' (midnight UTC).</p>':"")+'</section>')+'</div></div></div>';
   if(first){countUp($("#grossnum"),r.gross);countUp($("#bignum"),r.profit)}
   // Campaign: the progress bar grows from where it was to where the film took it (once).
   var bar=$("#campbar");if(bar&&!res.camp.grown){res.camp.grown=true;requestAnimationFrame(function(){requestAnimationFrame(function(){bar.style.width=bar.dataset.to+"%"})})}
@@ -1275,7 +1290,9 @@ function watchBoard(){
   lb.rows=null;lb.err=null;
   if(NET&&lb.type==="campaign"&&lb.campView==="big")lb.unsub=NET.watchStudios(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e,"campaign");drawBoard()});
   else if(NET&&lb.type==="campaign")lb.unsub=NET.watchCampaignBoard(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e,"campaign");drawBoard()});
-  else if(NET)lb.unsub=NET.watchBoard(boardId(lb.type,lb.diff,TODAY),function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e);drawBoard()});
+  else if(NET){var bid=boardId(lb.type,lb.diff,TODAY);lb.count=null;
+    lb.unsub=NET.watchBoard(bid,function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e);drawBoard()},lb.limit||50);
+    NET.countBoard(bid).then(function(n){if(boardId(lb.type,lb.diff,TODAY)===bid){lb.count=n;drawBoard()}},function(){})}
   drawBoard();
 }
 // Campaign board: the race to the A-list. Fewest films wins; ties go to fewer bailouts, then more lifetime profit.
@@ -1305,8 +1322,14 @@ function drawBoard(){
   var lb=state.lb,mk=lbModeKey(),me=state.me,mine=state.days[mk+"|"+TODAY];
   var ctl='<div class="lbctl"><div class="seg" role="group" aria-label="Board"><button data-act="lbtype" data-m="daily" aria-pressed="'+(lb.type==="daily")+'">Daily Challenge</button><button data-act="lbtype" data-m="basic" aria-pressed="'+(lb.type==="basic")+'">Basic</button><button data-act="lbtype" data-m="campaign" aria-pressed="'+(lb.type==="campaign")+'">Campaign</button></div>'+
     (lb.type==="basic"?'<div class="seg" role="group" aria-label="Difficulty">'+["easy","medium","hard"].map(function(k){return '<button data-act="lbdiff" data-m="'+k+'" aria-pressed="'+(lb.diff===k)+'">'+DIFFS[k].name+'</button>'}).join("")+'</div>':'')+'</div>';
+  // Others' films (director, cast, release) open only once you've made yours on this board today, so nobody can copy.
+  var canSee=!!mine;
+  function filmRow(e){var p=e.pick||{},cfg=DIFFS[lb.diff]||DIFFS.hard,ppl=[p.d&&D[p.d]&&D[p.d].name].concat([p.a1,p.a2,p.a3].filter(function(a){return A[a]}).map(function(a){return A[a].name})).filter(Boolean);
+    var when=p.w?(W[p.w]?W[p.w].name:prettyDate(p.w)):"";
+    return '<tr class="film"><td></td><td colspan="3"><b>'+esc(e.title||"")+'</b>'+(ppl.length?" · "+esc(ppl.join(", ")):"")+(when?" · "+esc(when):"")+(p.q&&p.q!==1?" · script "+x2(p.q):"")+'</td></tr>'}
   function row(e,rank,isMe){
-    return '<tr class="'+(isMe?"me":"")+'"><td class="r">'+rank+'</td><td>'+esc(e.name||"You")+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+esc(e.title||"")+(e.genre&&G[e.genre]?" · "+G[e.genre].name:"")+'</div></td><td class="n gr">'+money(e.gross||0)+'</td><td class="n '+(e.profit>=0?"pos":"neg")+'">'+money(e.profit)+'</td></tr>';
+    var open=lb.open===e.uid&&(canSee||isMe);
+    return '<tr class="click'+(isMe?" me":"")+'" data-act="lbrow" data-id="'+esc(e.uid||"")+'" tabindex="0" role="button" aria-expanded="'+open+'" title="'+(canSee||isMe?"See this film":"Release your own film today to see how others made theirs")+'"><td class="r">'+rank+'</td><td>'+esc(e.name||"You")+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+esc(e.title||"")+(e.genre&&G[e.genre]?" · "+G[e.genre].name:"")+'</div></td><td class="n gr">'+money(e.gross||0)+'</td><td class="n '+(e.profit>=0?"pos":"neg")+'">'+money(e.profit)+'</td></tr>'+(open?filmRow(e):"");
   }
   if(lb.type==="campaign"){$("#lb-mode").textContent="Campaign · all time";$("#boards").innerHTML=campBoardHtml(ctl);return}
   var head='<thead><tr><th>#</th><th>Studio</th><th class="n">Box office</th><th class="n">Profit</th></tr></thead>',body;
@@ -1316,7 +1339,9 @@ function drawBoard(){
   else if(!lb.rows.length)body='<p class="note">No releases on this board yet today. Be the first.</p>';
   else{
     var meIn=me&&lb.rows.some(function(e){return e.uid===me.uid});
-    body='<div class="scroll"><table class="lb">'+head+'<tbody>'+lb.rows.map(function(e,i){return row(e,i+1,me&&e.uid===me.uid)}).join("")+(me&&!meIn&&mine?row(Object.assign({name:me.name},mine),"—",true):"")+'</tbody></table></div>';
+    body='<div class="scroll"><table class="lb">'+head+'<tbody>'+lb.rows.map(function(e,i){return row(e,i+1,me&&e.uid===me.uid)}).join("")+(me&&!meIn&&mine?row(Object.assign({name:me.name},mine),"—",true):"")+'</tbody></table></div>'+
+      '<div class="lbmore"><span class="note">'+(lb.count!==null&&lb.count!==undefined?lb.count+" player"+(lb.count===1?"":"s")+" today":"")+(canSee?" · click a film to see how it was made":" · release your film to see how others made theirs")+'</span>'+
+      (lb.rows.length>=(lb.limit||50)?'<button class="btn sm" data-act="lbmore">Show more</button>':"")+'</div>';
   }
   if(NET&&!me)body+='<p class="note" style="margin-top:10px"><button class="link" data-act="signin">Sign in</button> to post your films to the board.</p>';
   var days=[];for(var i=6;i>=0;i--)days.push(addDays(TODAY,-i));
@@ -1326,7 +1351,7 @@ function drawBoard(){
   var all=Object.keys(state.days).filter(function(k){return k.indexOf(mk+"|")===0}).map(function(k){return state.days[k]}),bestEver=all.length?Math.max.apply(null,all.map(function(e){return e.profit})):null;
   var gross=all.reduce(function(s,e){return s+(e.gross||0)},0);
   $("#lb-mode").textContent=(lb.type==="daily"?"Daily Challenge":"Basic · "+DIFFS[lb.diff].name)+" · "+TODAY+" (UTC)";
-  $("#boards").innerHTML='<section style="display:grid;gap:14px">'+ctl+'<p class="note">Ranked by net profit. Your best release of the day counts, and every score is checked on the server.</p>'+body+'</section>'+
+  $("#boards").innerHTML='<section style="display:grid;gap:14px">'+ctl+'<p class="note">Ranked by net profit. '+(lb.type==="daily"?"One film per player per day: your first release counts.":"Your best release of the day counts.")+' Every score is checked on the server.</p>'+body+'</section>'+
    '<section><h3 class="mh" style="margin-top:0">Your studio'+(me?" · "+esc(me.name):"")+'</h3><div class="stats"><div><span class="lbl">Streak</span><b class="mono">'+streak()+'</b></div><div><span class="lbl">Best on this board</span><b class="mono">'+(bestEver===null?"—":money(bestEver))+'</b></div><div><span class="lbl">Total gross</span><b class="mono">'+money(gross)+'</b></div></div><p class="lbl" style="margin-bottom:8px">Last 7 days</p><div class="hist">'+hist+'</div>'+
    (me?'':'<p class="note" style="margin-top:10px">Signed out, this history lives on this device only.</p>')+'</section>';
 }
@@ -1418,7 +1443,7 @@ function introHtml(){
     ["win","Release timing","Some seasons suit some stories, and marketing costs change with the season. A rival studio can crowd your weekend."],
     ["dice","A little luck","A small hidden factor, seeded by the day. The same film made by two players today does exactly the same business."]];
   var modes=[["Easy","Learn the ropes","Every number on screen: boosts, multipliers and a projected profit."],["Medium","Trust your gut","The numbers stay hidden until release, and you decide who plays the lead."],
-    ["Hard","Real calendar","Hidden numbers, a real Friday release date, and real upcoming films opening against you."],["Daily Challenge","Same film for everyone","One shared genre and pitch, always on Hard. One board, everyone on it."],
+    ["Hard","Real calendar","Hidden numbers, a real Friday release date, and real upcoming films opening against you."],["Daily Challenge","Same film for everyone","One shared genre and pitch, always on Hard, and one attempt a day. One board, everyone on it."],
     ["Campaign","Build a studio","Your own studio, film after film. Start with cheap genres and unknown talent; profits unlock better talent, bigger budgets and new genres. Saved to your account."]];
   var signed=state.me;
   return '<div class="intro-in"><header class="ihead"><div class="brand"><div class="signal green" aria-hidden="true"><i></i><i></i><i></i></div><h1>GREEN<span>LIGHT</span></h1></div><button class="btn" data-act="introclose">Skip to the game</button></header>'+
@@ -1428,7 +1453,7 @@ function introHtml(){
     '<div class="icta"><button class="btn go" data-act="introclose">Start your first film</button>'+(NET&&!signed?'<button class="btn" data-act="signin">Sign in to get ranked</button>':'')+'</div></section>'+
     '<h3 class="ih">What to think about</h3><div class="igrid">'+things.map(function(t,i){return '<div class="icard" style="--i:'+i+'"><span class="ii">'+icon(t[0])+'</span><h4>'+t[1]+'</h4><p>'+t[2]+'</p></div>'}).join("")+'</div>'+
     '<h3 class="ih">Pick your challenge</h3><div class="igrid">'+modes.map(function(t,i){return '<div class="icard mode" style="--i:'+i+'"><span class="lbl">'+t[1]+'</span><h4>'+t[0]+'</h4><p>'+t[2]+'</p></div>'}).join("")+'</div>'+
-    '<section class="iboard"><h3 class="ih" style="margin:0">Leaderboards</h3><p>The Daily Challenge has its own board, and so does each Basic difficulty. Boards reset every day at midnight UTC. Your best film of the day counts, and you can tweak and re-release as often as you like.</p>'+
+    '<section class="iboard"><h3 class="ih" style="margin:0">Leaderboards</h3><p>The Daily Challenge has its own board, and so does each Basic difficulty. Boards reset every day at midnight UTC. On Basic your best film of the day counts and you can tweak and re-release as often as you like; the Daily Challenge gives everyone exactly one film a day.</p>'+
     '<p>'+(NET?(signed?"You're signed in as <b>"+esc(signed.name)+"</b>, so your films go straight onto the boards.":"Sign in with Google or email to post your films. Without an account you can still play; your results stay on this device.")+" Every score is re-checked on the server, which rebuilds your film from today's shortlists, so the boards stay honest.":"The online leaderboard isn't connected in this build, so results stay on this device.")+'</p>'+
     '<div class="icta"><button class="btn go" data-act="introclose">Start your first film</button></div></section></div>';
 }
@@ -1750,7 +1775,7 @@ function release(){
   swap(function(){state.stage="result";drawAll();window.scrollTo(0,0)});
   // The server re-checks and re-scores the film; its answer is what goes on the board.
   if(post.status==="pending")NET.release({type:state.type,diff:state.diff,day:state.day,pick:Object.assign({s:state.env.plots[p.g]},p,sc?{n:sc.n}:{})}).then(function(o){
-    res.post={status:"ok",rank:o.rank,total:o.total,better:o.better};
+    res.post={status:o.already?"already":"ok",rank:o.rank,total:o.total,better:o.better,best:o.best};
     state.days[k]=Object.assign({},o.best,{attempts:o.attempts});state.attempt=o.attempts;saveLocal();
     if(state.result===res)drawResult();
   },function(e){res.post={status:"error",msg:NET.errorText(e)};if(state.result===res)drawResult()});
@@ -1787,6 +1812,8 @@ document.addEventListener("click",function(e){
   else if(a==="campretryrel"){if(state.result&&state.result.camp)campSend(state.result)}
   else if(a==="campedit")openEditor();
   else if(a==="campview"){state.lb.campView=t.dataset.m;watchBoard()}
+  else if(a==="lbrow"){state.lb.open=state.lb.open===id?null:id;drawBoard()}
+  else if(a==="lbmore"){state.lb.limit=(state.lb.limit||50)+50;watchBoard()}
   else if(a==="card")openCard(id);
   else if(a==="cardclose")closeCard();
   else if(a==="editclose")closeEditor();
@@ -1821,9 +1848,9 @@ document.addEventListener("click",function(e){
   else if(a==="reel"){var tr=t.closest(".reel").querySelector(".track");tr.scrollBy({left:(+t.dataset.dir)*tr.clientWidth*0.8,behavior:REDUCED?"auto":"smooth"})}
   else if(a==="lb")openBoard();
   else if(a==="lbclose")closeBoard();
-  else if(a==="lbtype"){state.lb.type=t.dataset.m;state.lb.diff=t.dataset.m==="daily"?"hard":(state.type==="basic"?state.diff:"medium");
+  else if(a==="lbtype"){state.lb.type=t.dataset.m;state.lb.limit=50;state.lb.open=null;state.lb.diff=t.dataset.m==="daily"?"hard":(state.type==="basic"?state.diff:"medium");
     if(t.dataset.m==="campaign"&&state.me&&!CAMP.loaded&&!CAMP.loading)campLoad();watchBoard()}
-  else if(a==="lbdiff"){state.lb.diff=t.dataset.m;watchBoard()}
+  else if(a==="lbdiff"){state.lb.diff=t.dataset.m;state.lb.limit=50;state.lb.open=null;watchBoard()}
   else if(a==="intro")openIntro();
   else if(a==="introclose")closeIntro();
   else if(a==="signin"){if(document.body.classList.contains("intro-open"))closeIntro();openAuth()}

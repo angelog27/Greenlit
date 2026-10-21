@@ -99,13 +99,14 @@ A self-paced solo career, separate from the daily modes. Pick **Campaign** in th
 - **Lifetime profit** (profitable films only, so it never drops) unlocks better cast and directors, new genres, bigger budgets and finally real release dates.
 - The first 3 films show every number (Easy); after that numbers stay hidden until release (Medium).
 - A pass skips the current pitches for a $5M development fee; you earn one every 3 films. From studio level 3 you can also reroll a genre's story a few times per project (2, then 4 from level 6).
-- In Basic mode you can shuffle the story for your genre as often as you like; the Daily Challenge keeps one shared story for everyone.
+- Shuffling (Basic) or rerolling (Campaign) lays out three scripts to choose from. One draft has real upside: it shows on Easy, otherwise you find out after release. The Daily Challenge keeps one shared story and allows one film per player per day.
+- Click a studio on the campaign board to see its card and highest-grossing film; "Biggest studios" lists every studio by lifetime box office.
 - A **studio level** grows with lifetime box office (every film teaches you something, flops included). Each level gives an upgrade point: scouting that shows who fits the genre and the part, reunions and chemistry, story notes, market research, test screenings, and Reputation and Marketing Deals discounts.
 - 20 achievements, most with bronze, silver and gold tiers, shown as a medal row under your studio name; new ones animate in. Genre Master (3 profitable films in one genre) adds +3% box office in that genre.
 - Customize your studio: logo and backdrop images (uploaded to Firebase Storage), a colour, a tagline and a home city. Your logo, name and colour show on the campaign board.
 - The campaign board ranks studios by how few films they needed to reach the A-list (then fewer bailouts, then more lifetime profit), shown by studio name.
 
-Everything is decided on the server: the `campaignStart`, `campaignProject`, `campaignRelease`, `campaignPass`, `campaignReroll`, `campaignUpgrade`, `campaignStyle` and `campaignRename` callables (`functions/campaign.js` for the rules, `functions/campaign_store.js` for the transactions). The page reads your studio once per load and the film history only when you open it.
+Everything is decided on the server: the `campaignStart`, `campaignProject`, `campaignRelease`, `campaignPass`, `campaignReroll`, `campaignPickScript`, `campaignUpgrade`, `campaignStyle` and `campaignRename` callables (`functions/campaign.js` for the rules, `functions/campaign_store.js` for the transactions). The page reads your studio once per load and the film history only when you open it.
 
 ### Tuning
 

@@ -171,3 +171,26 @@ test("rate limits: a client hammering the slow real-dates switch gets turned awa
   assert.ok(outs.slice(0, 6).every((c) => c === "functions/failed-precondition"), "the first six reach the function: " + outs);
   assert.ok(outs.slice(6).every((c) => c === "functions/resource-exhausted"), "then the player is slowed down: " + outs);
 });
+
+test("Daily Challenge: one film per player per day; a second release is refused and the first stands", { skip }, async () => {
+  const { loadGame } = require("./game.js");
+  const game = loadGame(), m = game.m, day = new Date().toISOString().slice(0, 10), env = m.makeEnv(day), g = env.daily;
+  const pl = m.poolsFor(env, g), lo = (ids, M) => ids.slice().sort((x, y) => M[x].fee - M[y].fee);
+  const date = env.dates.slice().sort((x, y) => m.W[m.seasonOf(x)].cost - m.W[m.seasonOf(y)].cost)[0];
+  const first = { g, d: lo(m.dirsFor(env, g), m.D)[0], a1: lo(pl[0], m.A)[0], a2: lo(pl[1], m.A)[0], a3: lo(pl[2], m.A)[0], w: date };
+  const second = { ...first, a1: lo(pl[0], m.A)[1] };
+  const a = await player("a");
+  const one = await a.call("release", { type: "daily", diff: "hard", day, pick: first });
+  assert.equal(one.already, false);
+  const two = await a.call("release", { type: "daily", diff: "hard", day, pick: second });
+  assert.equal(two.already, true, "the second daily film is refused");
+  assert.equal(two.best.profit, one.film.profit, "the first film stands");
+  assert.equal(two.attempts, 1);
+  const row = await Fs.getDoc(Fs.doc(a.db, "boards", one.board, "entries", a.uid));
+  assert.equal(row.data().pick.a1, first.a1);
+  // Basic still allows as many attempts as you like.
+  const b1 = await a.call("release", { type: "basic", diff: "hard", day, pick: first });
+  const b2 = await a.call("release", { type: "basic", diff: "hard", day, pick: second });
+  assert.equal(b2.attempts, b1.attempts + 1);
+  assert.equal(b2.already, false);
+});
