@@ -104,7 +104,8 @@ A self-paced solo career, separate from the daily modes. Pick **Campaign** in th
 - A **studio level** grows with lifetime box office (every film teaches you something, flops included). Each level gives an upgrade point: scouting that shows who fits the genre and the part, reunions and chemistry, story notes, market research, test screenings, and Reputation and Marketing Deals discounts.
 - When you found a studio you answer four questions (each answer has an upside and a downside); they decide your **studio type**, which leans your studio toward some genres and changes fees, budgets and breakout odds for good.
 - **Breakouts:** a film within 94% of the best film its project allowed spins a roulette wheel (×1.3 up to a ×3 jackpot) on its box office. That's where the $1-2B films come from.
-- 22 achievements, most with bronze, silver and gold tiers, shown as a medal row under your studio name; new ones animate in. Genre Master (3 profitable films in one genre) adds +3% box office in that genre.
+- **Awards:** every 6 films the Golden Reel Awards judge your season against rival studios (Best Picture, Director, Lead, Supporting, Villain, Screenplay, Box Office Champion); each win pays prize money into the bank. Every week you can enter up to 5 of your films in the **Greenlight Globes** against every other studio; winners are crowned on Monday.
+- 25 achievements, most with bronze, silver and gold tiers, shown as a medal row under your studio name; new ones animate in. Genre Master (3 profitable films in one genre) adds +3% box office in that genre.
 - Customize your studio: logo and backdrop images (uploaded to Firebase Storage), a colour, a tagline and a home city. Your logo, name and colour show on the campaign board.
 - The campaign board ranks studios by how few films they needed to reach the A-list (then fewer bailouts, then more lifetime profit), shown by studio name.
 

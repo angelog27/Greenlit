@@ -8,10 +8,10 @@
   },
   "ladder": [
     { "id": "open",   "at": 0,    "actors": "D", "directors": "D", "genres": ["horror", "comedy", "drama", "horrorcomedy"] },
-    { "id": "c_cast", "at": 200,  "actors": "C" },
-    { "id": "c_crew", "at": 500,  "directors": "C", "genres": ["thriller", "romance", "romcom"] },
-    { "id": "b_tier", "at": 1200, "actors": "B", "directors": "B", "genres": ["action", "scifi", "actioncomedy", "scifithriller", "scifihorror"] },
-    { "id": "a_tier", "at": 2600, "actors": "A", "directors": "A", "genres": ["animation"], "hard": true }
+    { "id": "c_cast", "at": 450,  "actors": "C" },
+    { "id": "c_crew", "at": 1100, "directors": "C", "genres": ["thriller", "romance", "romcom"] },
+    { "id": "b_tier", "at": 2700, "actors": "B", "directors": "B", "genres": ["action", "scifi", "actioncomedy", "scifithriller", "scifihorror"] },
+    { "id": "a_tier", "at": 5800, "actors": "A", "directors": "A", "genres": ["animation"], "hard": true }
   ],
   "boardGoal": "a_tier",
   "trainingFilms": 3,
@@ -32,7 +32,7 @@
     { "id": "teal",   "name": "Lagoon",     "dark": "#3FD2C7", "light": "#0E837A" },
     { "id": "silver", "name": "Silver Screen", "dark": "#C9D1CB", "light": "#4E5A52" }
   ],
-  "levels": [0, 400, 1000, 1800, 2800, 4000, 5500, 7500, 10000, 13000, 17000, 22000, 28000, 35000],
+  "levels": [0, 800, 2000, 3600, 5600, 8000, 11000, 15000, 20000, 26000, 34000, 44000, 56000, 70000],
   "upgrades": [
     { "id": "scout",      "name": "Talent Scout",     "cost": 1, "ranks": ["See which actors and directors fit the genre.", "See who suits each part's tone, and which directors get the story's tone.", "See star ratings and director skill."] },
     { "id": "casting",    "name": "Casting Director", "cost": 1, "ranks": ["See reunions and cast chemistry before you hire."] },

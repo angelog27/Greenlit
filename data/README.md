@@ -136,3 +136,7 @@ A badge without `tiers` has one step. Each studio stores `{ tier, at }` per badg
 ### identity.json
 
 The studio-type onboarding. `questions`: four, each with three `answers` (`id`, `label`, `pros`, `cons` shown to the player, and `points` added to studio types). `types`: `id`, `name`, `icon`, `blurb`, the `pros`/`cons` shown on the result, and `effects`: `genres` (box-office lean per plain genre, e.g. 0.06 = +6%; blends average their halves), `fees` and `marketing` (+0.08 = 8% dearer, -0.2 = 20% cheaper), `cap` (budget cap), `breakout` (added to the breakout threshold). The type with the most points wins; ties go to the type the last (risk) answer gives the most points. Keep the pros/cons text in step with the effects, and check with `node tools/campaign_sim.mjs` that no type races ahead.
+
+### awards.json
+
+`season`: the Golden Reel Awards. `films` per season; `categories` (`id`, `name`, the film `score` it judges, `prize` in $M to the bank); `rivals.score` and `rivals.gross` are the rival bar per studio tier, varied by `spread`. `weekly`: the Greenlight Globes (`maxFilms` a studio may enter, `podium` places, `categories`). `scores`: how a film's award scores are built (director fit and tone, each role's star, genre and tone fit, the script, timing, chemistry and reunions). Measure changes with `node tools/campaign_sim.mjs`, which reports Golden Reel wins per season for random and decent play.

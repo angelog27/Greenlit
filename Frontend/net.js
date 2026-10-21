@@ -76,6 +76,17 @@ async function start() {
       const q = Fs.query(Fs.collection(db, "campaigns", net.user.uid, "films"), Fs.orderBy("projectIndex", "desc"), Fs.limit(200));
       return (await Fs.getDocs(q)).docs.map((d) => d.data());
     },
+    // Greenlight Globes: a week's head doc (status, results once final) and every studio's entry. Read on demand.
+    async awardsWeek(weekId) {
+      const [h, e] = await Promise.all([Fs.getDoc(Fs.doc(db, "awards", weekId)), Fs.getDocs(Fs.collection(db, "awards", weekId, "entries"))]);
+      return { head: h.exists() ? h.data() : null, entries: e.docs.map((d) => d.data()) };
+    },
+    // The signed-in player's films released since a time (this week's, for the Globes).
+    async campaignFilmsSince(t) {
+      if (!net.user) return [];
+      const q = Fs.query(Fs.collection(db, "campaigns", net.user.uid, "films"), Fs.where("at", ">=", t), Fs.orderBy("at", "desc"), Fs.limit(100));
+      return (await Fs.getDocs(q)).docs.map((d) => d.data());
+    },
     // Another studio's public card (studios/{uid}), or null if it has none yet. One read.
     async studioCard(uid) {
       const s = await Fs.getDoc(Fs.doc(db, "studios", uid));

@@ -29,12 +29,14 @@ function simulate({ cfg, ach, idn, awd, policy, run, films }) {
   // Every studio answers the onboarding at random, so all five studio types are in the mix.
   st = plain(camp.identity(C, st, uid, { answers: idn.questions.map((q) => any(q.answers).id) }));
   const reached = {}, profits = [], grosses = [];
+  let seasons = 0, wins = 0;
   for (let n = 1; n <= films; n++) {
     const pj = st.currentProject, dcfg = m.DIFFS[pj.diff], env = camp.projectEnv(pj);
     const pick = (policy === "random" ? randomPick : decentPick)(m, pj, env, dcfg, any);
     const out = plain(camp.release(C, st, uid, { index: pj.index, pick }, DATE, n));
     profits.push(out.film.profit);
     grosses.push(out.film.gross);
+    if (out.events.season) { seasons++; wins += out.events.season.wins.length; }
     out.events.gates.forEach((g) => { reached[g.id] = n; });
     st = out.state;
     // Spend upgrade points: random buys anything it can; decent buys the discounts first.
@@ -48,7 +50,7 @@ function simulate({ cfg, ach, idn, awd, policy, run, films }) {
     if (reached[cfg.boardGoal]) break;
   }
   return { policy, run, reached, bailouts: st.bailouts, films: profits.length, profits, lifetime: st.lifetimeProfit, level: camp.levelFor(C, st.lifetimeGross),
-    type: st.identity.type, breakouts: st.stats.breakouts || 0, grosses };
+    type: st.identity.type, breakouts: st.stats.breakouts || 0, grosses, seasons, wins };
 }
 
 function windowsOf(m, pj, dcfg) { return dcfg.real ? pj.env.dates : m.WINDOWS.filter((w) => !w.hardOnly).map((w) => w.id); }
@@ -139,6 +141,8 @@ if (!isMainThread) {
     console.log(`  bailouts per campaign: mean ${(b.reduce((a, x) => a + x, 0) / b.length).toFixed(2)}, ${b.filter((x) => x > 0).length} of ${rs.length} campaigns had one`);
     const gs = rs.flatMap((r) => r.grosses), bo = rs.reduce((a, r) => a + r.breakouts, 0);
     console.log(`  breakouts: ${(bo / pf.length * 100).toFixed(1)}% of films; grosses over $1B: ${gs.filter((x) => x >= 1000).length} (${(gs.filter((x) => x >= 1000).length / gs.length * 100).toFixed(1)}%), over $2B: ${gs.filter((x) => x >= 2000).length}; biggest $${Math.max(...gs)}M`);
+    const ns = rs.reduce((a, r) => a + r.seasons, 0), nw = rs.reduce((a, r) => a + r.wins, 0);
+    if (ns) console.log(`  Golden Reel Awards: ${(nw / ns).toFixed(2)} wins per season (of ${awd.season.categories.length}) over ${ns} seasons`);
     const byType = {}; rs.forEach((r) => { (byType[r.type] = byType[r.type] || []).push(r.reached[cfg.boardGoal] || 999); });
     console.log("  films to the A-list by studio type: " + Object.entries(byType).map(([t, xs]) => `${t} ${q(xs, 0.5)} (n=${xs.length})`).join(", "));
     console.log(`  profit per film: median $${q(pf, 0.5).toFixed(1)}M (p10 ${q(pf, 0.1).toFixed(1)}, p90 ${q(pf, 0.9).toFixed(1)}), flops ${Math.round(pf.filter((x) => x < 0).length / pf.length * 100)}%`);

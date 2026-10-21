@@ -504,6 +504,25 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 .wheel .ptr{position:absolute;left:50%;top:-6px;width:0;height:0;margin-left:-9px;border-left:9px solid transparent;border-right:9px solid transparent;border-top:16px solid var(--ink);z-index:1}
 .wheel text{font-family:var(--display);font-weight:900;font-size:15px;fill:#0A0B0A}
 @media (max-width:640px){.boom{grid-template-columns:1fr}.wheel{margin:0 auto}}
+/* awards */
+.trophies{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.trophy{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--gold);color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.trophy svg{width:14px;height:14px}
+.trophy.off{border-color:var(--line2);color:var(--dim)}
+.cer{display:grid;gap:6px;margin-top:6px}
+.cer div{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13.5px;padding:6px 0;border-bottom:1px solid var(--line)}
+.cer .w{color:var(--gold)} .cer .l{color:var(--dim)}
+.cer small{display:block;color:var(--muted);font-size:12px}
+.season-pips{display:flex;gap:5px;margin:8px 0}
+.season-pips i{width:26px;height:6px;background:var(--line2)}
+.season-pips i.on{background:var(--gold)}
+.picklist{display:grid;gap:6px;margin:10px 0}
+.picklist label{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);font-size:13.5px;cursor:pointer}
+.picklist input{accent-color:var(--accent);width:16px;height:16px}
+.globes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:10px}
+.globes h5{font-family:var(--display);font-weight:800;font-size:19px;text-transform:uppercase;margin:0 0 6px}
+.globes ol{margin:0;padding-left:20px;display:grid;gap:4px;font-size:13px}
+.globes li span{color:var(--muted)}
 .lb tr.click{cursor:pointer}
 .lb tr.film td{padding-top:0;font-size:12.5px;color:var(--muted)}
 .lb tr.film td b{color:var(--ink);font-weight:600}
@@ -1466,7 +1485,7 @@ function runsToDays(runs){var o={};runs.forEach(function(e){var k=e.id.replace(/
 function onUser(u){
   var changed=(state.me&&state.me.uid)!==(u&&u.uid);
   state.me=u;drawAcct();
-  if(changed){CAMP.st=null;CAMP.loaded=false;CAMP.history=null;if(state.type==="campaign"){if(state.stage!=="hq")newGame();else campLoad()}}
+  if(changed){CAMP.st=null;CAMP.loaded=false;CAMP.history=null;GLB=null;if(state.type==="campaign"){if(state.stage!=="hq")newGame();else campLoad()}}
   if(runsUnsub){runsUnsub();runsUnsub=null}
   if(u)runsUnsub=NET.watchRuns(function(runs){state.days=mergeDays(state.days,runsToDays(runs));saveLocal();if(document.body.classList.contains("lb-open"))drawBoard()},function(){});
   if($("#authm").classList.contains("open"))drawAuth();
@@ -1522,7 +1541,7 @@ function introSeen(){try{return localStorage.getItem(IKEY)==="1"}catch(e){return
 // ---- campaign: one studio per account, all of it on the server (functions/campaign.js). The page reads the
 // studio once per load (NET.campaignLoad); every change goes through a campaign* callable, which returns the new
 // studio. Shortlists, budget and visibility come from the server's current project; the page only draws them.
-var CAMPCFG=null,ACH=null,IDN=null;
+var CAMPCFG=null,ACH=null,IDN=null,AWD=null;
 var CAMP={st:null,loaded:false,loading:false,err:"",note:"",busy:"",history:null,passArm:false};
 function campProject(){return CAMP.st&&CAMP.st.currentProject}
 // The stored project in the shape the model expects (Firestore can't hold nested arrays).
@@ -1686,7 +1705,7 @@ function cardHtml(c,uid){
   var pr=c.profile||{},bd=studioImg(uid,"backdrop",pr.backdrop),b=c.bestFilm,fake={badges:Object.fromEntries(Object.keys(c.badges||{}).map(function(k){return [k,{tier:c.badges[k]}]}))};
   var stud='<section class="studio tint" style="'+tintStyle(pr.color)+'">'+(bd?'<div class="bd"><img src="'+esc(bd)+'" alt=""></div>':"")+'<div class="in" style="grid-template-columns:1fr"><div class="who">'+
     '<div class="id">'+logoHtml(uid,c.studioName,pr)+'<div>'+(c.type?typeBadge(c.type):"")+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+
-    '<p class="city">Level '+c.level+' · '+c.filmsMade+' film'+(c.filmsMade===1?"":"s")+' · '+money(c.lifetimeGross)+' lifetime box office'+(c.aTierFilms?' · A-list in '+c.aTierFilms+' films':"")+'</p></div></div>'+badgeStrip(fake).replace(/data-act="campach"/g,"")+'</div></div></section>';
+    '<p class="city">Level '+c.level+' · '+c.filmsMade+' film'+(c.filmsMade===1?"":"s")+' · '+money(c.lifetimeGross)+' lifetime box office'+(c.aTierFilms?' · A-list in '+c.aTierFilms+' films':"")+(c.trophies||c.globes?' · '+(c.trophies||0)+' Golden Reel'+(c.trophies===1?"":"s")+', '+(c.globes||0)+' Globe'+(c.globes===1?"":"s"):"")+'</p></div></div>'+badgeStrip(fake).replace(/data-act="campach"/g,"")+'</div></div></section>';
   var best=b?'<div><p class="lbl" style="margin-bottom:8px">Highest-grossing film</p><div class="best"><span class="media wide">'+pic(stillUrl(b.genre,"w300"),G[b.genre]?G[b.genre].name:b.title)+'</span><div><b>'+esc(b.title)+'</b>'+
     '<p class="note">'+(G[b.genre]?esc(G[b.genre].name)+' · ':"")+'Film #'+b.no+'</p><p><span class="pos mono">'+money(b.gross)+'</span> box office · '+money(b.profit)+' profit</p>'+
     (b.d&&D[b.d]?'<p class="note">'+esc(D[b.d].name)+(b.cast?' · '+b.cast.filter(function(a){return A[a]}).map(function(a){return esc(A[a].name)}).join(", "):"")+'</p>':"")+'</div></div></div>':'<p class="note">No films released yet.</p>';
@@ -1771,6 +1790,67 @@ function onboardHtml(st){
     '<p class="note">This is permanent for this studio: its perks and drawbacks apply to every film from now on.</p>'+(CAMP.err?'<p class="neg" role="alert">'+esc(CAMP.err)+'</p>':"")+
     '<div class="row"><button class="btn go" data-act="onblock"'+(CAMP.busy?" disabled":"")+'>'+(CAMP.busy==="identity"?"Locking it in…":"Lock it in")+'</button><button class="btn" data-act="onbredo">Change my answers</button></div></div></section></div>';
 }
+// ---- awards (data/awards.json). Golden Reels: every season of films, judged on the server at release. Greenlight
+// Globes: this week's entry and standings, loaded only when the player opens them (GLB).
+var GLB=null;
+function weekOfPage(t){var d=new Date(t),day=(d.getUTCDay()+6)%7,start=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-day);
+  var thu=new Date(start+3*86400000),y=thu.getUTCFullYear(),jan4=Date.UTC(y,0,4),w1=jan4-((new Date(jan4).getUTCDay()+6)%7)*86400000,n=Math.round((start-w1)/(7*86400000))+1;
+  return {id:y+"-W"+String(n).padStart(2,"0"),start:start,end:start+7*86400000}}
+function catName(list,id){var c=list.filter(function(x){return x.id===id})[0];return c?c.name:id}
+function awardsPanel(st){
+  if(!AWD)return "";
+  var n=(st.season||[]).length,S=AWD.season.films,tr=st.trophies||{total:0,byCat:{}},gl=st.globes||{wins:0,byCat:{}};
+  var cab=AWD.season.categories.map(function(c){var k=tr.byCat&&tr.byCat[c.id]||0;return '<span class="trophy'+(k?"":" off")+'">'+icon("trophy")+esc(c.name)+(k>1?" ×"+k:"")+'</span>'}).join("");
+  var recent=(st.awards||[]).slice(0,6).map(function(a){return '<div><span class="w">'+icon("trophy")+'</span><span>'+esc(a.name)+' · <b>'+esc(a.title)+'</b><small>'+(a.kind==="weekly"?"Greenlight Globes "+esc(a.week):"Golden Reels, season "+a.season)+'</small></span><span></span></div>'}).join("");
+  return '<section class="panel"><div class="sech"><h3>Awards</h3><span class="note">'+tr.total+' Golden Reel'+(tr.total===1?"":"s")+' · '+(gl.wins||0)+' Globe'+((gl.wins||0)===1?"":"s")+'</span></div>'+
+    '<p class="lbl" style="margin-top:6px">'+esc(AWD.season.name)+' · season '+((st.seasonNo||0)+1)+'</p><div class="season-pips" aria-label="'+n+' of '+S+' films this season">'+Array.from({length:S},function(_,i){return '<i class="'+(i<n?"on":"")+'"></i>'}).join("")+'</div>'+
+    '<p class="note">'+(S-n)+' more film'+(S-n===1?"":"s")+' until the ceremony. Your season\'s best films take on rival studios in '+AWD.season.categories.length+' categories; every win pays prize money into the bank.</p>'+
+    '<div class="trophies">'+cab+'</div>'+(recent?'<div class="cer" style="margin-top:12px">'+recent+'</div>':"")+
+    '<div class="row" style="margin-top:14px"><button class="btn" data-act="globes">'+icon("star")+(GLB?"Hide the Greenlight Globes":"Greenlight Globes: this week")+'</button></div>'+(GLB?globesHtml(st):"")+'</section>';
+}
+function standings(entries){var out={};AWD.weekly.categories.forEach(function(c){
+  out[c.id]=entries.map(function(e){var f=e.films.slice().sort(function(a,b){return b.scores[c.score]-a.scores[c.score]||b.scores.gross-a.scores.gross})[0];return f&&{name:e.studioName,uid:e.uid,title:f.title,value:f.scores[c.score],gross:f.scores.gross,at:e.at}})
+    .filter(function(x){return x&&(c.score!=="breakout"||x.value>1)}).sort(function(a,b){return b.value-a.value||b.gross-a.gross||a.at-b.at}).slice(0,AWD.weekly.podium)});return out}
+function fmtVal(score,v){return score==="gross"||score==="profit"?money(v):score==="breakout"?"×"+v:v+"/100"}
+function podiumHtml(res,me){
+  return '<div class="globes">'+AWD.weekly.categories.map(function(c){var rows=res[c.id]||[];
+    return '<div><h5>'+esc(c.name)+'</h5>'+(rows.length?'<ol>'+rows.map(function(r){return '<li>'+esc(r.studioName||r.name)+(me&&r.uid===me?' <b class="pos">(you)</b>':"")+' <span>· '+esc(r.title)+' · '+fmtVal(c.score,r.value)+'</span></li>'}).join("")+'</ol>':'<p class="note">No entries yet.</p>')+'</div>'}).join("")+'</div>';
+}
+function globesHtml(st){
+  var wk=weekOfPage(Date.now()),me=state.me.uid;
+  if(GLB.loading)return '<p class="note" style="margin-top:10px">Loading this week\'s Globes…</p>';
+  if(GLB.err)return '<p class="neg" style="margin-top:10px">'+esc(GLB.err)+'</p>';
+  var mine=GLB.entries.filter(function(e){return e.uid===me})[0],sel=GLB.sel,max=AWD.weekly.maxFilms,left=Math.ceil((wk.end-Date.now())/3600000);
+  var films=GLB.films.length?'<div class="picklist">'+GLB.films.map(function(f){var on=sel.indexOf(f.projectIndex)>-1;
+    return '<label><input type="checkbox" data-globe="'+f.projectIndex+'"'+(on?" checked":"")+(!on&&sel.length>=max?" disabled":"")+'><span><b>'+esc(f.title)+'</b> · '+(G[f.genre]?esc(G[f.genre].name):"")+'</span><span class="mono">'+money(f.gross)+'</span></label>'}).join("")+'</div>':
+    '<p class="note">You haven\'t released any films this week yet. Films you release before Sunday midnight (UTC) can be entered.</p>';
+  return '<div style="margin-top:14px"><h3 class="mh" style="margin-top:0">'+esc(AWD.weekly.name)+' · '+esc(wk.id)+'</h3>'+
+    '<p class="note">Enter up to '+max+' of this week\'s films. Every studio\'s best film in each category competes; winners are crowned Monday 00:15 UTC (in about '+(left>48?Math.round(left/24)+" days":left+" hours")+') and win prize money. '+GLB.entries.length+' studio'+(GLB.entries.length===1?"":"s")+' entered so far.</p>'+
+    films+(GLB.films.length?'<div class="row"><button class="btn go" data-act="globesubmit"'+(sel.length&&!CAMP.busy?"":" disabled")+'>'+(CAMP.busy==="globes"?"Entering…":mine?"Update my entry ("+sel.length+")":"Enter "+sel.length+" film"+(sel.length===1?"":"s"))+'</button>'+(mine?'<span class="note">Your entry: '+mine.films.map(function(f){return esc(f.title)}).join(", ")+'</span>':"")+'</div>':"")+
+    (CAMP.err?'<p class="neg">'+esc(CAMP.err)+'</p>':"")+
+    '<p class="lbl" style="margin-top:14px">Standings so far</p>'+podiumHtml(standings(GLB.entries),me)+
+    (GLB.last&&GLB.last.head&&GLB.last.head.results?'<p class="lbl" style="margin-top:14px">Last week\'s winners · '+esc(GLB.last.head.week)+'</p>'+podiumHtml(GLB.last.head.results,me):"")+'</div>';
+}
+// Ticking a film updates the list and the button in place (no redraw, so focus stays put).
+function syncGlobePicks(){
+  var max=AWD.weekly.maxFilms,n=GLB.sel.length,mine=GLB.entries.some(function(e){return e.uid===state.me.uid});
+  document.querySelectorAll("input[data-globe]").forEach(function(c){c.disabled=!c.checked&&n>=max});
+  var b=$("[data-act=globesubmit]");if(b){b.disabled=!n||!!CAMP.busy;b.textContent=mine?"Update my entry ("+n+")":"Enter "+n+" film"+(n===1?"":"s")}
+}
+function loadGlobes(){
+  var wk=weekOfPage(Date.now()),last=weekOfPage(wk.start-86400000);
+  GLB={loading:true,entries:[],films:[],sel:[]};drawHQ();
+  Promise.all([NET.awardsWeek(wk.id),NET.awardsWeek(last.id),NET.campaignFilmsSince(wk.start)]).then(function(v){
+    var mine=v[0].entries.filter(function(e){return e.uid===state.me.uid})[0];
+    GLB={entries:v[0].entries,last:v[1],films:v[2].filter(function(f){return f.scores}),sel:mine?mine.films.map(function(f){return f.projectIndex}):[]};drawHQ();
+  },function(e){GLB={err:NET.errorText(e,"campaign"),entries:[],films:[],sel:[]};drawHQ()});
+}
+function ceremonyHtml(s){
+  return '<div class="unlock pop flash" style="border-color:var(--gold)"><span class="lbl" style="color:var(--gold)">'+esc(s.name)+' · season '+s.n+'</span><h4>'+s.wins.length+' award'+(s.wins.length===1?"":"s")+'</h4>'+
+    '<div class="cer">'+s.wins.map(function(w){return '<div><span class="w">'+icon("trophy")+'</span><span><b>'+esc(w.name)+'</b> · '+esc(w.title)+'<small>Scored '+fmtVal(w.cat==="boxoffice"?"gross":"score",w.value)+' against the rival\'s '+fmtVal(w.cat==="boxoffice"?"gross":"score",w.bar)+'</small></span><span class="pos mono">+'+money(w.prize)+'</span></div>'}).join("")+
+    s.losses.map(function(w){return '<div><span class="l">·</span><span>'+esc(w.name)+' · '+esc(w.title)+'<small>'+fmtVal(w.cat==="boxoffice"?"gross":"score",w.value)+' fell short of the rival\'s '+fmtVal(w.cat==="boxoffice"?"gross":"score",w.bar)+'</small></span><span></span></div>'}).join("")+'</div>'+
+    (s.prize?'<p class="note">Prize money: <b class="pos">'+money(s.prize)+'</b> into the bank.</p>':'<p class="note">No awards this season. Fit, script and timing count as much as money with the judges.</p>')+'</div>';
+}
 function hqHtml(){
   var intro='<p>Run one studio over many films. Start small with a few cheap genres and D-list talent; every profitable film adds to your lifetime profit, which unlocks better talent, bigger budgets and new genres. A flop never takes an unlock away.</p>';
   if(!CAMPCFG)return hero({eyebrow:"Campaign",title:"Not available",text:'<p>The campaign settings could not load. Reload the page to try again.</p>'});
@@ -1793,6 +1873,7 @@ function hqHtml(){
   h+='<div class="hqgrid"><section class="panel"><h3>Your talent</h3>'+tierChips(st)+'<dl class="kv"><dt class="lbl">Films made</dt><dd class="mono">'+st.filmsMade+'</dd><dt class="lbl">Passes</dt><dd class="mono">'+st.passesAvailable+'</dd></dl></section>'+
     '<section class="panel"><div class="sech"><h3>'+(CAMP.history?"All films":"Recent films")+'</h3>'+(st.filmsMade>(st.recent||[]).length||CAMP.history?'<button class="btn sm" data-act="camphistory">'+(CAMP.history?"Recent only":"All films")+'</button>':"")+'</div>'+
       (CAMP.history==="loading"?'<p class="note">Loading…</p>':filmRows(Array.isArray(CAMP.history)?CAMP.history:st.recent||[]))+'</section></div>';
+  h+=awardsPanel(st);
   h+=achHtml(st);
   var hard=st.unlocked.hard?'<label class="switch"><input type="checkbox" data-act="camphard"'+(pj.diff==="hard"?" checked":"")+(busy?" disabled":"")+'> Real release dates for this project</label>':"";
   h+='<div class="hqbar">'+(err||'<span>'+passBtn()+'</span>')+'<div class="row">'+hard+'<button class="btn go" data-act="campnext"'+(busy?" disabled":"")+'>'+(busy==="hard"?"Updating the calendar…":busy==="pass"?"Passing…":"Start next project")+'</button></div></div></div>';
@@ -1817,6 +1898,7 @@ function campResultHtml(res){
     if(s.actors)what.push(tag(s.actors+"-list cast","ok"));if(s.directors)what.push(tag(s.directors+"-list directors","ok"));
     (s.genres||[]).forEach(function(g){what.push(tag(G[g].name,"ok"))});if(s.hard)what.push(tag("Real release dates","ok"));
     h+='<div class="unlock pop flash" style="--i:'+i+'"><span class="lbl">Unlocked!</span><h4>'+esc(gi.name)+'</h4><p class="note">'+esc(gi.text)+'</p><span class="chips">'+what.join("")+'</span></div>'});
+  if(ev.season)h+=ceremonyHtml(ev.season);
   if(ev.level)h+='<div class="unlock pop flash" style="--i:'+ev.gates.length+'"><span class="lbl">Level up!</span><h4>Studio level '+ev.level.to+'</h4><p class="note">Your studio learned from this release. You have '+ev.level.points+' upgrade point'+(ev.level.points===1?"":"s")+' to spend at HQ.</p></div>';
   if(ev.badges.length)h+='<div style="display:grid;gap:8px"><p class="lbl">New badge'+(ev.badges.length>1?"s":"")+'</p>'+ev.badges.map(function(e,i){return earnHtml(typeof e==="string"?{id:e,tier:1}:e,i+ev.gates.length)}).join("")+'</div>';
   ev.perks.forEach(function(g){h+='<p class="note"><b class="pos">Genre Master:</b> your '+esc(G[g].name)+' films earn +'+Math.round(b1.perks[g]*100)+'% at the box office from now on.</p>'});
@@ -1913,6 +1995,8 @@ document.addEventListener("click",function(e){
   else if(a==="campretry")campLoad();
   else if(a==="campretryrel"){if(state.result&&state.result.camp)campSend(state.result)}
   else if(a==="campedit")openEditor();
+  else if(a==="globes"){if(GLB){GLB=null;drawHQ()}else loadGlobes()}
+  else if(a==="globesubmit")campCall("campaignSubmitAwards",{films:GLB.sel},"globes",function(o){if(o)loadGlobes()});
   else if(a==="onbpick"){ONB.ans[ONB.k]=id;drawHQ()}
   else if(a==="onbnext"){if(ONB.ans[ONB.k]){ONB.k++;state.enter=true;drawHQ();window.scrollTo(0,0)}}
   else if(a==="onbback"){if(ONB.k>0){ONB.k--;state.enter=true;drawHQ()}}
@@ -1975,6 +2059,7 @@ document.addEventListener("submit",function(e){
 // The hard-mode switch on the HQ: same project and pitches, real release dates instead of windows.
 document.addEventListener("change",function(e){
   var t=e.target;if(t.dataset&&t.dataset.img){pickImage(t);return}
+  if(t.dataset&&t.dataset.globe!==undefined){var gi=+t.dataset.globe,k=GLB.sel.indexOf(gi);if(t.checked&&k<0)GLB.sel.push(gi);else if(!t.checked&&k>-1)GLB.sel.splice(k,1);syncGlobePicks();return}
   if(!t.dataset||t.dataset.act!=="camphard")return;
   campCall("campaignProject",{index:campProject().index,hard:t.checked},"hard",function(){newGame()});
 });
@@ -2012,8 +2097,8 @@ function loadData(){
 }
 // Optional: the game runs without images.json (initials stand in).
 function loadCampaignData(){
-  return Promise.all(["campaign","achievements","identity"].map(function(n){return fetch(DATA_URL+n+".json").then(function(r){if(!r.ok)throw new Error(n);return r.json()})}))
-    .then(function(v){CAMPCFG=v[0];ACH=v[1];IDN=v[2]},function(){CAMPCFG=ACH=IDN=null});
+  return Promise.all(["campaign","achievements","identity","awards"].map(function(n){return fetch(DATA_URL+n+".json").then(function(r){if(!r.ok)throw new Error(n);return r.json()})}))
+    .then(function(v){CAMPCFG=v[0];ACH=v[1];IDN=v[2];AWD=v[3]},function(){CAMPCFG=ACH=IDN=AWD=null});
 }
 function loadImages(){return fetch(DATA_URL+"images.json").then(function(r){return r.ok?r.json():{}}).catch(function(){return {}})}
 (async function boot(){
