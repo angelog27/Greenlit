@@ -44,6 +44,13 @@ function bestFilm(st, gid) {
   const pj = st.currentProject;
   return plain(camp.feasible(C, camp.projectEnv(pj), gid, m.DIFFS[pj.diff]).p);
 }
+// The env a released film was really scored with: the project's, plus its on-set event and breakout.
+function filmEnv(pj, film) {
+  const e = plain(camp.projectEnv(pj));
+  if (film.event) { e.prod = { [film.genre]: film.event.gross }; e.extra = film.event.cost; }
+  if (film.breakout) e.boom = { [film.genre]: film.breakout.x };
+  return e;
+}
 const playable = (st) => Object.keys(st.currentProject.genres).filter((g) => st.currentProject.genres[g].state === "ok");
 
 // Minimal Firestore stand-in: transactions apply their writes at the end, and writes must be plain
@@ -123,8 +130,8 @@ test("bailout: below the floor the bank resets to the floor and is counted", () 
   for (let i = 0; i < 40 && !flop; i++) {
     st = studio(0, { bank: cfg.start.floor, index: i });
     for (const g of playable(st)) {
-      const p = cheapest(st, g), r = m.evalFilm(camp.projectEnv(st.currentProject), p, m.DIFFS[st.currentProject.diff]);
-      if (r.profit < 0) { flop = { st, p }; break; }
+      const p = cheapest(st, g), o = camp.release(C, st, "u1", { index: st.currentProject.index, pick: p }, DATE, NOW);
+      if (o.film.profit < 0) { flop = { st, p }; break; }
     }
   }
   assert.ok(flop, "found a flop to test with");
@@ -233,9 +240,7 @@ test("a campaign film scores exactly like the page's own model for the same pick
       for (const g of playable(st)) {
         const p = cheapest(st, g), pj = st.currentProject;
         const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
-        const penv = plain(camp.projectEnv(pj));
-        if (out.film.breakout) penv.boom = { [g]: out.film.breakout.x }; // the server's spin, replayed on the page
-        const want = page.evalFilm(penv, p, page.DIFFS[pj.diff]);
+        const want = page.evalFilm(filmEnv(pj, out.film), p, page.DIFFS[pj.diff]); // the server's event and spin, replayed
         assert.equal(out.film.profit, Math.round(want.profit * 10) / 10);
         assert.equal(out.film.gross, Math.round(want.gross));
         assert.equal(out.film.cost, want.cost);
@@ -456,9 +461,7 @@ test("discounted campaign films score exactly like the page's model", () => {
   for (const g of playable(st)) {
     const p = bestFilm(st, g), pj = st.currentProject;
     const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
-    const penv = plain(camp.projectEnv(pj));
-    if (out.film.breakout) penv.boom = { [g]: out.film.breakout.x };
-    const want = page.evalFilm(penv, p, page.DIFFS[pj.diff]);
+    const want = page.evalFilm(filmEnv(pj, out.film), p, page.DIFFS[pj.diff]);
     assert.equal(out.film.profit, Math.round(want.profit * 10) / 10);
     assert.equal(out.film.cost, want.cost);
   }
@@ -614,13 +617,15 @@ test("breakouts: films near the best possible spin the wheel; the multiplier lan
     const st = studio(0, { index: 40 + i, films: 5 }), g = playable(st)[0], pj = st.currentProject, dcfg = m.DIFFS[pj.diff], env = camp.projectEnv(pj);
     const best = m.bestPossible(env, g, dcfg), cheap = cheapest(st, g);
     for (const p of [best.p, cheap]) {
-      const r0 = m.evalFilm(env, p, dcfg), out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+      const out = camp.release(C, st, "u1", { index: pj.index, pick: p }, DATE, NOW);
+      // Breakouts judge the film before any on-set luck; the wheel then applies to the film with its event.
+      const r0 = m.evalFilm(env, p, dcfg), withEvent = m.evalFilm(filmEnv(pj, { ...out.film, breakout: null }), p, dcfg);
       const b = out.film.breakout, share = r0.profit / best.profit;
       if (share >= cfg.breakout.threshold - 1e-9 && r0.profit > 0) {
         assert.ok(b, `breakout expected at ${share.toFixed(3)}`);
         assert.ok(W.some((w) => w.x === b.x));
-        assert.ok(Math.abs(out.film.gross - Math.round(r0.gross * b.x)) <= 1, "gross multiplied by the wheel");
-        assert.ok(out.film.profit > round(r0.profit), "profit grows");
+        assert.ok(Math.abs(out.film.gross - Math.round(withEvent.gross * b.x)) <= 1, "gross multiplied by the wheel");
+        assert.ok(out.film.profit > round(withEvent.profit), "profit grows");
         assert.ok(out.events.breakout && out.state.stats.breakouts === 1);
         slots[b.slot]++; hits++;
         // Same project and film: same spin.

@@ -771,6 +771,18 @@ function scriptQ(env,gid){return env.quality&&env.quality[gid]?env.quality[gid]:
 // multiplier (env.boom). Daily envs have neither, so daily scores never change.
 function identQ(env,gid){return env.ident&&env.ident[gid]?Math.round((1+env.ident[gid])*100)/100:1}
 function boomQ(env,gid){return env.boom&&env.boom[gid]?env.boom[gid]:1}
+// Campaign only: audience fatigue from repeating yourself (env.hist: the studio's recent scripts, directors,
+// actors and genre streak, with the weights from data/events.json), a production event's multiplier (env.prod)
+// and its extra cost (env.extra).
+function fatigueQ(env,p){
+  var h=env.hist;if(!h)return 1;var w=h.w,f=0;
+  f+=w.script*((h.scripts||{})[p.g+"|"+env.plots[p.g]]||0);
+  f+=w.director*((h.dirs||{})[p.d]||0);
+  [p.a1,p.a2,p.a3].forEach(function(a){f+=w.actor*((h.actors||{})[a]||0)});
+  if(h.streak&&h.streak.g===p.g&&h.streak.n>=2)f+=w.genre*(h.streak.n-1)*((h.mastered||[]).indexOf(p.g)>-1?w.masteredGenre:1);
+  return Math.round((1-Math.min(w.cap,f))*100)/100;
+}
+function prodQ(env,gid){return env.prod&&env.prod[gid]?env.prod[gid]:1}
 function winId(p,cfg){return cfg.real?(p.w?seasonOf(p.w):null):p.w}
 function luckOf(env,p,cfg){var ids=cfg.roles?p.a1+"|"+p.a2+"|"+p.a3:[p.a1,p.a2].sort().join("|")+"|"+p.a3;return 0.92+0.16*rng(hash(env.day+"|"+p.g+"|"+p.d+"|"+ids+"|"+p.w))()}
 function genreBonus(env,gid){return env.bonus&&env.bonus[gid]?Math.round((1+env.bonus[gid])*100)/100:1}
@@ -807,7 +819,7 @@ function synergies(env,p,cfg){
 }
 function evalFilm(env,p,cfg,luck){
   var g=G[p.g],d=D[p.d],cast=[A[p.a1],A[p.a2],A[p.a3]],wid=winId(p,cfg),w=W[wid],steps=[],m;
-  var out={steps:steps,cost:costOf(p,cfg,env),syn:[],rivals:[]};
+  var out={steps:steps,cost:costOf(p,cfg,env)+(env.extra||0),syn:[],rivals:[]};
   function push(k,x,note){steps.push({k:k,x:x,note:note||"",run:null})}
   m=g.base;steps.push({k:"Genre potential",abs:g.base,note:g.name+" at full strength",run:m});
   m*=env.heat[g.id];push("Today's heat",env.heat[g.id],"Audience mood for "+g.name);steps[steps.length-1].run=m;
@@ -825,6 +837,8 @@ function evalFilm(env,p,cfg,luck){
   var gb=genreBonus(env,g.id);if(gb!==1){push(gb>1?"Genre Master":"Off your specialty",gb,gb>1?"Your studio's track record in "+g.name:"Audiences know your studio for other genres");m*=gb;steps[steps.length-1].run=m}
   var sq=scriptQ(env,g.id);if(sq!==1){push("Script potential",sq,sq>=SCRIPT_Q[0]?"The strongest draft":sq>1?"A solid draft":"A weaker draft");m*=sq;steps[steps.length-1].run=m}
   var iq=identQ(env,g.id);if(iq!==1){push("Studio type",iq,"Your studio's lean toward "+g.name);m*=iq;steps[steps.length-1].run=m}
+  var fq=fatigueQ(env,p);if(fq!==1){push("Audience fatigue",fq,"You've made films like this lately");m*=fq;steps[steps.length-1].run=m}
+  var pq=prodQ(env,g.id);if(pq!==1){push("On set",pq,env.prodNote||"How the shoot went");m*=pq;steps[steps.length-1].run=m}
   out.syn=syn.map(function(s){return s[0]+" +"+Math.round(s[1]*100)+"%"});
   var lk=luck===undefined?luckOf(env,p,cfg):luck;push("Hidden luck",Math.round(lk*100)/100,"Seeded by today's date and your slate");m*=lk;steps[steps.length-1].run=m;
   var bq=boomQ(env,g.id);if(bq!==1){push("Breakout",bq,"Audiences kept coming back");m*=bq;steps[steps.length-1].run=m}
@@ -868,9 +882,11 @@ function evalFast(env,p,cfg,pre){
   m*=genreBonus(env,g.id);
   m*=scriptQ(env,g.id);
   m*=identQ(env,g.id);
+  m*=fatigueQ(env,p);
+  m*=prodQ(env,g.id);
   m*=luckOf(env,p,cfg);
   m*=boomQ(env,g.id);
-  var cost=costOf(p,cfg,env);
+  var cost=costOf(p,cfg,env)+(env.extra||0);
   return {gross:m,cost:cost,profit:m*SHARE-cost};
 }
 // Best possible film for one genre. Pass a subset of directors and the running best to work in chunks.

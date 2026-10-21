@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const { Reject } = require("./game");
 const awards = require("./awards");
+const stories = require("./events");
 
 const own = (o, k) => typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k);
 const round1 = (x) => Math.round(x * 10) / 10;
@@ -14,18 +15,18 @@ const ROLES = ["a1", "a2", "a3"];
 
 function loadCampaign(game, dir = path.join(__dirname, "gen", "data")) {
   const rd = (n) => JSON.parse(fs.readFileSync(path.join(dir, n + ".json"), "utf8"));
-  return makeCampaign(game, rd("campaign"), rd("achievements"), rd("identity"), rd("awards"));
+  return makeCampaign(game, rd("campaign"), rd("achievements"), rd("identity"), rd("awards"), rd("events"));
 }
 
 // Tiers are derived from stats: the highest tier whose minimum the person meets.
-function makeCampaign(game, cfg, ach, idn, awd) {
+function makeCampaign(game, cfg, ach, idn, awd, evt) {
   const m = game.m, order = cfg.tiers.order;
   const tierOf = (v, mins) => order.reduce((t, x) => (v >= mins[x] - 1e-9 ? x : t), order[0]);
   const actorTier = {}, dirTier = {};
   m.ACTORS.forEach((a) => { actorTier[a.id] = tierOf(a.star, cfg.tiers.actorMinStar); });
   m.DIRS.forEach((d) => { dirTier[d.id] = tierOf(d.skill, cfg.tiers.directorMinSkill); });
   const badges = Object.fromEntries(ach.badges.map((b) => [b.id, b]));
-  return { game, m, cfg, ach, idn: idn || { types: [], questions: [] }, awd: awd || null, badges, order, rank: (t) => order.indexOf(t), actorTier, dirTier };
+  return { game, m, cfg, ach, idn: idn || { types: [], questions: [] }, awd: awd || null, evt: evt || null, badges, order, rank: (t) => order.indexOf(t), actorTier, dirTier };
 }
 
 // What a lifetime profit has unlocked: the last tier each ladder step names, every genre named so far.
@@ -145,14 +146,17 @@ function makeProject(C, st, uid, date, hard, proofs) {
   for (let salt = 0; salt <= f.maxResalts; salt++) {
     const key = projectKey(uid, st.campaignId, st.projectIndex, salt);
     const e = m.makeEnv(date, key);
-    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: masteryBonus(C, st), disc: discounts(C, st), ident: identLean(C, st) };
+    const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: masteryBonus(C, st), hist: C.evt ? stories.histFor(C.evt, st) : null, disc: discounts(C, st), ident: identLean(C, st) };
     if (e.gs) env.gs = 1; // genre-aware talent for projects from SKILL_FROM on
     const genres = {}, loans = new Set();
     m.GENRES.forEach((g) => {
       if (!u.genres.includes(g.id)) { genres[g.id] = { state: "locked", at: genreUnlockAt(C, g.id) }; return; }
       const cp = castPools(C, key, g.id, u.actorTier);
       cp.loans.forEach((id) => loans.add(id));
-      genres[g.id] = { state: "ok", pools: { a1: cp.pools[0], a2: cp.pools[1], a3: cp.pools[2] }, dirs: crewList(C, key, g.id, u.directorTier) };
+      let pools3 = cp.pools, dirs = crewList(C, key, g.id, u.directorTier), declined = [];
+      // Some of the shortlist pass on the project (events.js); new studios hear "no" more often.
+      if (C.evt) ({ pools: pools3, dirs, declined } = stories.declines(m, C.evt, { level: levelFor(C, st.lifetimeGross || 0), reputation: (st.upgrades || {}).reputation || 0 }, key, g.id, pools3, dirs));
+      genres[g.id] = { state: "ok", pools: { a1: pools3[0], a2: pools3[1], a3: pools3[2] }, dirs, declined };
     });
     pj = { index: st.projectIndex, salt, key, date, diff, budget, env, genres, loans: [...loans] };
     const full = projectEnv(pj);
@@ -296,7 +300,7 @@ function breakoutFor(C, st, pj, env, p, cfg, r) {
 // timestamp; it becomes tier 1).
 const NEW_STATS = { streak: 0, reunions: 0, chemistry: 0, timing: 0, seasons: [], realHits: 0, bailedOut: false, breakouts: 0 };
 function normalize(st) {
-  const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {}, identity: null, genreAcclaim: {}, bonusPoints: 0 }, st);
+  const out = Object.assign({ lifetimeGross: 0, upgrades: {}, profile: {}, identity: null, genreAcclaim: {}, bonusPoints: 0, recentPicks: [], madeScripts: {} }, st);
   // Mastery is capped at two genres (older studios may have earned more under the old rule; the first two stay).
   out.perks = Object.fromEntries(Object.entries(st.perks || {}).slice(0, 2));
   out.stats = Object.assign({}, NEW_STATS, st.stats, { seasons: ((st.stats || {}).seasons || []).slice() });
@@ -351,8 +355,20 @@ function release(C, st, uid, input, date, now) {
   const p = { g, d, a1, a2, a3, w }, env = projectEnv(pj);
   if (m.costOf(p, cfg, env) > pj.budget) throw new Reject("That film is over this project's budget.");
   let r = m.evalFilm(env, p, cfg);
-  const boom = breakoutFor(C, st, pj, env, p, cfg, r);
-  if (boom) { env.boom = { [g]: boom.x }; r = m.evalFilm(env, p, cfg); }
+  // Breakouts judge the player's decisions: the film before any on-set luck against the best film possible.
+  const boom = breakoutFor(C, st, pj, Object.assign({}, env), p, cfg, r);
+  // Sometimes something happens on set (events.js): box office, cost and critics can move.
+  let ev = null;
+  if (C.evt) {
+    const sc0 = C.awd ? awards.filmScores(m, C.awd, env, p, cfg, r) : { critics: 0 };
+    ev = stories.rollEvent(m, C.evt, uid + "|" + st.campaignId, pj.key, p, { chem: filmFacts(C, st, { p, cfg, env, profit: r.profit }).chem, critics: sc0.critics });
+    if (ev) {
+      ev.costTotal = ev.cost + Math.round(ev.costShare * r.cost);
+      env.prod = { [g]: ev.gross }; env.prodNote = ev.title; env.extra = ev.costTotal;
+    }
+  }
+  if (boom) env.boom = { [g]: boom.x };
+  if (boom || ev) r = m.evalFilm(env, p, cfg);
   const profit = round1(r.profit);
 
   const before = st, B = C.badges, lifetime = round1(st.lifetimeProfit + Math.max(0, profit));
@@ -375,6 +391,10 @@ function release(C, st, uid, input, date, now) {
   const facts = Object.assign(filmFacts(C, before, { p, cfg, env, profit }), { boom });
   // Award scores for every film; every season.films films the Golden Reel Awards judge the season.
   const scores = C.awd ? awards.filmScores(m, C.awd, env, p, cfg, r) : null;
+  if (scores && ev && ev.critics) scores.critics = Math.max(0, Math.min(100, scores.critics + ev.critics));
+  // What this studio has made lately, for audience fatigue on later films.
+  next.recentPicks = [{ g, d: p.d, cast: [p.a1, p.a2, p.a3], s: env.plots[g] }].concat(st.recentPicks || []).slice(0, 8);
+  next.madeScripts = Object.assign({}, st.madeScripts, { [g + "|" + env.plots[g]]: ((st.madeScripts || {})[g + "|" + env.plots[g]] || 0) + 1 });
   const ready0 = masterReady(C, st);
   next.genreAcclaim = Object.assign({}, st.genreAcclaim);
   if (profit > 0 && scores && scores.critics >= B.genre_master.critics) next.genreAcclaim[g] = (next.genreAcclaim[g] || 0) + 1;
@@ -411,6 +431,7 @@ function release(C, st, uid, input, date, now) {
     gates: newGates, bailout: money.bailout, at: now,
     script: pj.script && pj.script.g === g ? { s: pj.script.s, q: m.scriptQ(env, g), items: pj.script.items } : null,
     breakout: boom, scores, d: p.d, cast: [p.a1, p.a2, p.a3],
+    event: ev ? { id: ev.id, title: ev.title, text: stories.eventText(m, ev, ev.costTotal), gross: ev.gross, cost: ev.costTotal, critics: ev.critics, a: ev.a, b: ev.b } : null,
   };
   // Highest-grossing film so far, for the public studio card.
   if (!st.bestFilm || film.gross > st.bestFilm.gross) {
@@ -418,7 +439,7 @@ function release(C, st, uid, input, date, now) {
   }
   // The last few films ride along in the studio doc so the HQ needs no extra reads.
   next.recent = [{ no: filmsMade, title: film.title, genre: g, profit, gross: film.gross, at: now }].concat(st.recent || []).slice(0, C.cfg.recentFilms || 5);
-  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout, breakout: boom, season, masterReady: masterNew,
+  const events = { gates: newGates.map((id) => C.cfg.ladder.find((s) => s.id === id)), badges, perks, bailout: money.bailout, breakout: boom, season, masterReady: masterNew, event: ev ? ev.id : null,
     level: lv1 > lv0 ? { from: lv0, to: lv1, points: pointsLeft(C, next) } : null };
   return { state: next, film, events, board };
 }

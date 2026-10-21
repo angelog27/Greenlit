@@ -1,0 +1,32 @@
+{
+  "fatigue": { "script": 0.12, "director": 0.04, "actor": 0.02, "genre": 0.03, "masteredGenre": 0.5, "window": 4, "cap": 0.35 },
+  "declines": {
+    "base": 0.35, "perLevel": 0.03, "min": 0.04, "max": 0.6, "star": 0.03, "reputation": 0.06,
+    "keepPerRole": 3, "keepDirectors": 4,
+    "reasons": ["Booked on another film", "Didn't love the script", "Not taking meetings right now", "Wants a bigger studio", "On a family break", "Asked for too much money"]
+  },
+  "traits": {
+    "chance": 0.5,
+    "list": [
+      { "id": "hothead",      "name": "Hothead",       "text": "Brilliant, but sparks fly on set.",          "events": { "clash": 3, "walkout": 3 } },
+      { "id": "teamplayer",   "name": "Team Player",   "text": "Keeps every set calm.",                      "events": { "clash": 0, "walkout": 0, "overrun": 0.5 } },
+      { "id": "fanfave",      "name": "Fan Favourite", "text": "The internet loves them.",                   "events": { "viral": 3 } },
+      { "id": "perfectionist","name": "Perfectionist", "text": "Takes after take after take.",               "events": { "overrun": 2.5, "buzz": 2 } },
+      { "id": "workhorse",    "name": "Workhorse",     "text": "Always on time, always prepared.",           "events": { "delay": 0, "overrun": 0.5 } }
+    ]
+  },
+  "chance": 0.4,
+  "list": [
+    { "id": "clash",    "weight": 3, "title": "Creative differences",   "text": "{a} and {b} had creative differences on set and stopped speaking. The mood shows on screen.", "gross": 0.94 },
+    { "id": "walkout",  "weight": 2, "title": "Walked off set",         "text": "{a} walked off set for a week after a heated argument. Reshoots cost {cost}.", "gross": 0.96, "cost": 6 },
+    { "id": "cutfight", "weight": 2, "title": "Director's-cut standoff","text": "{d} fought the studio over the final cut. The critics side with {d}.", "gross": 0.97, "critics": 4 },
+    { "id": "viral",    "weight": 3, "title": "It went viral",          "text": "A behind-the-scenes clip of {a} went viral weeks before release.", "gross": 1.08 },
+    { "id": "screening","weight": 3, "title": "Rave test screening",    "text": "Test audiences cheered at the end. Word of mouth is already spreading.", "gross": 1.05, "critics": 3 },
+    { "id": "delay",    "weight": 2, "title": "Weather delays",         "text": "Storms shut the shoot down for ten days. The delay cost {cost}.", "cost": 5 },
+    { "id": "overrun",  "weight": 2, "title": "Over budget",            "text": "{d} kept shooting until it was perfect. The film ran {cost} over budget.", "costShare": 0.1, "critics": 2 },
+    { "id": "leak",     "weight": 1, "title": "Footage leaked",         "text": "Unfinished footage leaked online and the reviews of it were brutal.", "gross": 0.95 },
+    { "id": "cameo",    "weight": 1, "title": "Surprise cameo",         "text": "A surprise cameo got audiences talking.", "gross": 1.04 },
+    { "id": "chemistry","weight": 2, "title": "Chemistry off the charts","text": "{a} and {b} became fast friends, and it shows in every scene.", "gross": 1.06, "needs": "chemistry" },
+    { "id": "buzz",     "weight": 2, "title": "Awards buzz",            "text": "Early reviews call {d}'s film the best of the season.", "critics": 6, "needs": "acclaim" }
+  ]
+}

@@ -17,10 +17,10 @@ import os from "node:os";
 const require = createRequire(import.meta.url);
 const ROOT = new URL("../", import.meta.url);
 
-function simulate({ cfg, ach, idn, awd, policy, run, films }) {
+function simulate({ cfg, ach, idn, awd, evt, policy, run, films }) {
   const { loadGame } = require("../functions/game.js");
   const camp = require("../functions/campaign.js");
-  const game = loadGame(), C = camp.makeCampaign(game, cfg, ach, idn, awd), m = C.m;
+  const game = loadGame(), C = camp.makeCampaign(game, cfg, ach, idn, awd, evt), m = C.m;
   const plain = (v) => JSON.parse(JSON.stringify(v));
   const uid = `sim-${policy}-${run}`, DATE = "2026-10-20";
   const r = m.rng(m.hash(uid));
@@ -110,8 +110,9 @@ if (!isMainThread) {
   const ach = JSON.parse(fs.readFileSync(fileURLToPath(new URL("data/achievements.json", ROOT)), "utf8"));
   const idn = JSON.parse(fs.readFileSync(fileURLToPath(new URL("data/identity.json", ROOT)), "utf8"));
   const awd = JSON.parse(fs.readFileSync(fileURLToPath(new URL("data/awards.json", ROOT)), "utf8"));
+  const evt = JSON.parse(fs.readFileSync(fileURLToPath(new URL("data/events.json", ROOT)), "utf8"));
   const jobs = [];
-  for (const policy of (arg("policies", "random,decent")).split(",")) for (let run = 0; run < runs; run++) jobs.push({ cfg, ach, idn, awd, policy, run, films });
+  for (const policy of (arg("policies", "random,decent")).split(",")) for (let run = 0; run < runs; run++) jobs.push({ cfg, ach, idn, awd, evt, policy, run, films });
   const results = [];
   const t0 = Date.now();
   await new Promise((done) => {
