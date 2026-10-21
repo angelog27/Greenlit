@@ -19,7 +19,9 @@ cur.initModel(plain({
   slate: ref.SLATE_RAW.map(([date, title, genre, strength]) => ({ date, title, genre, strength })),
 }));
 const DIFFS = ["easy", "medium", "hard"];
-const DAYS = ["2026-10-17", "2026-10-31", "2026-11-14", "2026-12-24", "2027-01-01", "2027-02-14", "2027-03-03", "2027-04-20", "2027-05-05", "2027-06-01"];
+// Genre-aware talent applies from SKILL_FROM (2026-10-22, a deliberate rule change); every day before it must
+// still score exactly as v1 did, so no published puzzle ever changed.
+const DAYS = ["2026-07-04", "2026-07-30", "2026-08-14", "2026-08-29", "2026-09-05", "2026-09-14", "2026-09-30", "2026-10-03", "2026-10-17", "2026-10-21"];
 
 test("constants are unchanged", () => {
   for (const k of ["GENRES", "DIRS", "ACTORS", "PLOTS", "WINDOWS", "LOYAL", "CHEM", "SLATE_RAW", "SLATE", "SEASON", "LAST_DATE", "SHARE", "DIFFS"]) {

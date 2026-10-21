@@ -145,6 +145,7 @@ function makeProject(C, st, uid, date, hard, proofs) {
     const key = projectKey(uid, st.campaignId, st.projectIndex, salt);
     const e = m.makeEnv(date, key);
     const env = { day: e.day, heat: e.heat, rival: e.rival, budget, plots: e.plots, dates: diff === "hard" ? e.dates : [], bonus: Object.assign({}, st.perks), disc: discounts(C, st), ident: identLean(C, st) };
+    if (e.gs) env.gs = 1; // genre-aware talent for projects from SKILL_FROM on
     const genres = {}, loans = new Set();
     m.GENRES.forEach((g) => {
       if (!u.genres.includes(g.id)) { genres[g.id] = { state: "locked", at: genreUnlockAt(C, g.id) }; return; }

@@ -154,3 +154,21 @@ test("shortlists don't depend on the order of actors.json or directors.json", ()
     }
   }
 });
+
+test("genre-aware talent: specialists keep full skill, off-genre directors and stars count for less (from SKILL_FROM)", () => {
+  for (const g of data.genres) for (const n of g.near || []) assert.ok(plainIds.includes(n), `${g.id} near ${n}`);
+  const env = m.makeEnv("2026-11-01"), old = m.makeEnv("2026-10-21");
+  assert.ok(env.gs && !old.gs, "applies from the cutoff only");
+  const peele = m.D.peele, chazelle = m.D.chazelle;
+  assert.equal(m.dirSkill(old, peele, "romance"), peele.skill, "before: plain skill");
+  assert.ok(m.dirSkill(env, peele, "romance") < m.dirSkill(env, chazelle, "romance"), "Peele is no longer the best romance director");
+  assert.equal(m.dirSkill(env, peele, "horror"), peele.skill, "full skill in his own genre");
+  assert.equal(m.dirSkill(env, peele, "horrorcomedy"), peele.skill, "either half of a blend counts");
+  // In every genre, the best director by effective skill specialises in it or a related genre.
+  for (const g of data.genres) {
+    const best = data.directors.slice().sort((a, b) => m.dirSkill(env, b, g.id) - m.dirSkill(env, a, g.id))[0];
+    assert.ok(m.fitLevel(best.spec, g.id) >= 1, `${g.id}: ${best.id} should fit`);
+  }
+  const off = m.ACTORS.find((a) => m.fitLevel(a.g, "animation") === 0);
+  assert.ok(m.starOf(env, off, "animation") < off.star && m.starOf(old, off, "animation") === off.star);
+});

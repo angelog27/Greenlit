@@ -710,7 +710,9 @@ function makeEnv(day,key){
   GENRES.forEach(function(g){if(g.mix){var s=0;g.mix.forEach(function(p){s+=heat[p]});heat[g.id]=Math.round(s/g.mix.length*100)/100}});
   var rival=WINDOWS.filter(function(w){return !w.hardOnly})[Math.floor(r()*6)].id,budget=110+5*Math.floor(r()*7);
   GENRES.forEach(function(g){var ok=plotChoices(day,g.id);plots[g.id]=ok[hash(key+"|plot|"+g.id)%ok.length]});
-  return {day:key,heat:heat,rival:rival,budget:budget,plots:plots,dates:buildDates(day),daily:GENRES[hash("daily|"+key)%GENRES.length].id};
+  var env={day:key,heat:heat,rival:rival,budget:budget,plots:plots,dates:buildDates(day),daily:GENRES[hash("daily|"+key)%GENRES.length].id};
+  if(day>=SKILL_FROM)env.gs=1;
+  return env;
 }
 function plotFor(env,gid){return PLOTS[gid][env.plots[gid]]}
 // Pitches a genre can use on a day: a pitch with `from` joins on that date, so adding stories never changes an
@@ -730,6 +732,14 @@ function scriptOffer(seed,choices){
 // Basic: the n-th offer for a genre on a day (any n; the server recomputes it from the same seed).
 function basicOffer(day,gid,n){return scriptOffer("offer|"+day+"|"+gid+"|"+n,plotChoices(day,gid))}
 function envWithScript(env,gid,s,q){var e=envWithPlot(env,gid,s);e.quality=Object.assign({},env.quality);e.quality[gid]=q;return e}
+// Genre-aware talent (from SKILL_FROM): a director's skill counts in full in their specialties, partly in related
+// genres (genres.json `near`) and little elsewhere; an actor's star power likewise. Earlier days keep plain
+// skill and stars (env.gs is unset), so no published puzzle changes. Game numbers, tunable.
+var SKILL_FROM="2026-10-22",SKILL_FIT=[0.25,0.6,1],STAR_FIT=[0.65,0.85,1];
+// 2 = the person's own genre (either half of a blend), 1 = a related genre, 0 = elsewhere.
+function fitLevel(list,gid){if(inGenre(list,gid))return 2;var ps=partsOf(gid);for(var i=0;i<ps.length;i++){var n=G[ps[i]]&&G[ps[i]].near||[];for(var j=0;j<list.length;j++)if(n.indexOf(list[j])>-1)return 1}return 0}
+function dirSkill(env,d,gid){return env.gs?Math.round((1+(d.skill-1)*SKILL_FIT[fitLevel(d.spec,gid)])*1000)/1000:d.skill}
+function starOf(env,a,gid){return env.gs?a.star*STAR_FIT[fitLevel(a.g,gid)]:a.star}
 function scriptQ(env,gid){return env.quality&&env.quality[gid]?env.quality[gid]:1}
 // Campaign only: the studio type's genre lean (env.ident, from data/identity.json) and a breakout's roulette
 // multiplier (env.boom). Daily envs have neither, so daily scores never change.
@@ -780,8 +790,8 @@ function evalFilm(env,p,cfg,luck){
     push("Competing releases",cx,rv.list.length?rv.list.length+" real films open nearby":"A clear calendar");m*=cx}
   else{var cr=env.rival===wid?0.8:1;push("Rival crowding",cr,cr<1?"A rival opens the same week":"Clear runway");m*=cr}
   steps[steps.length-1].run=m;
-  push("Director skill",d.skill,d.name);m*=d.skill;steps[steps.length-1].run=m;
-  var sw=cfg.roles?[.04,.02,.025]:[.03,.03,.03],sp=0;cast.forEach(function(a,i){sp+=sw[i]*a.star});
+  var ds=dirSkill(env,d,g.id);push("Director skill",ds,d.name+(env.gs?[" (outside their genres)"," (a related genre)",""][fitLevel(d.spec,g.id)]:""));m*=ds;steps[steps.length-1].run=m;
+  var sw=cfg.roles?[.04,.02,.025]:[.03,.03,.03],sp=0;cast.forEach(function(a,i){sp+=sw[i]*starOf(env,a,g.id)});
   var cm=Math.round((1+sp)*100)/100;
   push("Star power",cm,cast.map(function(a){return a.name+" ★"+a.star}).join(", "));m*=cm;steps[steps.length-1].run=m;
   var syn=synergies(env,p,cfg),sum=0;syn.forEach(function(s){sum+=s[1]});
@@ -824,8 +834,8 @@ function evalFast(env,p,cfg,pre){
   m*=Math.round(w.base*winG(w,g.id)*100)/100;
   if(cfg.real){cx=pre[wk];if(cx===undefined)cx=pre[wk]=Math.round(rivalsFor(p.w,g.id).x*100)/100}
   else cx=env.rival===wid?0.8:1;
-  m*=cx*d.skill;
-  var sw=cfg.roles?[.04,.02,.025]:[.03,.03,.03],sp=0;for(var i=0;i<3;i++)sp+=sw[i]*cast[i].star;
+  m*=cx*dirSkill(env,d,g.id);
+  var sw=cfg.roles?[.04,.02,.025]:[.03,.03,.03],sp=0;for(var i=0;i<3;i++)sp+=sw[i]*starOf(env,cast[i],g.id);
   m*=Math.round((1+sp)*100)/100;
   var syn=synergies(env,p,cfg),sum=0;for(var q=0;q<syn.length;q++)sum+=syn[q][1];
   m*=Math.round((1+sum)*100)/100;
@@ -1169,7 +1179,7 @@ function stepHtml(){
     h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(g.name),title:"Choose your director",text:'<p>Who sees this story best? Their fee comes out of your $'+env.budget+'M.</p>',art:sheet("dir"),artCls:"side"});
     var dpool=dirsFor(env,g.id).map(function(i){return D[i]});
     h+=reelOpen("Today's shortlist of "+dpool.length)+dpool.map(function(x,i){
-      var sub=(see.stars?'Skill '+x2(x.skill)+' · ':'')+'<em>'+esc(x.note)+'</em><br>'+esc(x.known),ch="";
+      var sub=(see.stars?'Skill '+x2(dirSkill(env,x,g.id))+(env.gs&&dirSkill(env,x,g.id)<x.skill?' in '+esc(g.name)+' ('+x2(x.skill)+' in their genres)':'')+' · ':'')+'<em>'+esc(x.note)+'</em><br>'+esc(x.known),ch="";
       if(see.fit)ch+=x.spec.filter(function(s){return G[s]}).map(function(s){return tag(G[s].name,partsOf(P.g).indexOf(s)>-1?"ok":"")}).join("");
       if(see.tone)ch+=x.tone.map(function(t){return tag(t,plot.tones.indexOf(t)>-1?"ok":"")}).join("");
       if(see.links)[L,S,T].forEach(function(a){if(a)LOYAL.forEach(function(l){if(l[0]===x.id&&l[1]===a.id)ch+=tag("Reunion with "+a.name.split(" ").pop(),"ok")})});
