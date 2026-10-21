@@ -76,6 +76,16 @@ async function start() {
       const q = Fs.query(Fs.collection(db, "campaigns", net.user.uid, "films"), Fs.orderBy("projectIndex", "desc"), Fs.limit(200));
       return (await Fs.getDocs(q)).docs.map((d) => d.data());
     },
+    // Another studio's public card (studios/{uid}), or null if it has none yet. One read.
+    async studioCard(uid) {
+      const s = await Fs.getDoc(Fs.doc(db, "studios", uid));
+      return s.exists() ? s.data() : null;
+    },
+    // Every studio by lifetime box office, live (the campaign board's "Biggest studios" view).
+    watchStudios(cb, err) {
+      const q = Fs.query(Fs.collection(db, "studios"), Fs.orderBy("lifetimeGross", "desc"), Fs.limit(25));
+      return Fs.onSnapshot(q, { includeMetadataChanges: true }, (s) => cb(s.docs.map((d) => d.data()), s.metadata.fromCache), err);
+    },
     // Campaign board: fewest films to reach the A-list, then fewer bailouts, then higher lifetime profit.
     watchCampaignBoard(cb, err) {
       const q = Fs.query(Fs.collection(db, "campaignBoard"), Fs.orderBy("filmsToATier", "asc"), Fs.orderBy("bailouts", "asc"), Fs.orderBy("lifetimeProfit", "desc"), Fs.limit(25));

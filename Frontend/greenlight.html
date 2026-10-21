@@ -462,6 +462,24 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 .imgf .row{align-items:center}
 .shuf{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:-8px 0 20px}
 .shuf .note svg{vertical-align:-5px;margin-right:6px}
+/* script offer: three drafts side by side */
+.offer{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin:0 0 22px}
+.draft{display:grid;gap:8px;align-content:start;padding:16px 18px;background:var(--panel);border:1px solid var(--line);text-align:left;transition:border-color .25s var(--ease),transform .35s var(--ease)}
+.draft:hover:not(:disabled){border-color:var(--line2);transform:translateY(-2px)}
+.draft:disabled{opacity:.5;cursor:not-allowed}
+.draft b{font-family:var(--display);font-weight:900;font-size:26px;line-height:.95;text-transform:uppercase}
+.draft p{font-size:13.5px;color:var(--muted);line-height:1.45}
+.draft .take{justify-self:start;margin-top:4px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.draft.cur{border-color:var(--accent)}
+.offer-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 10px}
+/* clickable studio rows and the studio card */
+.lb tr.click{cursor:pointer}
+.lb tr.click:hover td{background:var(--panel2)}
+.lb tr.click td:first-child button{font:inherit;color:inherit}
+.scard .studio{margin:0}
+.scard .best{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:center;padding:12px;border:1px solid var(--line);background:var(--panel2)}
+.scard .best .media{aspect-ratio:16/10}
+.scard .best b{display:block;font-family:var(--display);font-weight:900;font-size:26px;line-height:.95;text-transform:uppercase}
 .mform .imgf .btn{width:auto}
 .studio .side .lbl{display:block;margin-bottom:12px}
 .ugrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin-top:12px}
@@ -599,6 +617,7 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
 <section id="intro" aria-label="How to play" hidden></section>
 <div class="modal" id="authm" role="dialog" aria-modal="true" aria-labelledby="auth-h" inert><div class="mbox" id="authbox"></div></div>
 <div class="modal" id="studiom" role="dialog" aria-modal="true" aria-labelledby="studio-h" inert><div class="mbox wide" id="studiobox"></div></div>
+<div class="modal" id="cardm" role="dialog" aria-modal="true" aria-labelledby="card-h" inert><div class="mbox wide scard" id="cardbox"></div></div>
 <div class="toast" id="toast" aria-live="polite"></div>
 
 <script src="firebase-config.js" onerror="window.FIREBASE_CONFIG=null"></script>
@@ -808,8 +827,8 @@ var REDUCED=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").ma
 
 // The puzzle day is the UTC date, the same day the server checks against.
 var TODAY=new Date().toISOString().slice(0,10);
-var state={type:"basic",diff:"medium",campDiff:"easy",day:TODAY,env:null,dayEnv:null,pick:{g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"},result:null,stage:"play",step:"genre",enter:false,
-  me:null,days:{},ceil:null,attempt:0,lb:{type:"basic",diff:"medium",rows:null,err:null,unsub:null}};
+var state={type:"basic",diff:"medium",campDiff:"easy",day:TODAY,env:null,dayEnv:null,offer:null,offerN:{},script:null,pick:{g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"},result:null,stage:"play",step:"genre",enter:false,
+  me:null,days:{},ceil:null,attempt:0,lb:{type:"basic",diff:"medium",campView:"race",rows:null,err:null,unsub:null}};
 var LKEY="greenlight.days.v2";
 // In the campaign the project sets the rules (Easy for the first films, then Medium, Hard by choice).
 function CFG(){return DIFFS[state.type==="campaign"?state.campDiff:state.diff]}
@@ -1026,15 +1045,37 @@ function minCost(gid){
 // Basic: shuffle to any of the genre's stories for the day, as often as you like (the server checks the one you
 // release). Campaign: a few server-side rerolls per project once the studio level allows. Daily: one shared story.
 function campRerolls(st){var lv=campLevel(st);return (CAMPCFG.rerolls||[]).reduce(function(n,r){return lv>=r.level?r.count:n},0)}
+// The offer on screen for this genre: Basic keeps it in state.offer, the campaign on its project.
+function curOffer(gid){
+  if(state.type==="campaign"){var o=campProject().offer;return o&&o.g===gid?o:null}
+  return state.offer&&state.offer.g===gid?state.offer:null;
+}
+function draftTag(q){return q>=SCRIPT_Q[0]?tag("Strong draft "+x2(q),"ok"):q>1?tag("Solid draft "+x2(q),""):tag("Weak draft "+x2(q),"no")}
+function offerHtml(gid,o){
+  var see=SEE().story,camp=state.type==="campaign";
+  return '<div class="offer-h"><h3 class="mh" style="margin:0;border:0">Pick a script</h3><span class="note">'+(see?"Your story notes rate each draft.":"One of these drafts has real upside. Read them and trust your gut.")+'</span></div>'+
+    '<div class="offer anim">'+o.items.map(function(it,i){var p=PLOTS[gid][it.s],ok=it.ok!==false;
+      return '<button class="draft'+(state.env.plots[gid]===it.s&&scriptQ(state.env,gid)===it.q?" cur":"")+'" style="--i:'+i+'" data-act="pickscript" data-id="'+it.s+'"'+(ok&&!CAMP.busy?"":" disabled")+'>'+
+        '<span class="lbl">Script '+(i+1)+'</span><b>'+esc(p.title)+'</b><p>'+esc(p.text)+'</p>'+(see?'<span class="chips">'+draftTag(it.q)+'</span>':"")+
+        '<span class="take">'+(ok?(camp&&CAMP.busy==="script"?"Taking…":"Take this script"):"Too pricey for this budget")+'</span></button>'}).join("")+'</div>';
+}
 function shuffleBar(gid){
   if(state.type==="daily")return "";
+  var o=curOffer(gid),pick=o?offerHtml(gid,o):"";
   if(state.type==="campaign"){
     var allowed=campRerolls(CAMP.st),left=allowed-(campProject().rerolls||0),err=CAMP.err?' <span class="neg">'+esc(CAMP.err)+'</span>':"";
     if(!allowed)return '<div class="shuf"><span class="note">'+icon("dice")+'Story rerolls unlock at studio level '+CAMPCFG.rerolls[0].level+'.</span></div>';
-    return '<div class="shuf"><button class="btn" data-act="reroll"'+(left<1||CAMP.busy?" disabled":"")+'>'+icon("dice")+(CAMP.busy==="reroll"?"Rerolling…":"Reroll story")+'</button><span class="note">'+left+' of '+allowed+' rerolls left on this project.'+err+'</span></div>';
+    return '<div class="shuf"><button class="btn" data-act="reroll"'+(left<1||CAMP.busy?" disabled":"")+'>'+icon("dice")+(CAMP.busy==="reroll"?"Reading scripts…":"Reroll: read 3 scripts")+'</button><span class="note">'+left+' of '+allowed+' rerolls left on this project.'+err+'</span></div>'+pick;
   }
   var n=plotChoices(state.day,gid).length;
-  return n>1?'<div class="shuf"><button class="btn" data-act="shuffle">'+icon("dice")+'Shuffle story</button><span class="note">'+n+' stories in '+esc(G[gid].name)+' today. Shuffle as often as you like.</span></div>':"";
+  return n>1?'<div class="shuf"><button class="btn" data-act="shuffle">'+icon("dice")+(o?"Read 3 more scripts":"Shuffle: read 3 scripts")+'</button><span class="note">'+n+' stories in '+esc(G[gid].name)+' today. Each shuffle lays out three drafts; one is clearly stronger.</span></div>'+pick:"";
+}
+// After release: which draft was the strong one.
+function scriptNote(res){
+  var sc=res.script;if(!sc||sc.g!==res.p.g)return "";
+  var best=sc.items.filter(function(x){return x.q===SCRIPT_Q[0]})[0],mine=sc.items.filter(function(x){return x.s===res.p.s||x.s===sc.s})[0];
+  if(!best||!mine)return "";
+  return '<p class="note" style="margin-top:12px"><b>Script:</b> '+(mine.q===best.q?"you picked the strongest of the three drafts ("+x2(best.q)+").":"the strongest draft was “"+esc(PLOTS[sc.g][best.s].title)+"” ("+x2(best.q)+"); yours played at "+x2(mine.q)+".")+'</p>';
 }
 function nav(label,ok,act){
   var l=stepList(),i=l.indexOf(state.step);
@@ -1211,7 +1252,7 @@ function drawResult(){
      '<span class="note">'+(camp?"Cost ":"Attempt "+state.attempt+" · cost ")+money(r.cost)+' of $'+env.budget+'M</span>'+postLine(post)+'</div></section>'+
    '<div class="rgrid"><div><section class="panel"><h3>Box office build</h3><div class="wf">'+wf+'</div><p class="note" style="margin-top:12px">Worldwide gross '+money(r.gross)+'. Studio share '+Math.round(SHARE*100)+'%: '+money(r.share)+'. Costs: '+money(r.cost)+'. Luck this run: '+x2(r.luck)+'.</p>'+
      '<p class="lbl" style="margin-top:16px">Bonuses you earned</p>'+(r.syn.length?'<ul class="bon">'+r.syn.map(function(s){return '<li>'+esc(s)+'</li>'}).join("")+'</ul>':'<p class="note">None this time.</p>')+
-     '<p class="note" style="margin-top:12px">This pitch wanted: '+esc(wanted)+'. '+(cfg.roles?'The lead called for a '+esc(plot.lead.t)+' presence, the supporting role for a '+esc(plot.side.t)+' one and the antagonist for a '+esc(plot.anta.t)+' one':'The antagonist called for a '+esc(plot.anta.t)+' presence')+'.</p>'+rv+'</section></div>'+
+     '<p class="note" style="margin-top:12px">This pitch wanted: '+esc(wanted)+'. '+(cfg.roles?'The lead called for a '+esc(plot.lead.t)+' presence, the supporting role for a '+esc(plot.side.t)+' one and the antagonist for a '+esc(plot.anta.t)+' one':'The antagonist called for a '+esc(plot.anta.t)+' presence')+'.</p>'+scriptNote(res)+rv+'</section></div>'+
    '<div>'+(camp?campResultHtml(res)+cdiv:cdiv+'<section class="panel"><h3>Share it</h3><pre id="share">'+esc(share)+'</pre><div class="row"><button class="btn go" data-act="copy" id="copy">Copy result</button><button class="btn" data-act="again">Tweak and rerelease</button><button class="btn" data-act="new">New film</button><button class="btn" data-act="lb">Leaderboard</button></div></section>')+'</div></div></div>';
   if(first){countUp($("#grossnum"),r.gross);countUp($("#bignum"),r.profit)}
   // Campaign: the progress bar grows from where it was to where the film took it (once).
@@ -1232,28 +1273,33 @@ function lbModeKey(){return "r3-"+state.lb.type+"-"+state.lb.diff}
 function watchBoard(){
   var lb=state.lb;if(lb.unsub){lb.unsub();lb.unsub=null}
   lb.rows=null;lb.err=null;
-  if(NET&&lb.type==="campaign")lb.unsub=NET.watchCampaignBoard(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e,"campaign");drawBoard()});
+  if(NET&&lb.type==="campaign"&&lb.campView==="big")lb.unsub=NET.watchStudios(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e,"campaign");drawBoard()});
+  else if(NET&&lb.type==="campaign")lb.unsub=NET.watchCampaignBoard(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e,"campaign");drawBoard()});
   else if(NET)lb.unsub=NET.watchBoard(boardId(lb.type,lb.diff,TODAY),function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e);drawBoard()});
   drawBoard();
 }
 // Campaign board: the race to the A-list. Fewest films wins; ties go to fewer bailouts, then more lifetime profit.
 function campBoardHtml(ctl){
   var lb=state.lb,me=state.me,st=CAMP.st,body;
+  var big=lb.campView==="big";
   function row(e,rank,isMe){
-    return '<tr class="'+(isMe?"me":"")+'"><td class="r">'+rank+'</td><td><span style="display:flex;gap:10px;align-items:center">'+logoHtml(e.uid,e.displayName,{logo:e.logo,color:e.color}," sm")+'<span>'+esc(e.displayName)+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+(e.bailouts?e.bailouts+" bailout"+(e.bailouts>1?"s":""):"No bailouts")+' · '+money(e.lifetimeProfit)+' lifetime</div></span></span></td><td class="n">'+e.filmsToATier+'</td></tr>';
+    var name=big?e.studioName:e.displayName,pr=big?e.profile||{}:{logo:e.logo,color:e.color};
+    var sub=big?"Level "+e.level+" · "+e.filmsMade+" film"+(e.filmsMade===1?"":"s"):(e.bailouts?e.bailouts+" bailout"+(e.bailouts>1?"s":""):"No bailouts")+' · '+money(e.lifetimeProfit)+' lifetime';
+    return '<tr class="click'+(isMe?" me":"")+'" data-act="card" data-id="'+esc(e.uid)+'" tabindex="0" role="button" aria-label="See '+esc(name)+'"><td class="r">'+rank+'</td><td><span style="display:flex;gap:10px;align-items:center">'+logoHtml(e.uid,name,pr," sm")+'<span>'+esc(name)+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+esc(sub)+'</div></span></span></td><td class="n">'+(big?money(e.lifetimeGross):e.filmsToATier)+'</td></tr>';
   }
-  var head='<thead><tr><th>#</th><th>Studio</th><th class="n">Films</th></tr></thead>';
+  var head='<thead><tr><th>#</th><th>Studio</th><th class="n">'+(big?"Box office":"Films")+'</th></tr></thead>';
+  ctl+='<div class="seg" role="group" aria-label="Campaign board"><button data-act="campview" data-m="race" aria-pressed="'+!big+'">A-list race</button><button data-act="campview" data-m="big" aria-pressed="'+big+'">Biggest studios</button></div>';
   if(!NET)body='<p class="note">The online board isn\'t set up in this build.</p>';
   else if(lb.err)body='<p class="note neg">'+esc(lb.err)+'</p>';
   else if(!lb.rows)body='<p class="note">Connecting to the campaign board…</p>';
-  else if(!lb.rows.length)body='<p class="note">No studio has reached the A-list yet. Be the first.</p>';
-  else body='<div class="scroll"><table class="lb">'+head+'<tbody>'+lb.rows.map(function(e,i){return row(e,i+1,me&&e.uid===me.uid)}).join("")+'</tbody></table></div>';
+  else if(!lb.rows.length)body='<p class="note">'+(big?"No studios yet.":"No studio has reached the A-list yet. Be the first.")+'</p>';
+  else body='<div class="scroll"><table class="lb">'+head+'<tbody>'+lb.rows.map(function(e,i){return row(e,i+1,me&&e.uid===me.uid)}).join("")+'</tbody></table></div><p class="note">Click a studio to see its biggest film.</p>';
   if(NET&&!me)body+='<p class="note" style="margin-top:10px"><button class="link" data-act="signin">Sign in</button> to run a studio.</p>';
   var mine="";
   if(st&&CAMPCFG){var l=ladderAt(st.lifetimeProfit);
     mine='<section><h3 class="mh" style="margin-top:0">Your studio · '+esc(st.studioName)+'</h3><div class="stats"><div><span class="lbl">Films</span><b class="mono">'+st.filmsMade+'</b></div><div><span class="lbl">Lifetime</span><b class="mono">'+money(st.lifetimeProfit)+'</b></div><div><span class="lbl">Bailouts</span><b class="mono">'+st.bailouts+'</b></div></div>'+
       '<p class="note">'+(st.aTierFilms?"You reached the A-list in "+st.aTierFilms+" films.":l.next?money(l.next.at-st.lifetimeProfit)+" more lifetime profit to "+esc(gateInfo(l.next.id).name)+".":"")+'</p></section>'}
-  return '<section style="display:grid;gap:14px">'+ctl+'<p class="note">The race to the A-list: fewest films to get there wins. Ties go to fewer bailouts, then more lifetime profit. Studios are listed by their studio name.</p>'+body+'</section>'+mine;
+  return '<section style="display:grid;gap:14px">'+ctl+'<p class="note">'+(big?"Every studio, by lifetime box office.":"The race to the A-list: fewest films to get there wins. Ties go to fewer bailouts, then more lifetime profit.")+' Studios are listed by their studio name.</p>'+body+'</section>'+mine;
 }
 function drawBoard(){
   var lb=state.lb,mk=lbModeKey(),me=state.me,mine=state.days[mk+"|"+TODAY];
@@ -1556,6 +1602,29 @@ function editorHtml(){
 }
 function drawEditor(){$("#studiobox").innerHTML=editorHtml()}
 var editReturn=null;
+// Another studio's public card (studios/{uid}): look, level, badges and its highest-grossing film.
+var cardReturn=null;
+function cardHtml(c,uid){
+  var head='<div class="dh"><div><p class="lbl">Studio</p><h2 id="card-h">'+(c?esc(c.studioName):"Studio")+'</h2></div><button class="xbtn" data-act="cardclose" aria-label="Close">'+icon("close")+'</button></div>';
+  if(c===undefined)return head+'<p class="note">Loading…</p>';
+  if(c&&c.err)return head+'<p class="neg">'+esc(c.err)+'</p>';
+  if(!c)return head+'<p class="note">This studio hasn\'t opened its doors yet.</p>';
+  var pr=c.profile||{},bd=studioImg(uid,"backdrop",pr.backdrop),b=c.bestFilm,fake={badges:Object.fromEntries(Object.keys(c.badges||{}).map(function(k){return [k,{tier:c.badges[k]}]}))};
+  var stud='<section class="studio tint" style="'+tintStyle(pr.color)+'">'+(bd?'<div class="bd"><img src="'+esc(bd)+'" alt=""></div>':"")+'<div class="in" style="grid-template-columns:1fr"><div class="who">'+
+    '<div class="id">'+logoHtml(uid,c.studioName,pr)+'<div>'+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+
+    '<p class="city">Level '+c.level+' · '+c.filmsMade+' film'+(c.filmsMade===1?"":"s")+' · '+money(c.lifetimeGross)+' lifetime box office'+(c.aTierFilms?' · A-list in '+c.aTierFilms+' films':"")+'</p></div></div>'+badgeStrip(fake).replace(/data-act="campach"/g,"")+'</div></div></section>';
+  var best=b?'<div><p class="lbl" style="margin-bottom:8px">Highest-grossing film</p><div class="best"><span class="media wide">'+pic(stillUrl(b.genre,"w300"),G[b.genre]?G[b.genre].name:b.title)+'</span><div><b>'+esc(b.title)+'</b>'+
+    '<p class="note">'+(G[b.genre]?esc(G[b.genre].name)+' · ':"")+'Film #'+b.no+'</p><p><span class="pos mono">'+money(b.gross)+'</span> box office · '+money(b.profit)+' profit</p>'+
+    (b.d&&D[b.d]?'<p class="note">'+esc(D[b.d].name)+(b.cast?' · '+b.cast.filter(function(a){return A[a]}).map(function(a){return esc(A[a].name)}).join(", "):"")+'</p>':"")+'</div></div></div>':'<p class="note">No films released yet.</p>';
+  return head+stud+best;
+}
+function openCard(uid){
+  if(!NET)return;cardReturn=document.activeElement;
+  var m=$("#cardm");$("#cardbox").innerHTML=cardHtml(undefined,uid);m.inert=false;m.classList.add("open");
+  NET.studioCard(uid).then(function(c){if(m.classList.contains("open"))$("#cardbox").innerHTML=cardHtml(c,uid)},function(e){$("#cardbox").innerHTML=cardHtml({err:NET.errorText(e,"campaign")},uid)});
+  setTimeout(function(){var x=m.querySelector("[data-act=cardclose]");if(x)x.focus()},80);
+}
+function closeCard(){var m=$("#cardm");if(!m.classList.contains("open"))return;m.classList.remove("open");m.inert=true;if(cardReturn&&cardReturn.focus&&document.body.contains(cardReturn))cardReturn.focus()}
 function openEditor(){
   editReturn=document.activeElement;EDIT={busy:"",err:"",logo:{},backdrop:{}};drawEditor();
   var m=$("#studiom");m.inert=false;m.classList.add("open");setTimeout(function(){var f=m.querySelector("input");if(f)f.focus()},80);
@@ -1654,7 +1723,7 @@ function campResultHtml(res){
 }
 function campRelease(){
   var cfg=CFG(),p=curPick(),pj=campProject(),r=evalFilm(state.env,p,cfg),title=plotFor(state.env,p.g).title,ck="camp|"+pj.key+"|"+p.g;
-  var res=state.result={p:p,r:r,title:title,cfg:cfg,ck:ck,camp:{status:"pending",before:CAMP.st,index:pj.index}};
+  var res=state.result={p:p,r:r,title:title,cfg:cfg,ck:ck,camp:{status:"pending",before:CAMP.st,index:pj.index},script:pj.script||null};
   swap(function(){state.stage="result";drawAll();window.scrollTo(0,0)});
   campSend(res);
   if(!state.ceil||state.ceil.k!==ck){var env=state.env;bestPossibleAsync(env,p.g,cfg,function(b){if(!state.result||state.result.ck!==ck)return;state.ceil={k:ck,best:b};drawResult()})}
@@ -1671,16 +1740,16 @@ function campSend(res){
 function release(){
   if(state.type==="campaign"){campRelease();return}
   var cfg=CFG(),p=curPick(),r=evalFilm(state.env,p,cfg),title=plotFor(state.env,p.g).title,k=dkey();
-  var ck=modeKey()+"|"+state.day+"|"+p.g+"|"+state.env.plots[p.g];
+  var ck=modeKey()+"|"+state.day+"|"+p.g+"|"+state.env.plots[p.g]+"|"+scriptQ(state.env,p.g),sc=state.script&&state.script.g===p.g?state.script:null;
   var post=NET&&state.me?{status:"pending"}:{status:NET?"signedout":"offline"};
-  var res=state.result={p:p,r:r,title:title,cfg:cfg,ck:ck,post:post};
+  var res=state.result={p:p,r:r,title:title,cfg:cfg,ck:ck,post:post,script:sc};
   var prev=state.days[k],att=(prev?prev.attempts||1:0)+1;state.attempt=att;
   var entry={profit:Math.round(r.profit*10)/10,gross:Math.round(r.gross),cost:r.cost,title:title,genre:p.g,attempts:att};
   if(prev&&prev.profit>=entry.profit)entry=Object.assign({},prev,{attempts:att});
   state.days[k]=entry;saveLocal();
   swap(function(){state.stage="result";drawAll();window.scrollTo(0,0)});
   // The server re-checks and re-scores the film; its answer is what goes on the board.
-  if(post.status==="pending")NET.release({type:state.type,diff:state.diff,day:state.day,pick:Object.assign({s:state.env.plots[p.g]},p)}).then(function(o){
+  if(post.status==="pending")NET.release({type:state.type,diff:state.diff,day:state.day,pick:Object.assign({s:state.env.plots[p.g]},p,sc?{n:sc.n}:{})}).then(function(o){
     res.post={status:"ok",rank:o.rank,total:o.total,better:o.better};
     state.days[k]=Object.assign({},o.best,{attempts:o.attempts});state.attempt=o.attempts;saveLocal();
     if(state.result===res)drawResult();
@@ -1692,7 +1761,7 @@ function drawAll(){drawHead();drawStage();drawResult();drawAcct()}
 function newGame(){
   if(state.type==="campaign"){var pj=campProject();state.result=null;state.stage="hq";state.enter=true;state.pick={g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"};
     state.env=pj?projEnv(pj):null;if(pj)state.campDiff=pj.diff;if(!CAMP.loaded&&!CAMP.loading)campLoad();drawAll();return}
-  state.env=state.dayEnv;
+  state.env=state.dayEnv;state.offer=null;state.offerN={};state.script=null;
   state.result=null;state.stage="play";state.step=stepList()[0];state.enter=true;state.pick={g:state.type==="daily"?state.env.daily:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"};
   var e=state.days[dkey()];state.attempt=e?e.attempts||0:0;drawAll();
 }
@@ -1706,14 +1775,20 @@ document.addEventListener("click",function(e){
   var t=e.target.closest("[data-act]");if(!t||t.disabled)return;
   var a=t.dataset.act,id=t.dataset.id,P=state.pick;
   if(a==="type"){if(state.type!==t.dataset.m){swap(function(){state.type=t.dataset.m;if(state.type==="daily")state.diff="hard";newGame();window.scrollTo(0,0)})}}
-  else if(a==="shuffle"){var sg=P.g,others=plotChoices(state.day,sg).filter(function(i){return i!==state.env.plots[sg]});
-    if(others.length){var pickS=others[Math.floor(Math.random()*others.length)];swap(function(){state.env=envWithPlot(state.env,sg,pickS);state.enter=true;drawStage()})}}
-  else if(a==="reroll")campCall("campaignReroll",{index:campProject().index,g:P.g},"reroll",function(o){if(o){state.env=projEnv(campProject());state.enter=true}});
+  else if(a==="shuffle"){var sg=P.g,nn=state.offerN[sg]===undefined?0:state.offerN[sg]+1;state.offerN[sg]=nn;
+    state.offer={g:sg,n:nn,items:basicOffer(state.day,sg,nn)};drawStage()}
+  else if(a==="pickscript"){var ps=+id;
+    if(state.type==="campaign")campCall("campaignPickScript",{index:campProject().index,g:P.g,s:ps},"script",function(o){if(o)state.env=projEnv(campProject())});
+    else{var it=state.offer.items.filter(function(x){return x.s===ps})[0];state.env=envWithScript(state.env,P.g,it.s,it.q);state.script={g:P.g,n:state.offer.n,s:it.s,items:state.offer.items};state.offer=null;drawStage()}}
+  else if(a==="reroll")campCall("campaignReroll",{index:campProject().index,g:P.g},"reroll");
   else if(a==="campnext")campPlay();
   else if(a==="camphq")campHQ();
   else if(a==="campretry")campLoad();
   else if(a==="campretryrel"){if(state.result&&state.result.camp)campSend(state.result)}
   else if(a==="campedit")openEditor();
+  else if(a==="campview"){state.lb.campView=t.dataset.m;watchBoard()}
+  else if(a==="card")openCard(id);
+  else if(a==="cardclose")closeCard();
   else if(a==="editclose")closeEditor();
   else if(a==="editrm"){editorKeep();if(EDIT[id].url)URL.revokeObjectURL(EDIT[id].url);EDIT[id]={remove:true};drawEditor();editorRestore()}
   else if(a==="campach"){var c=$("#ach-"+id);if(c){c.scrollIntoView({behavior:REDUCED?"auto":"smooth",block:"center"});c.classList.add("hl");setTimeout(function(){c.classList.remove("hl")},1600)}}
@@ -1771,6 +1846,7 @@ document.addEventListener("change",function(e){
 });
 $("#authm").addEventListener("click",function(e){if(e.target===this)closeAuth()});
 $("#studiom").addEventListener("click",function(e){if(e.target===this)closeEditor()});
+$("#cardm").addEventListener("click",function(e){if(e.target===this)closeCard()});
 // Reels: keep the arrows in sync, and let a plain mouse wheel scroll them sideways until an end is reached.
 document.addEventListener("scroll",function(e){var t=e.target;if(t&&t.classList&&t.classList.contains("track"))reelState(t)},true);
 document.addEventListener("wheel",function(e){
@@ -1779,7 +1855,9 @@ document.addEventListener("wheel",function(e){
   if((e.deltaY>0&&tr.scrollLeft<max-1)||(e.deltaY<0&&tr.scrollLeft>1)){e.preventDefault();tr.scrollLeft+=e.deltaY*(e.deltaMode===1?32:1)}
 },{passive:false});
 window.addEventListener("resize",function(){var tr=$("#page .track");if(tr)reelState(tr)});
-document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;if($("#studiom").classList.contains("open"))closeEditor();else if($("#authm").classList.contains("open"))closeAuth();else if(document.body.classList.contains("intro-open"))closeIntro();else closeBoard()});
+// Clickable rows (studio cards) open with Enter or Space too.
+document.addEventListener("keydown",function(e){var t=e.target;if((e.key==="Enter"||e.key===" ")&&t&&t.tagName==="TR"&&t.dataset.act){e.preventDefault();t.click()}});
+document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;if($("#cardm").classList.contains("open"))closeCard();else if($("#studiom").classList.contains("open"))closeEditor();else if($("#authm").classList.contains("open"))closeAuth();else if(document.body.classList.contains("intro-open"))closeIntro();else closeBoard()});
 function setTopH(){document.documentElement.style.setProperty("--toph",$("#top").offsetHeight+"px")}
 if(window.ResizeObserver)new ResizeObserver(setTopH).observe($("#top"));else window.addEventListener("resize",setTopH);
 $("#lbbtn").innerHTML=icon("trophy")+"<span>Leaderboard</span>";$("#lbbtn").setAttribute("aria-label","Leaderboard");
