@@ -638,3 +638,17 @@ test("breakouts: films near the best possible spin the wheel; the multiplier lan
   assert.equal(camp.breakoutFor(C, tal, pj, env, cheapest(wild, g), dcfg, fake(cfg.breakout.threshold + 0.01)), null, "talent agency needs more");
 });
 function round(x) { return Math.round(x * 10) / 10; }
+
+test("raising a ladder threshold never takes an unlock away from a studio that reached it", () => {
+  // A studio that reached the A-list before the threshold went up (lifetime below today's A-list bar).
+  const top = cfg.ladder[cfg.ladder.length - 1], below = top.at - 100;
+  const st = { ...studio(below, { films: 20, bank: 150 }) };
+  st.gates = Object.fromEntries(cfg.ladder.map((s) => [s.id, NOW]));
+  st.unlocked = { ...st.unlocked, actorTier: "A", directorTier: "A", genres: camp.unlocksFor(C, top.at).genres, hard: true };
+  st.currentProject = plain(camp.makeProject(C, st, "u1", DATE, false));
+  const g = playable(st)[0], out = camp.release(C, st, "u1", { index: st.currentProject.index, pick: cheapest(st, g) }, DATE, NOW);
+  assert.equal(out.state.unlocked.actorTier, "A", "still A-list");
+  assert.equal(out.state.unlocked.hard, true);
+  assert.deepEqual(out.events.gates, [], "no unlock fires again");
+  assert.equal(camp.unlocksFor(C, below).actorTier !== "A", true, "without the reached gates it would have dropped");
+});

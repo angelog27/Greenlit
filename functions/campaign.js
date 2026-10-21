@@ -28,10 +28,12 @@ function makeCampaign(game, cfg, ach, idn) {
 }
 
 // What a lifetime profit has unlocked: the last tier each ladder step names, every genre named so far.
-function unlocksFor(C, lifetime) {
+// `reached` (the studio's gates so far) keeps a step unlocked even if its threshold is raised later, so
+// retuning the ladder never takes an unlock away.
+function unlocksFor(C, lifetime, reached) {
   const u = { actorTier: C.order[0], directorTier: C.order[0], genres: [], hard: false, gates: [] };
   C.cfg.ladder.forEach((s) => {
-    if (lifetime < s.at) return;
+    if (lifetime < s.at && !(reached && own(reached, s.id))) return;
     if (s.actors) u.actorTier = s.actors;
     if (s.directors) u.directorTier = s.directors;
     (s.genres || []).forEach((g) => { if (!u.genres.includes(g)) u.genres.push(g); });
@@ -323,7 +325,7 @@ function release(C, st, uid, input, date, now) {
   const before = st, B = C.badges, lifetime = round1(st.lifetimeProfit + Math.max(0, profit));
   const money = settle(C, st.bank + profit);
   const filmsMade = st.filmsMade + 1;
-  const u0 = unlocksFor(C, st.lifetimeProfit), u = unlocksFor(C, lifetime);
+  const u0 = unlocksFor(C, st.lifetimeProfit, st.gates), u = unlocksFor(C, lifetime, st.gates);
   const newGates = u.gates.filter((x) => !u0.gates.includes(x));
   const next = Object.assign({}, st, {
     bank: money.bank, lifetimeProfit: lifetime, filmsMade, bailouts: st.bailouts + (money.bailout ? 1 : 0), lastProfit: profit,
