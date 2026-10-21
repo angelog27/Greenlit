@@ -506,6 +506,9 @@ body.intro-open .igrid>*{animation:rise .6s var(--ease) both;animation-delay:cal
 @media (max-width:640px){.boom{grid-template-columns:1fr}.wheel{margin:0 auto}}
 /* awards */
 .trophies{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.evcard{display:grid;gap:6px;padding:12px 14px;border:1px solid var(--line2);border-left:4px solid var(--cold);background:var(--panel2)}
+.evcard b{font-family:var(--display);font-weight:900;font-size:24px;line-height:1;text-transform:uppercase}
+.evcard p{font-size:14px}
 .hq-tro{display:flex;flex-wrap:wrap;gap:6px;align-items:center;text-align:left}
 .hq-tro small{flex-basis:100%;font-size:12px;color:var(--muted)}
 .hq-tro:hover .trophy{border-color:var(--ink)}
@@ -1182,6 +1185,24 @@ function doneHtml(){
     '<p>The next Daily Challenge opens in <b>'+untilMidnight()+'</b> (midnight UTC). Until then, see how everyone else did, or keep playing Basic.</p>'+
     '<div class="row" style="margin-top:8px"><button class="btn go" data-act="lb">See today\'s board</button><button class="btn" data-act="type" data-m="basic">Play Basic</button></div>'});
 }
+// ---- campaign stories (data/events.json; the server decides, the page shows): each person's trait in this
+// studio's world, who you've worked with lately (audience fatigue), and who passed on the project.
+function traitOfPage(id){
+  if(!EVT||state.type!=="campaign"||!CAMP.st||!state.me)return null;
+  var r=rng(hash(state.me.uid+"|"+CAMP.st.campaignId+"|trait|"+id));if(r()>=EVT.traits.chance)return null;
+  return EVT.traits.list[Math.floor(r()*EVT.traits.list.length)];
+}
+function storyChips(id,isDir){
+  if(state.type!=="campaign")return "";
+  var t=traitOfPage(id),h=state.env.hist,n=h?((isDir?h.dirs:h.actors)||{})[id]||0:0;
+  return (t?'<span class="tag" title="'+esc(t.text)+'">'+esc(t.name)+'</span>':"")+(n?tag(n>1?"Worked with you "+n+"× lately":"Worked with you lately","no"):"");
+}
+function declinedCards(gid,role){
+  if(state.type!=="campaign")return "";
+  var list=(campProject().genres[gid].declined||[]).filter(function(x){return x.role===role});
+  return list.map(function(x,i){var p=role==="d"?D[x.id]:A[x.id];if(!p)return "";
+    return card({act:"none",id:x.id,sel:false,off:true,title:p.name,cost:null,img:faceUrl(x.id),i:i+20,sub:'<em>Passed on this project</em><br>'+esc(x.reason)})}).join("");
+}
 function nav(label,ok,act){
   var l=stepList(),i=l.indexOf(state.step);
   return '<div class="nav">'+(i>0?'<button class="btn" data-act="back">Back</button>':"<span></span>")+
@@ -1210,6 +1231,8 @@ function stepHtml(){
   }else if(id==="story"){
     var daily=state.type==="daily";
     h+=hero({cls:"pitch",eyebrow:(daily?"Today's challenge · ":"Your pitch · ")+esc(g.name),title:plot.title,text:'<p class="log">'+esc(plot.text)+'</p>',art:photoArt(g.id)});
+    var made=state.type==="campaign"&&state.env.hist&&(state.env.hist.scripts||{})[g.id+"|"+state.env.plots[g.id]];
+    if(made)h+='<p class="bail">You\'ve made this script before'+(made>1?" ("+made+" times)":"")+'. Audiences won\'t be as excited the second time around.</p>';
     h+=shuffleBar(g.id);
     var rl=[[cfg.roles?"Lead":"Hero",plot.lead],[cfg.roles?"Supporting":"Partner",plot.side],["Villain",plot.anta]];
     h+='<div class="roles3 anim">'+rl.map(function(r,i){var tone=see.story&&(cfg.roles||i===2)?tag(r[1].t+" presence","ok"):"";
@@ -1225,8 +1248,9 @@ function stepHtml(){
       if(see.fit)ch+=x.spec.filter(function(s){return G[s]}).map(function(s){return tag(G[s].name,partsOf(P.g).indexOf(s)>-1?"ok":"")}).join("");
       if(see.tone)ch+=x.tone.map(function(t){return tag(t,plot.tones.indexOf(t)>-1?"ok":"")}).join("");
       if(see.links)[L,S,T].forEach(function(a){if(a)LOYAL.forEach(function(l){if(l[0]===x.id&&l[1]===a.id)ch+=tag("Reunion with "+a.name.split(" ").pop(),"ok")})});
+      ch+=storyChips(x.id,true);
       return card({act:"d",id:x.id,sel:P.d===x.id,title:x.name,cost:fee(x),img:faceUrl(x.id),i:i,sub:sub,chips:ch+(P.d!==x.id?over(fee(x),d?fee(d):0):"")});
-    }).join("")+'</div></div>'+nav("Next",!!P.d);
+    }).join("")+declinedCards(g.id,"d")+'</div></div>'+nav("Next",!!P.d);
   }else if(id==="a1"||id==="a2"||id==="a3"){
     var k=id==="a1"?0:id==="a2"?1:2,pool=poolsFor(env,g.id)[k].map(function(i){return A[i]});
     var rol=k===0?plot.lead:k===1?plot.side:plot.anta;
@@ -1234,7 +1258,7 @@ function stepHtml(){
     var desc=(cfg.roles||k===2)?'Playing <b>'+esc(rol.r)+'</b>.':'Either of your two actors can carry the story.';
     h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(stepName(id)),title:title,text:'<p>'+desc+(state.type==="campaign"?' Your shortlist: three men and three women your studio can sign'+(campProject().loans.length?', plus a few on loan from the next tier up while yours is thin':'')+'.':' Today\'s shortlist: three men and three women, found only for this part.')+(see.story&&(cfg.roles||k===2)?' This role needs a <b>'+esc(rol.t)+'</b> presence.':'')+'</p>',art:sheet(id),artCls:"side"});
     h+=reelOpen("Shortlist of "+pool.length)+pool.map(function(x,i){
-      var sel=P[id]===x.id,sub,ch=tag(x.s==="f"?"Woman":"Man","")+(state.type==="campaign"&&campProject().loans.indexOf(x.id)>-1?tag("On loan",""):"");
+      var sel=P[id]===x.id,sub,ch=tag(x.s==="f"?"Woman":"Man","")+(state.type==="campaign"&&campProject().loans.indexOf(x.id)>-1?tag("On loan",""):"")+storyChips(x.id,false);
       sub=(see.stars?'★ '+x.star+' · ':'')+esc(x.known);
       if(see.fit)ch+=x.g.filter(function(s){return G[s]}).map(function(s){return tag(G[s].name,partsOf(P.g).indexOf(s)>-1?"ok":"")}).join("");
       if(see.tone)ch+=x.tone.map(function(t){var m=(cfg.roles||k===2)?rol.t===t:plot.tones.indexOf(t)>-1;return tag(t,m?"ok":"")}).join("");
@@ -1243,7 +1267,7 @@ function stepHtml(){
         [L,S,T].forEach(function(o){if(o&&o.id!==x.id&&o.id!==P[id])CHEM.forEach(function(c){if(pairKey(c[0],c[1])===pairKey(o.id,x.id))ch+=tag(cfg.show?"Chemistry +"+Math.round(c[2]*100)+"%":"Chemistry","ok")})})}
       var filled=P[id];
       return card({act:"c",id:x.id,sel:sel,title:x.name,cost:fee(x),img:faceUrl(x.id),i:i,sub:sub,chips:ch+(!sel?over(fee(x),filled?fee(A[filled]):0):"")});
-    }).join("")+'</div></div>'+nav("Next",!!P[id]);
+    }).join("")+declinedCards(g.id,id)+'</div></div>'+nav("Next",!!P[id]);
   }else if(id==="win"){
     h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(stepName(id)),title:cfg.real?"Pick your release date":"Pick your release window",text:'<p>'+(cfg.real?"Real films are opening on these weekends. Marketing cost depends on the season.":"When should audiences see it? Marketing cost depends on the season.")+'</p>'});
     if(cfg.real){
@@ -1564,7 +1588,7 @@ function introSeen(){try{return localStorage.getItem(IKEY)==="1"}catch(e){return
 // ---- campaign: one studio per account, all of it on the server (functions/campaign.js). The page reads the
 // studio once per load (NET.campaignLoad); every change goes through a campaign* callable, which returns the new
 // studio. Shortlists, budget and visibility come from the server's current project; the page only draws them.
-var CAMPCFG=null,ACH=null,IDN=null,AWD=null;
+var CAMPCFG=null,ACH=null,IDN=null,AWD=null,EVT=null;
 var CAMP={st:null,loaded:false,loading:false,err:"",note:"",busy:"",history:null,passArm:false};
 function campProject(){return CAMP.st&&CAMP.st.currentProject}
 // The stored project in the shape the model expects (Firestore can't hold nested arrays).
@@ -1736,7 +1760,7 @@ function cardHtml(c,uid){
     '<div class="id">'+logoHtml(uid,c.studioName,pr)+'<div>'+(c.type?typeBadge(c.type):"")+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+
     '<p class="city">Level '+c.level+' · '+c.filmsMade+' film'+(c.filmsMade===1?"":"s")+' · '+money(c.lifetimeGross)+' lifetime box office'+(c.aTierFilms?' · A-list in '+c.aTierFilms+' films':"")+(c.trophies||c.globes?' · '+(c.trophies||0)+' Golden Reel'+(c.trophies===1?"":"s")+', '+(c.globes||0)+' Globe'+(c.globes===1?"":"s"):"")+'</p></div></div>'+badgeStrip(fake).replace(/data-act="campach"/g,"")+'</div></div></section>';
   var best=b?'<div><p class="lbl" style="margin-bottom:8px">Highest-grossing film</p><div class="best"><span class="media wide">'+pic(stillUrl(b.genre,"w300"),G[b.genre]?G[b.genre].name:b.title)+'</span><div><b>'+esc(b.title)+'</b>'+
-    '<p class="note">'+(G[b.genre]?esc(G[b.genre].name)+' · ':"")+'Film #'+b.no+'</p><p><span class="pos mono">'+money(b.gross)+'</span> box office · '+money(b.profit)+' profit</p>'+
+    '<p class="note">'+(G[b.genre]?esc(G[b.genre].name)+' · ':"")+'Film #'+b.no+'</p><p><span class="pos mono">'+money(b.gross)+'</span> box office · '+money(b.profit)+' profit'+(b.audience!=null?' · audience '+b.audience+'%':"")+'</p>'+
     (b.d&&D[b.d]?'<p class="note">'+esc(D[b.d].name)+(b.cast?' · '+b.cast.filter(function(a){return A[a]}).map(function(a){return esc(A[a].name)}).join(", "):"")+'</p>':"")+'</div></div></div>':'<p class="note">No films released yet.</p>';
   return head+stud+best;
 }
@@ -1792,8 +1816,8 @@ function ladderHtml(life){
 }
 function filmRows(list){
   if(!list.length)return '<p class="note">No films yet. Your first project is waiting.</p>';
-  return '<div class="scroll"><table><thead><tr><th>#</th><th>Film</th><th class="n">Box office</th><th class="n">Profit</th></tr></thead><tbody>'+list.map(function(f){
-    return '<tr><td class="mono">'+f.no+'</td><td><b>'+esc(f.title)+'</b><small>'+(G[f.genre]?G[f.genre].name:"")+'</small></td><td class="n">'+money(f.gross)+'</td><td class="n '+(f.profit>=0?"pos":"neg")+'">'+money(f.profit)+'</td></tr>'}).join("")+'</tbody></table></div>';
+  return '<div class="scroll"><table><thead><tr><th>#</th><th>Film</th><th class="n">Box office</th><th class="n">Audience</th><th class="n">Profit</th></tr></thead><tbody>'+list.map(function(f){
+    return '<tr><td class="mono">'+f.no+'</td><td><b>'+esc(f.title)+'</b><small>'+(G[f.genre]?G[f.genre].name:"")+'</small></td><td class="n">'+money(f.gross)+'</td><td class="n">'+(f.audience!=null?f.audience+"%":(f.scores&&f.scores.audience!=null?f.scores.audience+"%":"—"))+'</td><td class="n '+(f.profit>=0?"pos":"neg")+'">'+money(f.profit)+'</td></tr>'}).join("")+'</tbody></table></div>';
 }
 // ---- studio type onboarding (data/identity.json): four questions, each answer showing its upsides and
 // downsides; the points pick one of five types (same rule as the server, which decides). Chosen once.
@@ -1932,6 +1956,8 @@ function campResultHtml(res){
   if(c.status==="error")return '<section class="panel camp-res"><h3>Studio report</h3><p class="neg">'+esc(c.msg)+'</p><div class="row"><button class="btn" data-act="campretryrel">Try again</button><button class="btn" data-act="camphq">Back to HQ</button></div></section>';
   var f=c.film,ev=c.events,b0=c.before,b1=CAMP.st,h='<section class="panel camp-res"><h3>Studio report</h3>'+(c.spin?boomHtml(res):"");
   if(c.spin&&!c.spin.done)return h+'</section>';
+  if(f.event)h+='<div class="evcard"><span class="lbl">On set</span><b>'+esc(f.event.title)+'</b><p>'+esc(f.event.text)+'</p><span class="chips">'+(f.event.gross!==1?tag("Box office "+x2(f.event.gross),f.event.gross>1?"ok":"no"):"")+(f.event.cost?tag("+"+money(f.event.cost)+" cost","no"):"")+(f.event.critics?tag("Critics +"+f.event.critics,"ok"):"")+'</span><small class="note">Studio stories are fiction: traits and events are drawn at random for your studio.</small></div>';
+  if(f.scores)h+='<div class="money2"><div><span class="lbl">Audience score</span><b class="mono '+(f.scores.audience>=70?"pos":f.scores.audience<50?"neg":"")+'">'+f.scores.audience+'%</b></div><div><span class="lbl">Critics</span><b class="mono">'+f.scores.critics+'/100</b></div></div>';
   if(ev.bailout)h+='<p class="bail"><b>The studio was bailed out.</b> The bank fell below $'+CAMPCFG.start.floor+'M, so investors topped it back up to $'+CAMPCFG.start.floor+'M. Your unlocks are safe.</p>';
   h+='<div class="money2"><div><span class="lbl">Bank</span><b class="mono">'+money(b0.bank)+' → '+money(b1.bank)+'</b></div><div><span class="lbl">Lifetime profit</span><b class="mono pos">'+money(b1.lifetimeProfit)+'</b></div></div>';
   var l=ladderAt(b1.lifetimeProfit),from=ev.gates.length?0:ladderPct(b0.lifetimeProfit);
@@ -1983,7 +2009,9 @@ function campSend(res){
   NET.campaign("campaignRelease",{index:res.camp.index,pick:res.p}).then(function(o){
     CAMP.st=o.state;CAMP.history=null;res.camp={status:"ok",before:res.camp.before,index:res.camp.index,film:o.film,events:o.events};
     // A breakout: the same film re-scored with the server's multiplier, revealed when the wheel stops.
-    if(o.film.breakout){res.r0=res.r;var benv=Object.assign({},res.env);benv.boom={};benv.boom[res.p.g]=o.film.breakout.x;res.camp.spin={done:false,boosted:evalFilm(benv,res.p,res.cfg)}}
+    var eenv=Object.assign({},res.env),fe=o.film.event;
+    if(fe){eenv.prod={};eenv.prod[res.p.g]=fe.gross;eenv.prodNote=fe.title;eenv.extra=fe.cost;res.r=evalFilm(eenv,res.p,res.cfg)}
+    if(o.film.breakout){res.r0=res.r;var benv=Object.assign({},eenv);benv.boom={};benv.boom[res.p.g]=o.film.breakout.x;res.camp.spin={done:false,boosted:evalFilm(benv,res.p,res.cfg)}}
     if(state.result===res){drawResult();drawHead();if(res.camp.spin)startSpin(res)}
   },function(e){res.camp.status="error";res.camp.msg=NET.errorText(e,"campaign");if(state.result===res)drawResult()});
 }
@@ -2141,8 +2169,8 @@ function loadData(){
 }
 // Optional: the game runs without images.json (initials stand in).
 function loadCampaignData(){
-  return Promise.all(["campaign","achievements","identity","awards"].map(function(n){return fetch(DATA_URL+n+".json").then(function(r){if(!r.ok)throw new Error(n);return r.json()})}))
-    .then(function(v){CAMPCFG=v[0];ACH=v[1];IDN=v[2];AWD=v[3]},function(){CAMPCFG=ACH=IDN=AWD=null});
+  return Promise.all(["campaign","achievements","identity","awards","events"].map(function(n){return fetch(DATA_URL+n+".json").then(function(r){if(!r.ok)throw new Error(n);return r.json()})}))
+    .then(function(v){CAMPCFG=v[0];ACH=v[1];IDN=v[2];AWD=v[3];EVT=v[4]},function(){CAMPCFG=ACH=IDN=AWD=EVT=null});
 }
 function loadImages(){return fetch(DATA_URL+"images.json").then(function(r){return r.ok?r.json():{}}).catch(function(){return {}})}
 (async function boot(){
