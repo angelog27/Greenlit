@@ -812,7 +812,31 @@ function scriptOffer(seed,choices){
   return out.map(function(s,i){return {s:s,q:q[i]}});
 }
 // Basic: the n-th offer for a genre on a day (any n; the server recomputes it from the same seed).
-function basicOffer(day,gid,n){return scriptOffer("offer|"+day+"|"+gid+"|"+n,plotChoices(day,gid))}
+// Fresh offers (from OFFER_FROM, user's request): the day's scripts are dealt in a seeded order with the day's own
+// story last, three at a time, so a shuffle never repeats a script from the offer on screen (with 6+ scripts) and
+// the first one never offers the story you already have. A set's ratings are seeded by the set itself.
+var OFFER_FROM="2026-10-23";
+function basicOffer(day,gid,n){
+  var ch=plotChoices(day,gid);
+  if(day<OFFER_FROM)return scriptOffer("offer|"+day+"|"+gid+"|"+n,ch);
+  var own=makeEnv(day).plots[gid],r=rng(hash("order|"+day+"|"+gid)),pool=ch.filter(function(s){return s!==own}),order=[];
+  while(pool.length)order.push(pool.splice(Math.floor(r()*pool.length),1)[0]);
+  order.push(own);
+  var set=[];for(var i=0;i<Math.min(3,order.length);i++)set.push(order[(3*n+i)%order.length]);
+  return dealQ("offer|"+day+"|"+gid+"|"+set.slice().sort(function(a,b){return a-b}).join(","),set);
+}
+// A reroll's offer avoiding scripts (the one in use, the last offer): fresh scripts first, then the avoided ones
+// from the front of the list, so the last entries are given up last.
+function freshOffer(seed,choices,avoid){
+  var r=rng(hash(seed)),pool=choices.filter(function(s){return avoid.indexOf(s)<0}),set=[],back=avoid.filter(function(s){return choices.indexOf(s)>=0});
+  while(set.length<3&&pool.length)set.push(pool.splice(Math.floor(r()*pool.length),1)[0]);
+  while(set.length<3&&back.length)set.push(back.shift());
+  return dealQ(seed+"|q",set);
+}
+function dealQ(seed,set){
+  var r=rng(hash(seed)),q=SCRIPT_Q.slice(0,set.length);for(var i=q.length-1;i>0;i--){var j=Math.floor(r()*(i+1)),t=q[i];q[i]=q[j];q[j]=t}
+  return set.map(function(s,i){return {s:s,q:q[i]}});
+}
 function envWithScript(env,gid,s,q){var e=envWithPlot(env,gid,s);e.quality=Object.assign({},env.quality);e.quality[gid]=q;return e}
 // Genre-aware talent (from SKILL_FROM): a director's skill counts in full in their specialties, partly in related
 // genres (genres.json `near`) and little elsewhere; an actor's star power likewise. Earlier days keep plain

@@ -563,7 +563,7 @@ function awardBadges(C, before, next, film, now) {
 }
 
 // Story rerolls: from the studio levels in data/campaign.json `rerolls`, a number per project. A reroll lays out
-// three scripts for one playable genre (scriptOffer, seeded by the project and the reroll count so it can't be
+// three scripts for one playable genre (freshOffer: none from the last offer or the story in use when it can; seeded by the project and the reroll count so it can't be
 // fished for): one strong draft, one middling, one weak. Drafts with no film over the feasibility margin are
 // marked unavailable. The player then takes one with pickScript; the project keeps the offer for the result.
 function rerollsFor(C, st) {
@@ -578,7 +578,10 @@ function reroll(C, st, uid, input) {
   if (used >= allowed) throw new Reject("No story rerolls left on this project.");
   if (!own(pj.genres, g) || pj.genres[g].state !== "ok") throw new Reject("You can only reroll the story of a playable genre.");
   const env0 = projectEnv(pj), cfg = m.DIFFS[pj.diff];
-  const items = m.scriptOffer(pj.key + "|offer|" + g + "|" + used, m.plotChoices(pj.date, g))
+  // Fresh scripts each time: avoid the last offer for this genre, then (given up last) the story in use.
+  const last = (pj.offer && pj.offer.g === g && pj.offer.items) || (pj.script && pj.script.g === g && pj.script.items) || [];
+  const avoid = last.map((x) => x.s).filter((s) => s !== env0.plots[g]).concat([env0.plots[g]]);
+  const items = m.freshOffer(pj.key + "|offer|" + g + "|" + used, m.plotChoices(pj.date, g), avoid)
     .map((x) => ({ s: x.s, q: x.q, ok: !!feasible(C, m.envWithScript(env0, g, x.s, x.q), g, cfg) }));
   if (!items.some((x) => x.ok)) throw new Reject("No script for that genre works within this budget.");
   return Object.assign({}, st, { currentProject: Object.assign({}, pj, { rerolls: used + 1, offer: { g, items } }) });

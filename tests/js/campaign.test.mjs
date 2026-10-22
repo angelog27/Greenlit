@@ -534,6 +534,11 @@ test("story rerolls: three scripts per reroll, one strongest, pick one; unlocked
   assert.equal(a.currentProject.rerolls, 1);
   assert.deepEqual(a.currentProject.env.plots, st.currentProject.env.plots, "nothing changes until a script is picked");
   assert.deepEqual(plain(camp.reroll(C, st, "u1", { index: idx, g })), a, "seeded: same reroll, same offer");
+  // Fresh scripts: never the story in use when there's room, and a second reroll avoids the first offer.
+  const choices = m.plotChoices(a.currentProject.date, g), inUse = st.currentProject.env.plots[g], ids = (o) => o.items.map((x) => x.s);
+  if (choices.length > 3) assert.ok(!ids(offer).includes(inUse), "the first reroll doesn't offer the story you have");
+  const a2 = plain(camp.reroll(C, a, "u1", { index: idx, g })).currentProject.offer;
+  assert.equal(ids(a2).filter((s) => !ids(offer).includes(s) && s !== inUse).length, Math.min(3, choices.filter((s) => !ids(offer).includes(s) && s !== inUse).length), "as many new scripts as there are");
   rejects(() => camp.pickScript(C, a, "u1", { index: idx, g, s: 999 }), /isn't one you can pick/);
   rejects(() => camp.pickScript(C, a, "u1", { index: idx, g: "drama", s: offer.items[0].s }), /no script offer/);
   // Pick the strongest draft: it becomes the project's story with its potential, and the film is scored with it.
@@ -548,6 +553,7 @@ test("story rerolls: three scripts per reroll, one strongest, pick one; unlocked
   assert.equal(out.film.title, m.PLOTS[g][best.s].title);
   assert.equal(out.film.script.q, best.q);
   assert.equal(out.film.script.items.length, offer.items.length, "the film remembers the drafts it was chosen from");
+  if (choices.length >= 6) assert.ok(plain(camp.reroll(C, b, "u1", { index: idx, g })).currentProject.offer.items.every((x) => !ids(offer).includes(x.s)), "after a pick, a reroll deals three new scripts");
   assert.ok(!out.state.currentProject.rerolls && !out.state.currentProject.env.quality, "a new project starts fresh");
   st = a;
   for (let i = 1; i < R[0].count; i++) st = plain(camp.reroll(C, st, "u1", { index: idx, g }));
