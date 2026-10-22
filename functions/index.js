@@ -13,7 +13,10 @@ const { getStorage } = require("firebase-admin/storage");
 const { loadGame, check, Reject, boardName } = require("./game");
 const { makeLimiter } = require("./limits");
 
-setGlobalOptions({ maxInstances: 10 });
+// Capacity (Oct 22 2026): the default (256MiB, a sixth of a CPU, one request per instance, 10 instances) ran out
+// with ~8 players at once; Cloud Run's "no instance" replies carry no CORS headers, so the page saw "internal".
+// A full CPU serving many requests per instance makes campaign calls ~6x faster and absorbs bursts.
+setGlobalOptions({ maxInstances: 20, memory: "512MiB", cpu: 1, concurrency: 40, timeoutSeconds: 60 });
 initializeApp();
 const db = getFirestore();
 const game = loadGame();

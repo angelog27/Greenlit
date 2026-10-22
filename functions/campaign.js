@@ -563,13 +563,20 @@ function awardBadges(C, before, next, film, now) {
 }
 
 // Story rerolls: from the studio levels in data/campaign.json `rerolls`, a number per project. A reroll lays out
-// three scripts for one playable genre (freshOffer: none from the last offer or the story in use when it can; seeded by the project and the reroll count so it can't be
+// up to three scripts for one playable genre (freshOffer: only scripts the project hasn't shown; seeded by the project and the reroll count so it can't be
 // fished for): one strong draft, one middling, one weak. Drafts with no film over the feasibility margin are
 // marked unavailable. The player then takes one with pickScript; the project keeps the offer for the result.
 function rerollsFor(C, st) {
   const lv = levelFor(C, st.lifetimeGross);
   return (C.cfg.rerolls || []).reduce((n, r) => (lv >= r.level ? r.count : n), 0);
 }
+// Scripts of a genre the project has already shown (earlier rerolls; older projects only kept the last offer).
+function seenOf(pj, g) {
+  const s = new Set(((pj.seen || {})[g]) || []);
+  [pj.offer, pj.script].forEach((o) => { if (o && o.g === g) o.items.forEach((x) => s.add(x.s)); });
+  return [...s];
+}
+function unseen(m, pj, g) { const seen = seenOf(pj, g); return m.plotChoices(pj.date, g).filter((s) => s !== pj.env.plots[g] && !seen.includes(s)); }
 function reroll(C, st, uid, input) {
   st = normalize(st);
   checkIndex(st, input && input.index);
@@ -578,13 +585,15 @@ function reroll(C, st, uid, input) {
   if (used >= allowed) throw new Reject("No story rerolls left on this project.");
   if (!own(pj.genres, g) || pj.genres[g].state !== "ok") throw new Reject("You can only reroll the story of a playable genre.");
   const env0 = projectEnv(pj), cfg = m.DIFFS[pj.diff];
-  // Fresh scripts each time: avoid the last offer for this genre, then (given up last) the story in use.
-  const last = (pj.offer && pj.offer.g === g && pj.offer.items) || (pj.script && pj.script.g === g && pj.script.items) || [];
-  const avoid = last.map((x) => x.s).filter((s) => s !== env0.plots[g]).concat([env0.plots[g]]);
-  const items = m.freshOffer(pj.key + "|offer|" + g + "|" + used, m.plotChoices(pj.date, g), avoid)
+  // Only scripts this project hasn't shown: never the one in use or an earlier reroll's; ones the studio has
+  // already made a film of come last.
+  const fresh = unseen(m, pj, g), made = (s) => !!(st.madeScripts || {})[g + "|" + s];
+  if (!fresh.length) throw new Reject("You've read every script for this genre on this project.");
+  const items = m.freshOffer(pj.key + "|offer|" + g + "|" + used, [fresh.filter((s) => !made(s)), fresh.filter(made)])
     .map((x) => ({ s: x.s, q: x.q, ok: !!feasible(C, m.envWithScript(env0, g, x.s, x.q), g, cfg) }));
   if (!items.some((x) => x.ok)) throw new Reject("No script for that genre works within this budget.");
-  return Object.assign({}, st, { currentProject: Object.assign({}, pj, { rerolls: used + 1, offer: { g, items } }) });
+  const seen = Object.assign({}, pj.seen, { [g]: seenOf(pj, g).concat(items.map((x) => x.s)) });
+  return Object.assign({}, st, { currentProject: Object.assign({}, pj, { rerolls: used + 1, offer: { g, items }, seen }) });
 }
 function pickScript(C, st, uid, input) {
   st = normalize(st);

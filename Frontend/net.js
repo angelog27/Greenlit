@@ -58,7 +58,17 @@ async function start() {
       const s = await Fs.getDoc(Fs.doc(db, "campaigns", net.user.uid));
       return s.exists() ? s.data() : null;
     },
-    async campaign(name, payload) { return (await Fn.httpsCallable(fns, name)(payload || {})).data; },
+    // A busy server (every instance taken) reaches the page as "internal" or "unavailable". Calls that are safe
+    // to repeat (start and project return the studio as it is; a release is idempotent per project) retry once.
+    async campaign(name, payload) {
+      const call = () => Fn.httpsCallable(fns, name)(payload || {});
+      try { return (await call()).data; } catch (e) {
+        const safe = ["campaignStart", "campaignProject", "campaignRelease"].includes(name) && !(name === "campaignProject" && payload && payload.hard !== undefined);
+        if (!safe || !/internal|unavailable|deadline-exceeded/.test((e && e.code) || "")) throw e;
+        await new Promise((r) => setTimeout(r, 1500));
+        return (await call()).data;
+      }
+    },
     // Studio images: the owner uploads studios/{uid}/logo or /backdrop (storage.rules), then calls campaignStyle,
     // which checks the upload. Anyone can view them by URL; v (the stored version) busts the browser cache.
     async uploadStudioImage(name, blob) {
@@ -126,7 +136,7 @@ async function start() {
       const camp = ctx === "campaign" && {
         "permission-denied": "The server won't let the page read your studio. The campaign's Firestore rules aren't deployed on this project yet (firebase deploy --only firestore).",
         "functions/not-found": "The campaign functions aren't deployed on this project yet (firebase deploy --only functions).",
-        "functions/internal": "The campaign server hit an error.",
+        "functions/internal": "The campaign server is busy or hit an error. Try again in a moment.",
         "functions/unavailable": "The campaign server can't be reached right now.",
         "unavailable": "The campaign server can't be reached right now. If you're using ?emu, start the emulators.",
       }[code];

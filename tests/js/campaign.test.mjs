@@ -23,13 +23,13 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
 const rejects = (fn, re) => assert.throws(fn, (e) => e instanceof Reject && re.test(e.message));
 
 // A studio at a given lifetime profit (unlocks follow from it), bank and film count.
-function studio(lifetime, { bank = cfg.start.bank, films = 5, index = 7, uid = "u1", perks = {}, proofs } = {}) {
-  const st = camp.newCampaign(C, uid, "cid", "", DATE, NOW);
+function studio(lifetime, { bank = cfg.start.bank, films = 5, index = 7, uid = "u1", perks = {}, proofs, date = DATE } = {}) {
+  const st = camp.newCampaign(C, uid, "cid", "", date, NOW);
   const u = camp.unlocksFor(C, lifetime);
   Object.assign(st, { lifetimeProfit: lifetime, bank, filmsMade: films, projectIndex: index, perks,
     unlocked: { actorTier: u.actorTier, directorTier: u.directorTier, genres: u.genres, hard: u.hard },
     gates: Object.fromEntries(u.gates.map((g) => [g, NOW])) });
-  st.currentProject = camp.makeProject(C, st, uid, DATE, false, proofs);
+  st.currentProject = camp.makeProject(C, st, uid, date, false, proofs);
   return plain(st);
 }
 // The cheapest legal film for a playable genre of the current project.
@@ -518,7 +518,7 @@ test("studio style reaches the campaign board row once the studio is on it", asy
 });
 
 test("story rerolls: three scripts per reroll, one strongest, pick one; unlocked by level, a few per project", () => {
-  const R = cfg.rerolls, st0 = studio(0, { index: 4 });
+  const R = cfg.rerolls, st0 = studio(0, { index: 4, date: "2026-10-27" }); // a day with 9 scripts per genre
   rejects(() => camp.reroll(C, st0, "u1", { index: st0.currentProject.index, g: playable(st0)[0] }), /unlock at studio level/);
   let st = { ...st0, lifetimeGross: cfg.levels[R[0].level - 1] };
   assert.equal(camp.rerollsFor(C, st), R[0].count);
@@ -529,16 +529,24 @@ test("story rerolls: three scripts per reroll, one strongest, pick one; unlocked
   const a = plain(camp.reroll(C, st, "u1", { index: idx, g }));
   const offer = a.currentProject.offer;
   assert.equal(offer.g, g);
-  assert.equal(offer.items.length, Math.min(3, m.plotChoices(a.currentProject.date, g).length));
+  assert.equal(offer.items.length, 3);
   assert.equal(offer.items.filter((x) => x.q === m.SCRIPT_Q[0]).length, 1, "exactly one strongest draft");
   assert.equal(a.currentProject.rerolls, 1);
   assert.deepEqual(a.currentProject.env.plots, st.currentProject.env.plots, "nothing changes until a script is picked");
   assert.deepEqual(plain(camp.reroll(C, st, "u1", { index: idx, g })), a, "seeded: same reroll, same offer");
-  // Fresh scripts: never the story in use when there's room, and a second reroll avoids the first offer.
+  // Only unseen scripts: never the story in use, never an earlier reroll's; when they run out, rerolls stop.
   const choices = m.plotChoices(a.currentProject.date, g), inUse = st.currentProject.env.plots[g], ids = (o) => o.items.map((x) => x.s);
-  if (choices.length > 3) assert.ok(!ids(offer).includes(inUse), "the first reroll doesn't offer the story you have");
-  const a2 = plain(camp.reroll(C, a, "u1", { index: idx, g })).currentProject.offer;
-  assert.equal(ids(a2).filter((s) => !ids(offer).includes(s) && s !== inUse).length, Math.min(3, choices.filter((s) => !ids(offer).includes(s) && s !== inUse).length), "as many new scripts as there are");
+  assert.equal(choices.length, 9);
+  assert.ok(!ids(offer).includes(inUse), "the first reroll doesn't offer the story you have");
+  let many = { ...a, lifetimeGross: cfg.levels[R[R.length - 1].level - 1] }, seen = [inUse, ...ids(offer)];
+  for (const want of [3, 2]) {
+    many = plain(camp.reroll(C, many, "u1", { index: idx, g }));
+    const o = ids(many.currentProject.offer);
+    assert.equal(o.length, want);
+    assert.ok(o.every((s) => !seen.includes(s)), "a reroll repeats a script: " + o + " vs " + seen);
+    seen = seen.concat(o);
+  }
+  rejects(() => camp.reroll(C, many, "u1", { index: idx, g }), /read every script/);
   rejects(() => camp.pickScript(C, a, "u1", { index: idx, g, s: 999 }), /isn't one you can pick/);
   rejects(() => camp.pickScript(C, a, "u1", { index: idx, g: "drama", s: offer.items[0].s }), /no script offer/);
   // Pick the strongest draft: it becomes the project's story with its potential, and the film is scored with it.
@@ -553,7 +561,7 @@ test("story rerolls: three scripts per reroll, one strongest, pick one; unlocked
   assert.equal(out.film.title, m.PLOTS[g][best.s].title);
   assert.equal(out.film.script.q, best.q);
   assert.equal(out.film.script.items.length, offer.items.length, "the film remembers the drafts it was chosen from");
-  if (choices.length >= 6) assert.ok(plain(camp.reroll(C, b, "u1", { index: idx, g })).currentProject.offer.items.every((x) => !ids(offer).includes(x.s)), "after a pick, a reroll deals three new scripts");
+  assert.ok(plain(camp.reroll(C, b, "u1", { index: idx, g })).currentProject.offer.items.every((x) => !ids(offer).includes(x.s) && x.s !== inUse), "after a pick, a reroll deals new scripts");
   assert.ok(!out.state.currentProject.rerolls && !out.state.currentProject.env.quality, "a new project starts fresh");
   st = a;
   for (let i = 1; i < R[0].count; i++) st = plain(camp.reroll(C, st, "u1", { index: idx, g }));

@@ -69,17 +69,16 @@ test("daily challenge: one genre and one plot per day for everyone, rotating by 
   if (other !== undefined) assert.throws(() => check(game, { type: "daily", diff: "hard", day: DAY, pick: { ...honest(env, g, "hard"), s: other } }, NOW), (e) => e instanceof Reject);
 });
 
-test("free play shuffles: each offer shares no script with the one before; the first skips the day's story", () => {
+test("free play shuffles: only scripts you haven't seen, never the day's story, until they run out", () => {
   for (const day of ["2026-10-23", "2026-10-27"]) for (const g of m.GENRES.map((x) => x.id)) {
-    const own = m.makeEnv(day).plots[g], L = m.plotChoices(day, g).length;
-    let prev = null;
-    for (let n = 0; n < 6; n++) {
+    const own = m.makeEnv(day).plots[g], L = m.plotChoices(day, g).length, seen = [own];
+    for (let n = 0; ; n++) {
       const o = m.basicOffer(day, g, n), ids = o.map((x) => x.s);
-      assert.equal(new Set(ids).size, 3);
+      if (!o.length) { assert.equal(seen.length, L, "every script is shown once before the offers run out"); break; }
+      assert.equal(ids.length, Math.min(3, L - seen.length));
       assert.equal(o.filter((x) => x.q === m.SCRIPT_Q[0]).length, 1);
-      if (n === 0) assert.ok(!ids.includes(own), "first shuffle: new scripts only");
-      if (prev && L >= 6) assert.ok(ids.every((s) => !prev.includes(s)), `${day} ${g} offer ${n} repeats a script`);
-      prev = ids;
+      assert.ok(ids.every((s) => !seen.includes(s)), `${day} ${g} offer ${n} repeats a script`);
+      seen.push(...ids);
     }
   }
   const old = m.basicOffer("2026-10-22", "action", 1), again = m.scriptOffer("offer|2026-10-22|action|1", m.plotChoices("2026-10-22", "action"));
