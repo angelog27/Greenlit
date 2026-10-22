@@ -76,13 +76,13 @@ function makeStore(db, C, files) {
     submitAwards: (uid, data, now) => db.runTransaction(async (tx) => {
       const A = C.awd, wk = awards.weekOf(now), list = data && data.films;
       if (!Array.isArray(list) || !list.length || list.length > A.weekly.maxFilms || new Set(list).size !== list.length || !list.every((x) => Number.isInteger(x) && x >= 0))
-        throw new Reject(`Pick 1 to ${A.weekly.maxFilms} different films from this week.`);
+        throw new Reject(`Pick 1 to ${A.weekly.maxFilms} different films from today's round.`);
       const st = await load(tx, uid);
       const snaps = await Promise.all(list.map((i) => tx.get(db.doc(`campaigns/${uid}/films/${filmId(i)}`))));
       const films = snaps.map((s, k) => {
         const f = s.exists ? s.data() : null;
         if (!f || !f.scores) throw new Reject("One of those films can't be entered.");
-        if (f.at < wk.start || f.at >= wk.end) throw new Reject("Only films released this week (Monday to Sunday, UTC) can be entered.");
+        if (f.at < wk.start || f.at >= wk.end) throw new Reject("Only films released since the last Globes (7:30 PM Central) can be entered.");
         if (list[k] < (st.firstIndex || 0)) throw new Reject("Only films from your current run can be entered.");
         return { projectIndex: list[k], title: f.title, genre: f.genre, d: f.d || null, cast: f.cast || null, scores: f.scores };
       });

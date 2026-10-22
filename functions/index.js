@@ -35,7 +35,8 @@ exports.release = onCall(async (req) => {
     throw e;
   }
   const uid = req.auth.uid, tok = req.auth.token || {};
-  const name = boardName(uid, tok);
+  const studio = await db.doc(`campaigns/${uid}`).get();
+  const name = (studio.exists && studio.data().studioName) || boardName(uid, tok);
   const film = { profit: round1(run.profit), gross: Math.round(run.gross), cost: run.cost, title: run.title, genre: run.p.g, pick: run.p };
   const entryRef = db.doc(`boards/${run.board}/entries/${uid}`);
   const runRef = db.doc(`users/${uid}/runs/${run.board}`);
@@ -108,9 +109,9 @@ exports.campaignPickScript = campaignCall(store.pickScript);
 exports.campaignIdentity = campaignCall(store.identity);
 exports.campaignSubmitAwards = campaignCall(store.submitAwards);
 exports.campaignMaster = campaignCall(store.master);
-// Greenlight Globes: every Monday 00:15 UTC, crown last week's winners.
+// Greenlight Globes: every day at 19:31 Chicago time, crown the round that closed at 19:30.
 const { weekOf } = require("./awards");
-exports.weeklyAwards = onSchedule({ schedule: "15 0 * * 1", timeZone: "Etc/UTC" }, async () => {
-  const out = await store.finalizeWeek(weekOf(Date.now() - 86400000).id, Date.now());
+exports.weeklyAwards = onSchedule({ schedule: "31 19 * * *", timeZone: "America/Chicago" }, async () => {
+  const out = await store.finalizeWeek(weekOf(Date.now() - 5 * 60000).id, Date.now());
   console.log("weeklyAwards", JSON.stringify({ entries: out.entries, skipped: !!out.skipped }));
 });

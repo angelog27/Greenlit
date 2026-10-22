@@ -408,6 +408,398 @@
     "thatcher": {
       "tmdb": 1981044,
       "profile": "/s7wB4ORCwPPz7H3dWVCNSAKQz9P.jpg"
+    },
+    "reynolds": {
+      "tmdb": 10859,
+      "profile": "/trzgptffGvAlAT6MEu01fz47cLW.jpg"
+    },
+    "bale": {
+      "tmdb": 3894,
+      "profile": "/7Pxez9J8fuPd2Mn9kex13YALrCQ.jpg"
+    },
+    "lawrence": {
+      "tmdb": 72129,
+      "profile": "/6WTY6HjXMGxnHilJRVC3eLnu43F.jpg"
+    },
+    "craig": {
+      "tmdb": 8784,
+      "profile": "/iFerDZUmC5Fu26i4qI8xnUVEHc7.jpg"
+    },
+    "blanchett": {
+      "tmdb": 112,
+      "profile": "/1Rd567YFdGfkJjSlhNPR8joYkaX.jpg"
+    },
+    "streep": {
+      "tmdb": 5064,
+      "profile": "/g5cVxQBAQ3AXt3LhdBXtbbN47Uc.jpg"
+    },
+    "evans": {
+      "tmdb": 16828,
+      "profile": "/3bOGNsHlrswhyW79uvIHH1V43JI.jpg"
+    },
+    "jackman": {
+      "tmdb": 6968,
+      "profile": "/4Xujtewxqt6aU0Y81tsS9gkjizk.jpg"
+    },
+    "elba": {
+      "tmdb": 17605,
+      "profile": "/be1bVF7qGX91a6c5WeRPs5pKXln.jpg"
+    },
+    "pratt": {
+      "tmdb": 73457,
+      "profile": "/cRH6HPAQ98PlOwwEvhYO4CM9lwu.jpg"
+    },
+    "cumberbatch": {
+      "tmdb": 71580,
+      "profile": "/wz3MRiMmoz6b5X3oSzMRC9nLxY1.jpg"
+    },
+    "bullock": {
+      "tmdb": 18277,
+      "profile": "/4rfjISL3Flx16jfiusXoHbpt87X.jpg"
+    },
+    "roberts": {
+      "tmdb": 1204,
+      "profile": "/fQacAdIa1WUNChQ6FgEko13eqOA.jpg"
+    },
+    "jolie": {
+      "tmdb": 11701,
+      "profile": "/bXNxIKcJ5cNNW8QFrBPWcfTSu9x.jpg"
+    },
+    "driver": {
+      "tmdb": 1023139,
+      "profile": "/b5w381C8Z33D1iF30KT4k8tJNsk.jpg"
+    },
+    "holland": {
+      "tmdb": 1136406,
+      "profile": "/5OK84Wn1bIEIThFKcVoaN087mLj.jpg"
+    },
+    "carrey": {
+      "tmdb": 206,
+      "profile": "/y3U9QfPN6sJaGl6l68xjwWj28ig.jpg"
+    },
+    "statham": {
+      "tmdb": 976,
+      "profile": "/8l6lmrmKFDvhDjMJPj6tBpJdhaA.jpg"
+    },
+    "portman": {
+      "tmdb": 524,
+      "profile": "/edPU5HxncLWa1YkgRPNkSd68ONG.jpg"
+    },
+    "bardem": {
+      "tmdb": 3810,
+      "profile": "/zfRID0jx8DKBluPGU9xtk9sZWUt.jpg"
+    },
+    "winslet": {
+      "tmdb": 204,
+      "profile": "/6qNnMsKtKz9si5rabpUEG85UfHp.jpg"
+    },
+    "mikkelsen": {
+      "tmdb": 1019,
+      "profile": "/AsX4bdvZ8UCayWTmAf9lAqOA8V7.jpg"
+    },
+    "diesel": {
+      "tmdb": 12835,
+      "profile": "/tEoUF0RJqHnskmBOJiDEQhyN7Ok.jpg"
+    },
+    "farrell": {
+      "tmdb": 72466,
+      "profile": "/5FdalJbrbZ5UCsED5rFrXpvbqJa.jpg"
+    },
+    "ali": {
+      "tmdb": 932967,
+      "profile": "/9ZmSejm5lnUVY5IJ1iNx2QEjnHb.jpg"
+    },
+    "fiennes": {
+      "tmdb": 5469,
+      "profile": "/tJr9GcmGNHhLVVEH3i7QYbj6hBi.jpg"
+    },
+    "brolin": {
+      "tmdb": 16851,
+      "profile": "/sX2etBbIkxRaCsATyw5ZpOVMPTD.jpg"
+    },
+    "pine": {
+      "tmdb": 62064,
+      "profile": "/vSe6sIsdtcoqBhuWRXynahFg8Vf.jpg"
+    },
+    "lopez": {
+      "tmdb": 16866,
+      "profile": "/80DP8sLNWHxV5EJUQxaA8uaFFxo.jpg"
+    },
+    "gadot": {
+      "tmdb": 90633,
+      "profile": "/AbXKtWQwuDiwhoQLh34VRglwuBE.jpg"
+    },
+    "kravitz": {
+      "tmdb": 37153,
+      "profile": "/n0mhAgmY6eJQmA7kaugsTZEJgHo.jpg"
+    },
+    "cruz": {
+      "tmdb": 955,
+      "profile": "/n5SFgmvJSENQt8poE4qYacUnKOi.jpg"
+    },
+    "pike": {
+      "tmdb": 10882,
+      "profile": "/8ObNklHDi2hjdz0ayzJFB9jtqzm.jpg"
+    },
+    "mccarthy": {
+      "tmdb": 55536,
+      "profile": "/yl0qva0O4u92fvtItakdvKmKrW9.jpg"
+    },
+    "larson": {
+      "tmdb": 60073,
+      "profile": "/xSGvMwNNJcEQvVcjiIUTyxyMfkZ.jpg"
+    },
+    "gaga": {
+      "tmdb": 237405,
+      "profile": "/9Y4Pz7AEXhB9qNar2tMsx5EVXML.jpg"
+    },
+    "hart": {
+      "tmdb": 55638,
+      "profile": "/byiNydUlM6oP8diA7WMvYbNM7a1.jpg"
+    },
+    "hill": {
+      "tmdb": 21007,
+      "profile": "/cymlWttB83MsAGR2EkTgANtjeRH.jpg"
+    },
+    "rogen": {
+      "tmdb": 19274,
+      "profile": "/nYl9bvQzaPQLzlf0wf75clLN6Hi.jpg"
+    },
+    "patel": {
+      "tmdb": 76788,
+      "profile": "/byAo6xoleVSG5O9YpGrQ5YuCRX7.jpg"
+    },
+    "ahmed": {
+      "tmdb": 53240,
+      "profile": "/1uP9RaX7BGVx7XGTEmwObBJJzsC.jpg"
+    },
+    "keoghan": {
+      "tmdb": 1290466,
+      "profile": "/ngoitknM6hw8fffLywyvjzy6Iti.jpg"
+    },
+    "bautista": {
+      "tmdb": 543530,
+      "profile": "/snk6JiXOOoRjPtHU5VMoy6qbd32.jpg"
+    },
+    "garfield": {
+      "tmdb": 37625,
+      "profile": "/5ydZ6TluPtxlz5G8nlWMB7SGmow.jpg"
+    },
+    "malek": {
+      "tmdb": 17838,
+      "profile": "/8ykTeTRSYd2MKF5uLBvD93X5KMJ.jpg"
+    },
+    "rudd": {
+      "tmdb": 22226,
+      "profile": "/6jtwNOLKy0LdsRAKwZqgYMAfd5n.jpg"
+    },
+    "radcliffe": {
+      "tmdb": 10980,
+      "profile": "/uUFfo8RANo7tuckB6AZAnESne55.jpg"
+    },
+    "mcadams": {
+      "tmdb": 53714,
+      "profile": "/2DPh6KoNg0p57vvGc6N468zr3ct.jpg"
+    },
+    "mulligan": {
+      "tmdb": 36662,
+      "profile": "/iwVHhqoz5b62FR0SDpZ7wfsuTBI.jpg"
+    },
+    "colman": {
+      "tmdb": 39187,
+      "profile": "/lawJUdbLb1YW0niaYjiVGR9IBG8.jpg"
+    },
+    "stewart": {
+      "tmdb": 37917,
+      "profile": "/xldswdQ1VnpcOf2wZMPguZ3avgO.jpg"
+    },
+    "fanning": {
+      "tmdb": 18050,
+      "profile": "/ucC5faqfEYVhoC25M6Hi3znZmab.jpg"
+    },
+    "vikander": {
+      "tmdb": 227454,
+      "profile": "/lZu8qiTwiQIN96cuptgqMCCaUtg.jpg"
+    },
+    "qualley": {
+      "tmdb": 1392137,
+      "profile": "/qk6X0yIAkdkD9l30ztWKYeBQaz8.jpg"
+    },
+    "moore": {
+      "tmdb": 3416,
+      "profile": "/wApParZYBDi4yxekjfxjKEifJYh.jpg"
+    },
+    "james": {
+      "tmdb": 1016168,
+      "profile": "/2w8tMEdCxBXB44X05RQDC2Kvbap.jpg"
+    },
+    "mbbrown": {
+      "tmdb": 1356210,
+      "profile": "/8qasWpPYwiBgPw5Sn54YzN7q5uI.jpg"
+    },
+    "djohnson": {
+      "tmdb": 118545,
+      "profile": "/qFek0KqpaPV5mVyHHNfAapDE9Tj.jpg"
+    },
+    "fey": {
+      "tmdb": 56323,
+      "profile": "/yPTAi1iucXf85UpiFPtyiTSM6do.jpg"
+    },
+    "kendrick": {
+      "tmdb": 84223,
+      "profile": "/i2HIJQcBsUQ3o9HwEeDwou45D60.jpg"
+    },
+    "mara": {
+      "tmdb": 108916,
+      "profile": "/zT6UyHFHEQ9RcKykplWCycKBnoS.jpg"
+    },
+    "chopra": {
+      "tmdb": 77234,
+      "profile": "/hh48u9scic0nITGtzi9b6rJeAtT.jpg"
+    },
+    "nanjiani": {
+      "tmdb": 466505,
+      "profile": "/9EyrK1Cv7ey1h1GgmsVAOn45w6G.jpg"
+    },
+    "goldblum": {
+      "tmdb": 4785,
+      "profile": "/kcyEPgYtBP5Pm6LLeLGfXKjYovL.jpg"
+    },
+    "rockwell": {
+      "tmdb": 6807,
+      "profile": "/afYhNpLwpa65Yy0Q0g00FNFhzx5.jpg"
+    },
+    "leto": {
+      "tmdb": 7499,
+      "profile": "/ca3x0OfIKbJppZh8S1Alx3GfUZO.jpg"
+    },
+    "egerton": {
+      "tmdb": 1303037,
+      "profile": "/uCaPhyKAQIfEzAWWCYIrO2004CB.jpg"
+    },
+    "domingo": {
+      "tmdb": 91671,
+      "profile": "/t0cgfvtA7Thxnrtj5baRi656zlc.jpg"
+    },
+    "bernal": {
+      "tmdb": 258,
+      "profile": "/a7wZYMDkySngdGEa1yKzDSenynu.jpg"
+    },
+    "watanabe": {
+      "tmdb": 3899,
+      "profile": "/psAXOYp9SBOXvg6AXzARDedNQ9P.jpg"
+    },
+    "plaza": {
+      "tmdb": 119592,
+      "profile": "/ejtGfjOAvUHBdVc3xTIV1HtJBi9.jpg"
+    },
+    "mckinnon": {
+      "tmdb": 1240487,
+      "profile": "/2cNetzianFcxPQbyOQnkAIkKUZE.jpg"
+    },
+    "oh": {
+      "tmdb": 25540,
+      "profile": "/zU8vjebHxcP60ESEL5Ok68KWZvj.jpg"
+    },
+    "steinfeld": {
+      "tmdb": 130640,
+      "profile": "/qDInsG0cxWNxS1X4t59TBZ5S6x5.jpg"
+    },
+    "rapace": {
+      "tmdb": 87722,
+      "profile": "/m0J6ZqEyNljqF1DXBoC9DcMStHP.jpg"
+    },
+    "spencer": {
+      "tmdb": 6944,
+      "profile": "/zDGydyM1fmvNWzQlTAns9IZjNxT.jpg"
+    },
+    "monae": {
+      "tmdb": 1005852,
+      "profile": "/eTYG6eBH1LzLWcdQJaH72Wzxemm.jpg"
+    },
+    "quan": {
+      "tmdb": 690,
+      "profile": "/iestHyn7PLuVowj5Jaa1SGPboQ4.jpg"
+    },
+    "liu": {
+      "tmdb": 1489211,
+      "profile": "/cCx2OghLj9KN73oyRZe92i2p3Ih.jpg"
+    },
+    "sanada": {
+      "tmdb": 9195,
+      "profile": "/SOwDxhGnRccP2lAtssQ7TxCzOe.jpg"
+    },
+    "songkh": {
+      "tmdb": 20738,
+      "profile": "/kBM9UTPYXUA2RNk210DXhztLFns.jpg"
+    },
+    "luna": {
+      "tmdb": 8688,
+      "profile": "/qwbjcyDN37OHiln4a6P4LP31o7F.jpg"
+    },
+    "gladstone": {
+      "tmdb": 1183917,
+      "profile": "/zYAN84WqZv2sbVE2JDkcWoXGoF7.jpg"
+    },
+    "cho": {
+      "tmdb": 68842,
+      "profile": "/4Lar4uy8gk78cEocq6ERPRFWt3e.jpg"
+    },
+    "slate": {
+      "tmdb": 213001,
+      "profile": "/mMxsNO6r966ut0sordYzj2iDOb6.jpg"
+    },
+    "deadwyler": {
+      "tmdb": 1853909,
+      "profile": "/9XIVrT3xzmEnovPiM5ZV7n89c2b.jpg"
+    },
+    "deutch": {
+      "tmdb": 1059597,
+      "profile": "/cU124pdfKA84tDvoapECkJ57rR2.jpg"
+    },
+    "dever": {
+      "tmdb": 481337,
+      "profile": "/np5rBCFRdeS1sXePL8uY09ktoC4.jpg"
+    },
+    "lynch": {
+      "tmdb": 1360281,
+      "profile": "/ypNxRag9uJ5nzPAN2um3amQK340.jpg"
+    },
+    "henwick": {
+      "tmdb": 1202689,
+      "profile": "/hRrEqDIWlov1FvYRmBN2vLaAxyl.jpg"
+    },
+    "chan": {
+      "tmdb": 97576,
+      "profile": "/stTKj4iNauhqlVmZ6XAsFsvcMCY.jpg"
+    },
+    "beetz": {
+      "tmdb": 1545693,
+      "profile": "/sgxzT54GnvgeMnOZgpQQx9csAdd.jpg"
+    },
+    "leejj": {
+      "tmdb": 73249,
+      "profile": "/lx8oiTXL9lIx78KOXlrlvNfoz43.jpg"
+    },
+    "pierre": {
+      "tmdb": 1763709,
+      "profile": "/hNwZWdT2KxKj1YLbipvtUhNjfAp.jpg"
+    },
+    "oconnell": {
+      "tmdb": 85065,
+      "profile": "/tCzR4clrIkbkijuJBYsNoEuwRDa.jpg"
+    },
+    "reid": {
+      "tmdb": 1344344,
+      "profile": "/c5ld0nVHZ2dv25Jhn5DpXwTlXyH.jpg"
+    },
+    "hayek": {
+      "tmdb": 3136,
+      "profile": "/3j8MpAjyopkAc8mbNiDeXyqBmcS.jpg"
+    },
+    "leung": {
+      "tmdb": 1337,
+      "profile": "/idGzkwbm0BiLdrrKfcXecFNXbDu.jpg"
     }
   },
   "genres": {

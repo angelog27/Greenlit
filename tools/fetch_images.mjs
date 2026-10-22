@@ -44,8 +44,11 @@ const out = { base: "https://image.tmdb.org/t/p/", people: {}, genres: {}, slate
 if (!REFRESH) for (const k of ["people", "genres", "slate"]) Object.assign(out[k], prev[k] || {});
 const missing = [];
 
+// People TMDB lists under a longer name.
+const TMDB_NAME = { "Salma Hayek": "Salma Hayek Pinault", "Tony Leung": "Tony Leung Chiu-wai" };
 async function person(id, name, dept) {
   if (out.people[id]?.profile) return;
+  name = TMDB_NAME[name] || name;
   const res = (await tmdb("/search/person", { query: name })).results || [];
   const exact = res.filter((r) => r.name.toLowerCase() === name.toLowerCase() && r.profile_path);
   const pick = exact.find((r) => r.known_for_department === dept) || exact.sort((a, b) => b.popularity - a.popularity)[0];

@@ -6,7 +6,7 @@ const crypto = require("crypto");
 // All numbers live in data/campaign.json (progression) and data/achievements.json (gates and badges).
 const fs = require("fs");
 const path = require("path");
-const { Reject } = require("./game");
+const { Reject, cleanNotes } = require("./game");
 const awards = require("./awards");
 const stories = require("./events");
 
@@ -336,6 +336,8 @@ function publicStudio(C, uid, st, now) {
     badges: Object.fromEntries(Object.entries(st.badges || {}).map(([k, v]) => [k, typeof v === "number" ? 1 : v.tier])),
     bestFilm: st.bestFilm || null, type: (st.identity && st.identity.type) || null,
     trophies: (st.trophies || {}).total || 0, globes: (st.globes || {}).wins || 0, updatedAt: now,
+    popcorn: (st.popcorn || []).length ? Math.round(st.popcorn.reduce((a, b) => a + b, 0) / st.popcorn.length) : null,
+    badgeCount: Object.keys(st.badges || {}).length,
   };
 }
 
@@ -367,7 +369,8 @@ function release(C, st, uid, input, date, now) {
   if (!gs.pools.a1.includes(a1) || !gs.pools.a2.includes(a2) || !gs.pools.a3.includes(a3)) throw new Reject("Someone in that cast isn't on this project's shortlist for their part.");
   const cfg = m.DIFFS[pj.diff];
   if (cfg.real ? !pj.env.dates.includes(w) : !(own(m.W, w) && !m.W[w].hardOnly)) throw new Reject("That release slot isn't available.");
-  const p = { g, d, a1, a2, a3, w }, env = projectEnv(pj);
+  const p = { g, d, a1, a2, a3, w }, env = projectEnv(pj), notes = cleanNotes(pick.notes);
+  if (notes) p.notes = notes;
   if (m.costOf(p, cfg, env) > pj.budget) throw new Reject("That film is over this project's budget.");
   let r = m.evalFilm(env, p, cfg);
   // Breakouts judge the player's decisions: the film before any on-set luck against the best film possible.

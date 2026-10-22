@@ -17,6 +17,10 @@ function loadGame(dir = path.join(__dirname, "gen")) {
 }
 
 class Reject extends Error {}
+// Table-read answers: two option indexes (0-2). Anything else counts as not answered.
+function cleanNotes(x) {
+  return Array.isArray(x) && x.length === 2 && x.every((v) => Number.isInteger(v) && v >= 0 && v <= 2) ? [x[0], x[1]] : null;
+}
 const own = (o, k) => typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k);
 const utcDay = (t) => new Date(t).toISOString().slice(0, 10);
 
@@ -35,6 +39,7 @@ function check(game, input, now = Date.now()) {
   if (day !== today && day !== m.addDays(today, -1)) throw new Reject("That day's puzzle is closed. Reload to play today's.");
   if (!pick || typeof pick !== "object") throw new Reject("No film in the request.");
   const { g, d, a1, a2, a3, w, s, n } = pick;
+  const notes = cleanNotes(pick.notes);
 
   let env = m.makeEnv(day);
   const cfg = m.DIFFS[diff];
@@ -57,6 +62,7 @@ function check(game, input, now = Date.now()) {
   if (cfg.real ? !env.dates.includes(w) : !(own(m.W, w) && !m.W[w].hardOnly)) throw new Reject("That release slot isn't available.");
 
   const p = { g, d, a1, a2, a3, w, s: env.plots[g], q: m.scriptQ(env, g), n: Number.isInteger(n) ? n : null };
+  if (notes) p.notes = notes;
   const cost = m.costOf(p, cfg);
   if (cost > env.budget) throw new Reject("That film is over today's budget.");
   const r = m.evalFilm(env, p, cfg);
@@ -74,4 +80,4 @@ function boardName(uid, tok) {
   return typed || "Studio " + uid.slice(0, 5).toUpperCase();
 }
 
-module.exports = { loadGame, check, Reject, utcDay, boardName };
+module.exports = { loadGame, check, Reject, utcDay, boardName, cleanNotes };

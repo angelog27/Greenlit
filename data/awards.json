@@ -20,15 +20,16 @@
   "weekly": {
     "name": "Greenlight Globes",
     "maxFilms": 5,
+    "closes": "19:30 America/Chicago (daily)",
     "podium": 3,
     "categories": [
-      { "id": "picture",  "name": "Best Picture",         "score": "critics",  "prize": 30, "points": 1 },
-      { "id": "boxoffice","name": "Box Office Champion",  "score": "gross",    "prize": 20, "points": 1 },
-      { "id": "profit",   "name": "Most Profitable",      "score": "profit",   "prize": 20, "points": 1 },
-      { "id": "director", "name": "Best Director",        "score": "director", "prize": 15, "points": 1 },
-      { "id": "ensemble", "name": "Best Ensemble",        "score": "ensemble", "prize": 15, "points": 1 },
-      { "id": "breakout", "name": "Breakout of the Week", "score": "breakout", "prize": 15, "points": 1 },
-      { "id": "audience", "name": "Audience Award",       "score": "audience", "prize": 15, "points": 1 }
+      { "id": "picture",  "name": "Best Picture",         "score": "critics",  "prize": 12, "points": 1 },
+      { "id": "boxoffice","name": "Box Office Champion",  "score": "gross",    "prize": 8 },
+      { "id": "profit",   "name": "Most Profitable",      "score": "profit",   "prize": 8 },
+      { "id": "director", "name": "Best Director",        "score": "director", "prize": 6 },
+      { "id": "ensemble", "name": "Best Ensemble",        "score": "ensemble", "prize": 6 },
+      { "id": "breakout", "name": "Breakout of the Day",  "score": "breakout", "prize": 6 },
+      { "id": "audience", "name": "Audience Award",       "score": "audience", "prize": 6 }
     ]
   },
   "scores": {

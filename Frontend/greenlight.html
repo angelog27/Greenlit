@@ -535,6 +535,19 @@ details.info[open]{flex-basis:100%}
 .infobox li b{display:block;color:var(--ink);font-size:14px}
 .infobox .sym{display:grid;place-items:center;height:26px;font-weight:800;color:var(--accent)}.infobox .sym svg{width:18px;height:18px}
 .bail.restart{margin-top:10px}
+.tread{display:grid;gap:10px;margin-top:16px;padding:16px;border:1px solid var(--accent);background:var(--panel)}
+.tread h3{margin:0;font-family:var(--display);font-weight:900;font-size:24px;text-transform:uppercase}
+.tread fieldset{border:0;margin:0;padding:0;display:grid;gap:8px}.tread legend{font-weight:700;margin-bottom:6px}
+.topts{display:flex;flex-wrap:wrap;gap:8px}
+.topts button{padding:8px 14px;border:1px solid var(--line2);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit}
+.topts button[aria-pressed=true]{border-color:var(--accent);background:var(--accent);color:var(--on-accent);font-weight:700}
+.gbanner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;margin-bottom:14px;border:1px solid var(--amber);border-left-width:4px;background:var(--panel)}
+.gbanner svg{width:22px;height:22px;color:var(--amber);flex:none}.gbanner span{flex:1;min-width:220px}
+.caststrip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 14px}@media(max-width:700px){.caststrip{grid-template-columns:1fr}}
+.caststrip>div{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line2);background:var(--panel)}
+.caststrip>div.now{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
+.caststrip b{font-size:15px}.caststrip small{color:var(--ink2);font-size:12px}
+#type button.main{font-weight:800}
 .hq-fans{display:grid;gap:4px;margin-top:10px;max-width:260px}.hq-fans small{color:var(--ink2);font-size:12px}
 .relcols{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){.relcols{grid-template-columns:1fr}}
 ul.rel{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}
@@ -729,7 +742,7 @@ html[data-nav="back"]::view-transition-old(stage){animation-name:vt-out-back}
 // PLOTS: three pitches per genre. tones are what the story needs; win lists release seasons that suit it; lead/side say who the story needs.
 // LOYAL [director, actor, bonus, films] and CHEM [actor, actor, bonus, films]: films the people actually made together.
 // SLATE_RAW [date, title, our genre tag, our strength rating 1-10]: real upcoming releases as publicly reported in Oct 2026.
-var GENRES,DIRS,ACTORS,PLOTS,WINDOWS,LOYAL,CHEM,SLATE_RAW;
+var GENRES,DIRS,ACTORS,PLOTS,WINDOWS,LOYAL,CHEM,SLATE_RAW,LOYAL_BY,CHEM_BY;
 var SEASON={1:"winter",2:"val",3:"spring",4:"spring",5:"summer",6:"summer",7:"summer",8:"summer",9:"hallow",10:"hallow",11:"awards",12:"holiday"};
 function seasonOf(ds){return SEASON[+ds.slice(5,7)]}
 var LAST_DATE="2027-06-25";
@@ -751,6 +764,9 @@ function initModel(data){
   GENRES=data.genres;DIRS=data.directors;ACTORS=data.actors;PLOTS=data.plots;WINDOWS=data.windows;
   LOYAL=data.loyal.map(function(x){return [x.director,x.actor,x.bonus,x.films]});
   CHEM=data.chem.map(function(x){return [x.a,x.b,x.bonus,x.films]});
+  // Lookups by pair (file order kept within a pair), so synergies stays fast as the lists grow.
+  LOYAL_BY={};LOYAL.forEach(function(l){var k=l[0]+"|"+l[1];(LOYAL_BY[k]=LOYAL_BY[k]||[]).push(l)});
+  CHEM_BY={};CHEM.forEach(function(c){var k=pairKey(c[0],c[1]);(CHEM_BY[k]=CHEM_BY[k]||[]).push(c)});
   SLATE_RAW=data.slate.map(function(x){return [x.date,x.title,x.genre,x.strength]});
   G=byId(GENRES);D=byId(DIRS);A=byId(ACTORS);W=byId(WINDOWS);
   SLATE=SLATE_RAW.map(function(r){return {d:r[0],t:r[1],g:r[2],s:r[3],f:wkFri(r[0])}});
@@ -801,6 +817,25 @@ function envWithScript(env,gid,s,q){var e=envWithPlot(env,gid,s);e.quality=Objec
 // Genre-aware talent (from SKILL_FROM): a director's skill counts in full in their specialties, partly in related
 // genres (genres.json `near`) and little elsewhere; an actor's star power likewise. Earlier days keep plain
 // skill and stars (env.gs is unset), so no published puzzle changes. Game numbers, tunable.
+// Table read (from READ_FROM, every mode): two questions on the Pitch screen that only the script answers (the
+// story's feel and the villain's presence). Options are seeded by the day, genre and script, so the server
+// rebuilds them; each right answer is a "Table read" step of +READ_PER. The answers are never confirmed before
+// release, and picks without notes (bestPossible, older pages) score as before.
+var READ_FROM="2026-10-22",READ_PER=0.03,READ_TONES=["epic","gritty","funny","stylish","heartfelt","eerie"];
+function readOn(env){return !!env.day&&env.day>=READ_FROM}
+function readQuiz(env,gid){
+  var pl=plotFor(env,gid),r=rng(hash(env.day+"|read|"+gid+"|"+pl.title));
+  function sh(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(r()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+  var feel=pl.tones.slice().sort().join(" and "),pairs=[];
+  for(var i=0;i<READ_TONES.length;i++)for(var j=i+1;j<READ_TONES.length;j++){var x=[READ_TONES[i],READ_TONES[j]].sort().join(" and ");if(x!==feel)pairs.push(x)}
+  var o1=sh(sh(pairs).slice(0,2).concat([feel])),o2=sh(sh(READ_TONES.filter(function(t){return t!==pl.anta.t})).slice(0,2).concat([pl.anta.t]));
+  return [{q:"What feel is this story going for?",opts:o1,ans:o1.indexOf(feel)},{q:"What kind of presence does the villain need?",opts:o2,ans:o2.indexOf(pl.anta.t)}];
+}
+function readScore(env,p){
+  if(!readOn(env)||!p.notes||!p.notes.length)return 0;
+  var q=readQuiz(env,p.g),n=0;q.forEach(function(x,i){if(p.notes[i]===x.ans)n++});return n;
+}
+function readQ(env,p){var n=readScore(env,p);return n?Math.round((1+READ_PER*n)*100)/100:1}
 var SKILL_FROM="2026-10-22",SKILL_FIT=[0.25,0.6,1],STAR_FIT=[0.65,0.85,1];
 // 2 = the person's own genre (either half of a blend), 1 = a related genre, 0 = elsewhere.
 function fitLevel(list,gid){if(inGenre(list,gid))return 2;var ps=partsOf(gid);for(var i=0;i<ps.length;i++){var n=G[ps[i]]&&G[ps[i]].near||[];for(var j=0;j<list.length;j++)if(n.indexOf(list[j])>-1)return 1}return 0}
@@ -849,8 +884,8 @@ function synergies(env,p,cfg){
   if(g&&d&&inGenre(d.spec,g.id))out.push(["Director specialty",.15]);
   cast.forEach(function(a,i){if(!a)return;
     if(g&&inGenre(a.g,g.id))out.push([a.name+" fits the genre",gf[i]]);
-    if(d)LOYAL.forEach(function(l){if(l[0]===d.id&&l[1]===a.id)out.push([d.name+" + "+a.name+" ("+l[3]+")",l[2]])})});
-  for(var i=0;i<3;i++)for(var j=i+1;j<3;j++)if(cast[i]&&cast[j])CHEM.forEach(function(c){if(pairKey(c[0],c[1])===pairKey(cast[i].id,cast[j].id))out.push(["Cast chemistry: "+c[3],c[2]])});
+    if(d)(LOYAL_BY[d.id+"|"+a.id]||[]).forEach(function(l){out.push([d.name+" + "+a.name+" ("+l[3]+")",l[2]])})});
+  for(var i=0;i<3;i++)for(var j=i+1;j<3;j++)if(cast[i]&&cast[j])(CHEM_BY[pairKey(cast[i].id,cast[j].id)]||[]).forEach(function(c){out.push(["Cast chemistry: "+c[3],c[2]])});
   if(plot){
     var rt=[plot.lead.t,plot.side.t,plot.anta.t],rw=[.07,.05,.06];
     if(d)d.tone.forEach(function(t){if(plot.tones.indexOf(t)>-1)out.push([d.name+" gets the story's tone ("+t+")",.05])});
@@ -881,6 +916,7 @@ function evalFilm(env,p,cfg,luck){
   var gb=genreBonus(env,g.id);if(gb!==1){push(gb>1?"Genre Master":"Off your specialty",gb,gb>1?"Your studio's track record in "+g.name:"Audiences know your studio for other genres");m*=gb;steps[steps.length-1].run=m}
   var sq=scriptQ(env,g.id);if(sq!==1){push("Script potential",sq,sq>=SCRIPT_Q[0]?"The strongest draft":sq>1?"A solid draft":"A weaker draft");m*=sq;steps[steps.length-1].run=m}
   var iq=identQ(env,g.id);if(iq!==1){push("Studio type",iq,"Your studio's lean toward "+g.name);m*=iq;steps[steps.length-1].run=m}
+  var rq=readQ(env,p);if(rq!==1){push("Table read",rq,readScore(env,p)===2?"You read the script closely":"You got part of the script");m*=rq;steps[steps.length-1].run=m}
   var fq=fatigueQ(env,p);if(fq!==1){push("Audience fatigue",fq,"You've made films like this lately");m*=fq;steps[steps.length-1].run=m}
   var nq=fansQ(env);if(nq!==1){push("Fan base",nq,nq>1?"Audiences loved your recent films":"Audiences didn't love your recent films");m*=nq;steps[steps.length-1].run=m}
   var pq=prodQ(env,g.id);if(pq!==1){push("On set",pq,env.prodNote||"How the shoot went");m*=pq;steps[steps.length-1].run=m}
@@ -928,6 +964,7 @@ function evalFast(env,p,cfg,pre){
   m*=genreBonus(env,g.id);
   m*=scriptQ(env,g.id);
   m*=identQ(env,g.id);
+  m*=readQ(env,p);
   m*=fatigueQ(env,p);
   m*=fansQ(env);
   m*=prodQ(env,g.id);
@@ -969,19 +1006,29 @@ var REDUCED=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").ma
 
 // The puzzle day is the UTC date, the same day the server checks against.
 var TODAY=new Date().toISOString().slice(0,10);
-var state={type:"basic",diff:"medium",campDiff:"easy",day:TODAY,env:null,dayEnv:null,offer:null,offerN:{},script:null,pick:{g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"},result:null,stage:"play",step:"genre",enter:false,
-  me:null,days:{},ceil:null,attempt:0,lb:{type:"basic",diff:"medium",campView:"race",rows:null,err:null,unsub:null}};
+var state={type:"campaign",diff:"medium",campDiff:"easy",day:TODAY,env:null,dayEnv:null,offer:null,offerN:{},script:null,pick:{g:null,d:null,a1:null,a2:null,a3:null,w:null,slot:"a1"},result:null,stage:"play",step:"genre",enter:false,
+  me:null,days:{},ceil:null,attempt:0,lb:{type:"basic",diff:"medium",campView:"top",rows:null,err:null,unsub:null}};
 var LKEY="greenlight.days.v2";
 // In the campaign the project sets the rules (Easy for the first films, then Medium, Hard by choice).
 function CFG(){return DIFFS[state.type==="campaign"?state.campDiff:state.diff]}
 function modeKey(){return "r3-"+state.type+"-"+state.diff}
-function modeLabel(){return state.type==="campaign"?"Campaign · "+CFG().name+" rules":(state.type==="daily"?"Daily Challenge":"Basic")+" · "+CFG().name}
+function modeLabel(){return state.type==="campaign"?"Campaign · "+CFG().name+" rules":(state.type==="daily"?"Daily Challenge":"Free Play")+" · "+CFG().name}
 function dkey(day){return modeKey()+"|"+(day||state.day)}
 function loadLocal(){try{state.days=JSON.parse(localStorage.getItem(LKEY)||"{}")||{}}catch(e){state.days={}}}
 function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(state.days))}catch(e){}}
 function mergeDays(a,b){var o={};[a,b].forEach(function(src){Object.keys(src||{}).forEach(function(k){if(k.indexOf("|")<0)return;var e=src[k],c=o[k];if(!c)o[k]=Object.assign({},e);else{var att=Math.max(e.attempts||1,c.attempts||1);if(e.profit>c.profit)o[k]=Object.assign({},e);o[k].attempts=att}})});return o}
 
-function curPick(){var P=state.pick;return {g:P.g,d:P.d,a1:P.a1,a2:P.a2,a3:P.a3,w:P.w}}
+function curPick(){var P=state.pick,p={g:P.g,d:P.d,a1:P.a1,a2:P.a2,a3:P.a3,w:P.w},n=P.g&&state.env&&readOn(state.env)?notesFor(P.g):null;if(n&&n[0]!=null&&n[1]!=null)p.notes=n.slice();return p}
+// Table-read answers, kept per genre and script (a new script means a new read).
+function readKey(g){return g+"|"+(state.env.plots[g])+"|"+plotFor(state.env,g).title}
+function notesFor(g){state.notes=state.notes||{};return state.notes[readKey(g)]||(state.notes[readKey(g)]=[null,null])}
+function readDone(g){return !readOn(state.env)||notesFor(g).every(function(x){return x!=null})}
+function tableRead(g){
+  if(!readOn(state.env))return "";
+  var q=readQuiz(state.env,g),n=notesFor(g);
+  return '<section class="tread"><span class="lbl">Table read</span><h3>Read the script, then answer two questions</h3><p class="note">Everything you need is in the pitch above and the three roles. Each right answer gives your film a boost; you\'ll find out how you did after release.</p>'+
+    q.map(function(x,i){return '<fieldset><legend>'+(i+1)+'. '+esc(x.q)+'</legend><div class="topts">'+x.opts.map(function(o,j){return '<button type="button" data-act="note" data-q="'+i+'" data-m="'+j+'" aria-pressed="'+(n[i]===j)+'">'+esc(o.charAt(0).toUpperCase()+o.slice(1))+'</button>'}).join("")+'</div></fieldset>'}).join("")+'</section>';
+}
 function complete(){var p=curPick();return !!(p.g&&p.d&&p.a1&&p.a2&&p.a3&&p.w)}
 function curCost(){return costOf(curPick(),CFG(),state.env)}
 // What the player may see before release. Easy shows everything and Medium/Hard nothing; on a campaign
@@ -1061,7 +1108,7 @@ function drawHead(){
   var daily=state.type==="daily";
   var camp=state.type==="campaign";
   $("#date").textContent=camp?(CAMP.st?CAMP.st.studioName+" · Film #"+(CAMP.st.filmsMade+(state.stage==="result"?0:1))+" · "+CFG().name+" rules":"Campaign"):prettyDate(state.day)+" · "+modeLabel();
-  $("#type").innerHTML=[["basic","Basic"],["daily","Daily Challenge"],["campaign","Campaign"]].map(function(x){return '<button data-act="type" data-m="'+x[0]+'" aria-pressed="'+(state.type===x[0])+'">'+x[1]+'</button>'}).join("");
+  $("#type").innerHTML=[["campaign","Campaign"],["daily","Daily Challenge"],["basic","Free Play"]].map(function(x){return '<button data-act="type" data-m="'+x[0]+'"'+(x[0]==="campaign"?' class="main"':"")+' aria-pressed="'+(state.type===x[0])+'">'+x[1]+'</button>'}).join("");
   $("#diff").innerHTML=["easy","medium","hard"].map(function(k){return '<button data-act="diff" data-m="'+k+'" aria-pressed="'+(state.diff===k)+'">'+DIFFS[k].name+'</button>'}).join("");
   $("#diffwrap").hidden=daily||camp;
   $("#railfoot").innerHTML='<span class="lbl">Scoring</span><span>Profit is your score: your studio\'s <b>'+Math.round(SHARE*100)+'%</b> of the box office minus everything you spend.</span>'+(CFG().show?'':'<span>How your choices combine stays secret until you greenlight.</span>');
@@ -1087,9 +1134,15 @@ function drawPurse(){
 
 // ---- steps and the rail
 function stepList(){return state.type==="daily"?["story","dir","a1","a2","a3","win","review"]:["genre","story","dir","a1","a2","a3","win","review"]}
-function stepName(id){var cfg=CFG(),n={genre:"Genre",story:"Pitch",dir:"Director",a1:cfg.roles?"Lead":"Actor 1",a2:cfg.roles?"Supporting":"Actor 2",a3:"Villain",win:cfg.real?"Date":"Window",review:"Greenlight"};return n[id]}
-function stepPrompt(id){var cfg=CFG(),n={genre:"Pick a genre",story:"Read the pitch",dir:"Pick a director",a1:cfg.roles?"Cast the lead":"Cast an actor",a2:cfg.roles?"Cast support":"Cast an actor",a3:"Cast the villain",win:cfg.real?"Pick a date":"Pick a window",review:"Release it"};return n[id]}
-function stepFilled(id){var P=state.pick;return id==="genre"||id==="story"?!!P.g:id==="dir"?!!P.d:id==="win"?!!P.w:id==="review"?false:!!P[id]}
+// Who is being cast for which part: all three parts of the script, the current one highlighted.
+function castingStrip(plot,k,cfg){
+  var names=cfg.roles?["Lead","Supporting","Villain"]:["Hero","Partner","Villain"],roles=[plot.lead,plot.side,plot.anta],ids=["a1","a2","a3"];
+  return '<div class="caststrip" role="list">'+roles.map(function(r,i){var who=state.pick[ids[i]]&&A[state.pick[ids[i]]];
+    return '<div role="listitem" class="'+(i===k?"now":"")+'"><span class="lbl">Role '+(i+1)+' of 3 · '+names[i]+(i===k?" · casting now":"")+'</span><b>'+esc(r.r)+'</b><small>'+(who?esc(who.name):i===k?"Pick from the shortlist below":"Not cast yet")+'</small></div>'}).join("")+'</div>';
+}
+function stepName(id){var cfg=CFG(),n={genre:"Genre",story:"Pitch",dir:"Director",a1:cfg.roles?"Lead":"Hero",a2:cfg.roles?"Supporting":"Partner",a3:"Villain",win:cfg.real?"Date":"Window",review:"Greenlight"};return n[id]}
+function stepPrompt(id){var cfg=CFG(),n={genre:"Pick a genre",story:"Read the pitch",dir:"Pick a director",a1:cfg.roles?"Cast the lead":"Cast the hero",a2:cfg.roles?"Cast support":"Cast the partner",a3:"Cast the villain",win:cfg.real?"Pick a date":"Pick a window",review:"Release it"};return n[id]}
+function stepFilled(id){var P=state.pick;return id==="genre"?!!P.g:id==="story"?!!P.g&&readDone(P.g):id==="dir"?!!P.d:id==="win"?!!P.w:id==="review"?false:!!P[id]}
 function canGo(id){var l=stepList(),k=l.indexOf(id);for(var i=0;i<k;i++)if(!stepFilled(l[i]))return false;return k>-1}
 function stepValue(id){
   var P=state.pick,cfg=CFG();
@@ -1154,7 +1207,7 @@ function hero(o){
 function photoArt(gid){var x=IMG.genres[gid];return '<span class="media">'+pic(stillUrl(gid,"w1280"),G[gid].name)+'</span>'+(x&&x.film?'<span class="cap">Still · '+esc(x.film)+'</span>':"")}
 // The four people on the film so far, with the slot being filled highlighted.
 function sheet(active){
-  var P=state.pick,cfg=CFG(),items=[["dir","Director",P.d&&D[P.d]],["a1",cfg.roles?"Lead":"Actor",P.a1&&A[P.a1]],["a2",cfg.roles?"Support":"Actor",P.a2&&A[P.a2]],["a3","Villain",P.a3&&A[P.a3]]];
+  var P=state.pick,cfg=CFG(),items=[["dir","Director",P.d&&D[P.d]],["a1",cfg.roles?"Lead":"Hero",P.a1&&A[P.a1]],["a2",cfg.roles?"Support":"Partner",P.a2&&A[P.a2]],["a3","Villain",P.a3&&A[P.a3]]];
   return '<div class="sheet">'+items.map(function(x){var who=x[2];
     return '<span class="frame'+(x[0]===active?" on":"")+(who?" full":"")+'"><span class="fm">'+(who?pic(faceUrl(who.id,"w185"),who.name):"")+'</span><span class="lbl">'+x[1]+'</span></span>'}).join("")+'</div>';
 }
@@ -1227,8 +1280,8 @@ function untilMidnight(){var now=Date.now(),next=Date.UTC(new Date(now).getUTCFu
 function doneHtml(){
   var e=state.days[dkey()];
   return hero({eyebrow:"Daily Challenge · "+esc(prettyDate(state.day)),title:"Today's film is in",text:'<p>Everyone gets one Daily Challenge film a day. Yours was <b>'+esc(e.title||"your film")+'</b>'+(e.genre&&G[e.genre]?" ("+esc(G[e.genre].name)+")":"")+': '+money(e.gross||0)+' at the box office, <b class="'+(e.profit>=0?"pos":"neg")+'">'+money(e.profit)+'</b> profit.</p>'+
-    '<p>The next Daily Challenge opens in <b>'+untilMidnight()+'</b> (midnight UTC). Until then, see how everyone else did, or keep playing Basic.</p>'+
-    '<div class="row" style="margin-top:8px"><button class="btn go" data-act="lb">See today\'s board</button><button class="btn" data-act="type" data-m="basic">Play Basic</button></div>'});
+    '<p>The next Daily Challenge opens in <b>'+untilMidnight()+'</b> (midnight UTC). Until then, see how everyone else did, or keep playing Free Play.</p>'+
+    '<div class="row" style="margin-top:8px"><button class="btn go" data-act="lb">See today\'s board</button><button class="btn" data-act="type" data-m="basic">Play Free Play</button></div>'});
 }
 // ---- campaign stories (data/events.json; the server decides, the page shows): each person's trait in this
 // studio's world, who you've worked with lately (audience fatigue), and who passed on the project.
@@ -1309,11 +1362,13 @@ function stepHtml(){
     if(made)h+='<p class="bail">You\'ve made this script before'+(made>1?" ("+made+" times)":"")+'. Audiences won\'t be as excited the second time around.</p>';
     h+=shuffleBar(g.id);
     var rl=[[cfg.roles?"Lead":"Hero",plot.lead],[cfg.roles?"Supporting":"Partner",plot.side],["Villain",plot.anta]];
-    h+='<div class="roles3 anim">'+rl.map(function(r,i){var tone=see.story&&(cfg.roles||i===2)?tag(r[1].t+" presence","ok"):"";
+    var told=see.story&&readDone(g.id); // on Easy the story notes show once the table read is answered
+    h+='<div class="roles3 anim">'+rl.map(function(r,i){var tone=told&&(cfg.roles||i===2)?tag(r[1].t+" presence","ok"):"";
       return '<div class="role" style="--i:'+i+'"><span class="lbl">0'+(i+1)+' · '+r[0]+'</span><p>'+esc(r[1].r)+'</p>'+(tone?'<span class="chips">'+tone+'</span>':"")+'</div>'}).join("")+'</div>';
-    if(see.story)h+='<div class="hints"><b>'+(cfg.show?"Easy hints:":"Story notes:")+'</b> the story wants '+plot.tones.map(esc).join(" and ")+' tones and suits '+plot.win.map(function(x){return esc(W[x].name)}).join(" or ")+'. The villain needs a '+esc(plot.anta.t)+' presence.</div>';
+    if(told)h+='<div class="hints"><b>'+(cfg.show?"Easy hints:":"Story notes:")+'</b> the story wants '+plot.tones.map(esc).join(" and ")+' tones and suits '+plot.win.map(function(x){return esc(W[x].name)}).join(" or ")+'. The villain needs a '+esc(plot.anta.t)+' presence.</div>';
     if(daily)h+='<div class="facts"><div><span class="lbl">Studio budget</span><b class="mono">$'+env.budget+'M</b></div><div style="flex:1;min-width:240px">'+modeNote()+'</div></div>';
-    h+='<p class="note" style="margin-top:14px">Next you choose a director, then cast three parts from a shortlist of six each, then pick when to release.</p>'+nav("Start casting",true);
+    h+=tableRead(g.id);
+    h+='<p class="note" style="margin-top:14px">'+(readDone(g.id)?"Next you choose a director, then cast three parts from a shortlist of six each, then pick when to release.":"Answer both table-read questions to start casting.")+'</p>'+nav("Start casting",readDone(g.id));
   }else if(id==="dir"){
     h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(g.name),title:"Choose your director",text:'<p>Who sees this story best? Their fee comes out of your $'+env.budget+'M.</p>',art:sheet("dir"),artCls:"side"});
     var dpool=dirsFor(env,g.id).map(function(i){return D[i]});
@@ -1328,9 +1383,10 @@ function stepHtml(){
   }else if(id==="a1"||id==="a2"||id==="a3"){
     var k=id==="a1"?0:id==="a2"?1:2,pool=poolsFor(env,g.id)[k].map(function(i){return A[i]});
     var rol=k===0?plot.lead:k===1?plot.side:plot.anta;
-    var title=k===2?"Cast the villain":cfg.roles?(k===0?"Cast the lead":"Cast the supporting role"):(k===0?"Choose your first actor":"Choose your second actor");
-    var desc=(cfg.roles||k===2)?'Playing <b>'+esc(rol.r)+'</b>.':'Either of your two actors can carry the story.';
+    var title=k===2?"Cast the villain":cfg.roles?(k===0?"Cast the lead":"Cast the supporting role"):(k===0?"Cast the hero":"Cast the partner");
+    var desc='This actor plays <b>'+esc(rol.r)+'</b>.'+(!cfg.roles&&k<2?' (On Easy, if your hero and partner suit each other\'s part better, the studio swaps them.)':'');
     h+=hero({eyebrow:"“"+esc(plot.title)+"” · "+esc(stepName(id)),title:title,text:'<p>'+desc+(state.type==="campaign"?' Your shortlist: three men and three women your studio can sign'+(campProject().loans.length?', plus a few on loan from the next tier up while yours is thin':'')+'.':' Today\'s shortlist: three men and three women, found only for this part.')+(see.story&&(cfg.roles||k===2)?' This role needs a <b>'+esc(rol.t)+'</b> presence.':'')+'</p>',art:sheet(id),artCls:"side"});
+    h+=castingStrip(plot,k,cfg);
     h+=reelOpen("Shortlist of "+pool.length)+pool.map(function(x,i){
       var sel=P[id]===x.id,sub,ch=tag(x.s==="f"?"Woman":"Man","")+(state.type==="campaign"&&campProject().loans.indexOf(x.id)>-1?tag("On loan",""):"")+storyChips(x.id,false);
       sub=(see.stars?'★ '+x.star+' · ':'')+esc(x.known);
@@ -1370,11 +1426,11 @@ function stepHtml(){
     function bill(a,lbl){return '<div class="bill"><span class="fm">'+(a?pic(faceUrl(a.id),a.name):"")+'</span><b>'+(a?esc(a.name):"—")+'</b><span class="lbl">'+lbl+'</span></div>'}
     var wlab=P.w?(cfg.real?prettyDate(P.w):W[P.w].name):"Not chosen",wc=W[wid]?wcost(W[wid]):null;
     h+='<div class="review anim"><section class="onesheet" style="--i:0"><span class="media wide">'+pic(stillUrl(g.id,"w1280"),g.name)+'</span><div class="os"><p class="lbl">'+esc(g.name)+' · '+esc(wlab)+'</p><h2>'+esc(plot.title)+'</h2><p class="by">'+(d?"A "+esc(d.name)+" film":"Director not chosen")+'</p>'+
-      '<div class="billing">'+bill(L,cfg.roles?"Lead":"Starring")+bill(S,cfg.roles?"Supporting":"Starring")+bill(T,"Villain")+'</div></div></section>'+
+      '<div class="billing">'+bill(L,cfg.roles?"Lead":"Hero")+bill(S,cfg.roles?"Supporting":"Partner")+bill(T,"Villain")+'</div></div></section>'+
       '<section class="panel" style="--i:1"><h3>Ready to greenlight?</h3><p class="note">Check the slate, then release it. You can come back and tweak it afterwards.</p><div class="scroll"><table><tbody>'+
       row("dir","Director",d?esc(d.name):"Not chosen",d?fee(d):null)+
-      row("a1",cfg.roles?"Lead · "+esc(plot.lead.r):"Actor 1",L?esc(L.name):"Not chosen",L?fee(L):null)+
-      row("a2",cfg.roles?"Supporting · "+esc(plot.side.r):"Actor 2",S?esc(S.name):"Not chosen",S?fee(S):null)+
+      row("a1",(cfg.roles?"Lead · ":"Hero · ")+esc(plot.lead.r),L?esc(L.name):"Not chosen",L?fee(L):null)+
+      row("a2",(cfg.roles?"Supporting · ":"Partner · ")+esc(plot.side.r),S?esc(S.name):"Not chosen",S?fee(S):null)+
       row("a3","Villain · "+esc(plot.anta.r),T?esc(T.name):"Not chosen",T?fee(T):null)+
       row("win",cfg.real?"Release date":"Release window",esc(wlab),wc)+
       '<tr><td><span class="lbl">Genre</span><div class="who">'+esc(g.name)+'</div></td><td class="n">$'+g.cost+'M</td><td></td></tr></tbody></table></div>'+
@@ -1435,6 +1491,13 @@ function postLine(post){
   if(post.status==="offline")return '<span class="note">Saved on this device. The online leaderboard isn\'t available here.</span>';
   return '<span class="note neg">'+esc(post.msg||"Could not post to the leaderboard.")+' Your result is saved on this device.</span>';
 }
+// After release: how the table read went, with the right answers.
+function readNote(env,p){
+  if(!readOn(env)||!p.g)return "";
+  var q=readQuiz(env,p.g),n=readScore(env,p);
+  return '<div class="hints" style="margin-top:12px"><b>Table read: '+(p.notes?n+' of 2 right':'skipped')+'.</b> '+q.map(function(x,i){var mine=p.notes?x.opts[p.notes[i]]:null;
+    return esc(x.q)+' <b>'+esc(x.opts[x.ans])+'</b>'+(mine&&p.notes[i]!==x.ans?' (you said '+esc(mine)+')':'')}).join(" · ")+'</div>';
+}
 function drawResult(){
   var res=state.result;if(!res){$("#result").innerHTML="";return}
   var r=res.r,p=res.p,env=state.env,cfg=res.cfg,plot=plotFor(env,p.g),wid=winId(p,cfg),max=Math.max.apply(null,r.steps.map(function(s){return s.run||s.abs||0}));
@@ -1456,7 +1519,7 @@ function drawResult(){
      '<span class="note">'+(camp?"Cost ":"Attempt "+state.attempt+" · cost ")+money(r.cost)+' of $'+env.budget+'M</span>'+postLine(post)+'</div></section>'+
    '<div class="rgrid"><div><section class="panel"><h3>Box office build</h3><div class="wf">'+wf+'</div><p class="note" style="margin-top:12px">Worldwide gross '+money(r.gross)+'. Studio share '+Math.round(SHARE*100)+'%: '+money(r.share)+'. Costs: '+money(r.cost)+'. Luck this run: '+x2(r.luck)+'.</p>'+
      '<p class="lbl" style="margin-top:16px">Bonuses you earned</p>'+(r.syn.length?'<ul class="bon">'+r.syn.map(function(s){return '<li>'+esc(s)+'</li>'}).join("")+'</ul>':'<p class="note">None this time.</p>')+
-     '<p class="note" style="margin-top:12px">This pitch wanted: '+esc(wanted)+'. '+(cfg.roles?'The lead called for a '+esc(plot.lead.t)+' presence, the supporting role for a '+esc(plot.side.t)+' one and the antagonist for a '+esc(plot.anta.t)+' one':'The antagonist called for a '+esc(plot.anta.t)+' presence')+'.</p>'+scriptNote(res)+rv+'</section></div>'+
+     '<p class="note" style="margin-top:12px">This pitch wanted: '+esc(wanted)+'. '+(cfg.roles?'The lead called for a '+esc(plot.lead.t)+' presence, the supporting role for a '+esc(plot.side.t)+' one and the antagonist for a '+esc(plot.anta.t)+' one':'The antagonist called for a '+esc(plot.anta.t)+' presence')+'.</p>'+scriptNote(res)+readNote(env,p)+rv+'</section></div>'+
    '<div>'+(camp?campResultHtml(res)+cdiv:cdiv+'<section class="panel"><h3>Share it</h3><pre id="share">'+esc(share)+'</pre><div class="row"><button class="btn go" data-act="copy" id="copy">Copy result</button>'+(state.type==="daily"?"":'<button class="btn" data-act="again">Tweak and rerelease</button><button class="btn" data-act="new">New film</button>')+'<button class="btn" data-act="lb">Leaderboard</button></div>'+(state.type==="daily"?'<p class="note" style="margin-top:10px">That\'s your Daily Challenge film for today. The next one opens in '+untilMidnight()+' (midnight UTC).</p>':"")+'</section>')+'</div></div></div>';
   if(first){countUp($("#grossnum"),r.gross);countUp($("#bignum"),r.profit)}
   // Campaign: the progress bar grows from where it was to where the film took it (once).
@@ -1477,7 +1540,7 @@ function lbModeKey(){return "r3-"+state.lb.type+"-"+state.lb.diff}
 function watchBoard(){
   var lb=state.lb;if(lb.unsub){lb.unsub();lb.unsub=null}
   lb.rows=null;lb.err=null;
-  if(NET&&lb.type==="campaign"&&lb.campView==="big")lb.unsub=NET.watchStudios(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e,"campaign");drawBoard()});
+  if(NET&&lb.type==="campaign"&&lb.campView!=="race")lb.unsub=NET.watchStudios(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e,"campaign");drawBoard()},lb.campView==="big"?"lifetimeGross":"lifetimeProfit");
   else if(NET&&lb.type==="campaign")lb.unsub=NET.watchCampaignBoard(function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e,"campaign");drawBoard()});
   else if(NET){var bid=boardId(lb.type,lb.diff,TODAY);lb.count=null;
     lb.unsub=NET.watchBoard(bid,function(rows,cached){lb.rows=rows.length||!cached?rows:null;drawBoard()},function(e){lb.err=NET.errorText(e);drawBoard()},lb.limit||50);
@@ -1487,14 +1550,16 @@ function watchBoard(){
 // Campaign board: the race to the A-list. Fewest films wins; ties go to fewer bailouts, then more lifetime profit.
 function campBoardHtml(ctl){
   var lb=state.lb,me=state.me,st=CAMP.st,body;
-  var big=lb.campView==="big";
+  var view=lb.campView,race=view==="race",big=!race;
   function row(e,rank,isMe){
-    var name=big?e.studioName:e.displayName,pr=big?e.profile||{}:{logo:e.logo,color:e.color};
-    var sub=big?"Level "+e.level+" · "+e.filmsMade+" film"+(e.filmsMade===1?"":"s"):(e.bailouts?e.bailouts+" bailout"+(e.bailouts>1?"s":""):"No bailouts")+' · '+money(e.lifetimeProfit)+' lifetime';
-    return '<tr class="click'+(isMe?" me":"")+'" data-act="card" data-id="'+esc(e.uid)+'" tabindex="0" role="button" aria-label="See '+esc(name)+'"><td class="r">'+rank+'</td><td><span style="display:flex;gap:10px;align-items:center">'+logoHtml(e.uid,name,pr," sm")+'<span>'+esc(name)+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+esc(sub)+'</div></span></span></td><td class="n">'+(big?money(e.lifetimeGross):e.filmsToATier)+'</td></tr>';
+    var name=race?e.displayName:e.studioName,pr=race?{logo:e.logo,color:e.color}:e.profile||{};
+    var sub=race?(e.bailouts?e.bailouts+" bailout"+(e.bailouts>1?"s":""):"No bailouts")+' · '+money(e.lifetimeProfit)+' lifetime':"Level "+e.level+" · "+e.filmsMade+" film"+(e.filmsMade===1?"":"s")+(e.badgeCount?" · "+e.badgeCount+" badge"+(e.badgeCount===1?"":"s"):"")+((e.trophies||0)+(e.globes||0)?" · 🏆 "+(e.trophies||0)+" ★ "+(e.globes||0):"");
+    var cells=race?'<td class="n">'+e.filmsToATier+'</td>':
+      '<td class="n"><b class="pos">'+money(e.lifetimeProfit)+'</b><div class="t">'+money(e.lifetimeGross)+' box office</div></td><td class="n">'+popcorn(e.popcorn)+'</td>';
+    return '<tr class="click'+(isMe?" me":"")+'" data-act="card" data-id="'+esc(e.uid)+'" tabindex="0" role="button" aria-label="See '+esc(name)+'"><td class="r">'+rank+'</td><td><span style="display:flex;gap:10px;align-items:center">'+logoHtml(e.uid,name,pr," sm")+'<span>'+esc(name)+(isMe?'<span class="you">You</span>':'')+'<div class="t">'+esc(sub)+'</div></span></span></td>'+cells+'</tr>';
   }
-  var head='<thead><tr><th>#</th><th>Studio</th><th class="n">'+(big?"Box office":"Films")+'</th></tr></thead>';
-  ctl+='<div class="seg" role="group" aria-label="Campaign board"><button data-act="campview" data-m="race" aria-pressed="'+!big+'">A-list race</button><button data-act="campview" data-m="big" aria-pressed="'+big+'">Biggest studios</button></div>';
+  var head='<thead><tr><th>#</th><th>Studio</th>'+(race?'<th class="n">Films</th>':'<th class="n">Profit</th><th class="n">Popcorn</th>')+'</tr></thead>';
+  ctl+='<div class="seg" role="group" aria-label="Campaign board"><button data-act="campview" data-m="top" aria-pressed="'+(view==="top")+'">Top studios</button><button data-act="campview" data-m="big" aria-pressed="'+(view==="big")+'">Biggest box office</button><button data-act="campview" data-m="race" aria-pressed="'+race+'">A-list race</button></div>';
   if(!NET)body='<p class="note">The online board isn\'t set up in this build.</p>';
   else if(lb.err)body='<p class="note neg">'+esc(lb.err)+'</p>';
   else if(!lb.rows)body='<p class="note">Connecting to the campaign board…</p>';
@@ -1505,11 +1570,11 @@ function campBoardHtml(ctl){
   if(st&&CAMPCFG){var l=ladderAt(st.lifetimeProfit);
     mine='<section><h3 class="mh" style="margin-top:0">Your studio · '+esc(st.studioName)+'</h3><div class="stats"><div><span class="lbl">Films</span><b class="mono">'+st.filmsMade+'</b></div><div><span class="lbl">Lifetime</span><b class="mono">'+money(st.lifetimeProfit)+'</b></div><div><span class="lbl">Bailouts</span><b class="mono">'+st.bailouts+'</b></div></div>'+
       '<p class="note">'+(st.aTierFilms?"You reached the A-list in "+st.aTierFilms+" films.":l.next?money(l.next.at-st.lifetimeProfit)+" more lifetime profit to "+esc(gateInfo(l.next.id).name)+".":"")+'</p></section>'}
-  return '<section style="display:grid;gap:14px">'+ctl+'<p class="note">'+(big?"Every studio, by lifetime box office.":"The race to the A-list: fewest films to get there wins. Ties go to fewer bailouts, then more lifetime profit.")+' Studios are listed by their studio name.</p>'+body+'</section>'+mine;
+  return '<section style="display:grid;gap:14px">'+ctl+'<p class="note">'+(view==="top"?"Every studio, by total profit across all its films, with its awards and average popcorn score.":view==="big"?"Every studio, by lifetime box office.":"The race to the A-list: fewest films to get there wins. Ties go to fewer bailouts, then more lifetime profit.")+' Studios are listed by their studio name.</p>'+body+'</section>'+mine;
 }
 function drawBoard(){
   var lb=state.lb,mk=lbModeKey(),me=state.me,mine=state.days[mk+"|"+TODAY];
-  var ctl='<div class="lbctl"><div class="seg" role="group" aria-label="Board"><button data-act="lbtype" data-m="daily" aria-pressed="'+(lb.type==="daily")+'">Daily Challenge</button><button data-act="lbtype" data-m="basic" aria-pressed="'+(lb.type==="basic")+'">Basic</button><button data-act="lbtype" data-m="campaign" aria-pressed="'+(lb.type==="campaign")+'">Campaign</button></div>'+
+  var ctl='<div class="lbctl"><div class="seg" role="group" aria-label="Board"><button data-act="lbtype" data-m="daily" aria-pressed="'+(lb.type==="daily")+'">Daily Challenge</button><button data-act="lbtype" data-m="basic" aria-pressed="'+(lb.type==="basic")+'">Free Play</button><button data-act="lbtype" data-m="campaign" aria-pressed="'+(lb.type==="campaign")+'">Campaign</button></div>'+
     (lb.type==="basic"?'<div class="seg" role="group" aria-label="Difficulty">'+["easy","medium","hard"].map(function(k){return '<button data-act="lbdiff" data-m="'+k+'" aria-pressed="'+(lb.diff===k)+'">'+DIFFS[k].name+'</button>'}).join("")+'</div>':'')+'</div>';
   // Others' films (director, cast, release) open only once you've made yours on this board today, so nobody can copy.
   var canSee=!!mine;
@@ -1539,7 +1604,7 @@ function drawBoard(){
   var hist=days.map(function(k){var e=state.days[dk(k)];return '<div><span class="mono">'+k.slice(5)+'</span><span class="bk">'+(e?'<i class="'+(e.profit<0?"neg":"")+'" style="width:'+Math.max(2,Math.abs(e.profit)/mx*100)+'%"></i>':"")+'</span><span class="mono" style="text-align:right">'+(e?money(e.profit):"—")+'</span></div>'}).join("");
   var all=Object.keys(state.days).filter(function(k){return k.indexOf(mk+"|")===0}).map(function(k){return state.days[k]}),bestEver=all.length?Math.max.apply(null,all.map(function(e){return e.profit})):null;
   var gross=all.reduce(function(s,e){return s+(e.gross||0)},0);
-  $("#lb-mode").textContent=(lb.type==="daily"?"Daily Challenge":"Basic · "+DIFFS[lb.diff].name)+" · "+TODAY+" (UTC)";
+  $("#lb-mode").textContent=(lb.type==="daily"?"Daily Challenge":"Free Play · "+DIFFS[lb.diff].name)+" · "+TODAY+" (UTC)";
   $("#boards").innerHTML='<section style="display:grid;gap:14px">'+ctl+'<p class="note">Ranked by net profit. '+(lb.type==="daily"?"One film per player per day: your first release counts.":"Your best release of the day counts.")+' Every score is checked on the server.</p>'+body+'</section>'+
    '<section><h3 class="mh" style="margin-top:0">Your studio'+(me?" · "+esc(me.name):"")+'</h3><div class="stats"><div><span class="lbl">Streak</span><b class="mono">'+streak()+'</b></div><div><span class="lbl">Best on this board</span><b class="mono">'+(bestEver===null?"—":money(bestEver))+'</b></div><div><span class="lbl">Total gross</span><b class="mono">'+money(gross)+'</b></div></div><p class="lbl" style="margin-bottom:8px">Last 7 days</p><div class="hist">'+hist+'</div>'+
    (me?'':'<p class="note" style="margin-top:10px">Signed out, this history lives on this device only.</p>')+'</section>';
@@ -1571,7 +1636,7 @@ function authHtml(){
   if(u)return h+'<div style="display:flex;gap:12px;align-items:center">'+avatar(u)+'<div><b>'+esc(u.name)+'</b><div class="note">'+esc(u.email||"")+'</div></div></div>'+
     '<p class="note">Your best film of each day is saved to your account and posted to that day\'s board.</p>'+(u.email&&!u.verified?'<p class="note">Check your inbox to verify your email address.</p>':'')+
     '<button class="btn" data-act="signout">Sign out</button>';
-  h+='<p class="note">'+(v==="reset"?"We'll email you a link to choose a new password.":"Sign in to post your films to the Daily and Basic leaderboards and keep your studio's history.")+'</p>';
+  h+='<p class="note">'+(v==="reset"?"We'll email you a link to choose a new password.":"Sign in to run your studio and post your films to the Daily Challenge and Free Play leaderboards.")+'</p>';
   if(v!=="reset")h+='<button class="btn gbtn" data-act="google"'+(AUTH.busy?" disabled":"")+'>Continue with Google</button><div class="or">or use email</div>';
   h+='<form class="mform" id="authform" novalidate>'+
     (v==="up"?'<label class="field"><span>Studio name (shown on the leaderboard)</span><input name="name" maxlength="40" autocomplete="nickname" required></label>':'')+
@@ -1634,15 +1699,15 @@ function introHtml(){
   var goals=[
     ["coin","Make the most money","Every hit grows your bank. Profits unlock bigger budgets, new genres and famous talent, from unknowns all the way to the A-list."],
     ["star","Keep audiences happy","Every film gets a 🍿 popcorn score. Loved films spread by word of mouth, build your fan base and make talent want to work with you."],
-    ["trophy","Win awards","Every few films there's an awards season, and every week you can enter the Globes against other studios."]];
+    ["trophy","Win awards","Every few films there's an awards season, and every day you can enter the Globes against other studios (they close at 7:30 PM Central)."]];
   var life=[
     ["Talent can say no","New studios hear \"no\" a lot. Earn a name and people come to you."],
     ["Relationships matter","Hits bring people closer, fights on set push them away. Friends give you a better deal; fall out and they won't come back."],
     ["Audiences get bored","Make the same film with the same faces again and again, and people stop showing up."],
     ["Things happen on set","Walk-offs, viral clips, rave screenings. Every studio's story is different."]];
-  var modes=[["Daily Challenge","One shot a day","Everyone gets the same genre and script. You get one film. Beat everyone on today's board."],
-    ["Basic","Practise and compete","Pick any genre. Remake your film as often as you like; your best one counts. Choose Easy (you see every number), Medium or Hard (numbers hidden until release)."],
-    ["Campaign","Your studio run","Build your own studio, film after film. Saved to your account."]];
+  var modes=[["Campaign","Your studio run","Build your own studio, film after film. Saved to your account."],["Daily Challenge","One shot a day","Everyone gets the same genre and script. You get one film. Beat everyone on today's board."],
+    ["Free Play","Practise and compete","Pick any genre. Remake your film as often as you like; your best one counts. Choose Easy (you see every number), Medium or Hard (numbers hidden until release)."],
+];
   var signed=state.me,card=function(t,i,cls){return '<div class="icard'+(cls||"")+'" style="--i:'+i+'"><span class="ii">'+icon(t[0])+'</span><h4>'+t[1]+'</h4><p>'+t[2]+'</p></div>'};
   return '<div class="intro-in"><header class="ihead"><div class="brand"><div class="signal green" aria-hidden="true"><i></i><i></i><i></i></div><h1>GREEN<span>LIGHT</span></h1></div><button class="btn" data-act="introclose">Skip to the game</button></header>'+
     '<section class="ihero"><p class="lbl">A daily movie-studio game</p><h2>You run a movie studio. <span>Make a film that makes money.</span></h2>'+
@@ -1805,14 +1870,14 @@ function studioStats(st){
     row("$","Bank","Money you have now. Your next budget comes from it. Drop too low and the studio is bailed out.")+
     row("$↑","Lifetime profit","Every hit added up; flops never take it away. It unlocks better talent, genres and real release dates.")+
     row(icon("trophy"),"Golden Reels","Every 6 films is an awards season against rival studios. Wins pay the bank.")+
-    row(icon("star"),"Globes","Weekly awards against other players. Enter up to 5 of this week's films.")+
+    row(icon("star"),"Globes","Daily awards against other players, closing at 7:30 PM Central. Enter up to 5 of the day's films.")+
     row("●","Medals","Your badges. Bronze, silver and gold tiers each pay a reward.")+
     row("♥","Relationships","How talent feels about you. Friends sign on and give a friends rate; fall out and they won't work with you.")+
     '</ul></div></details></div>';
 }
 function studioHead(st,rules){
   var pr=st.profile||{},uid=state.me.uid,bd=studioImg(uid,"backdrop",pr.backdrop),pj=st.currentProject;
-  return '<section class="studio tint" style="'+tintStyle(pr.color)+'">'+(bd?'<div class="bd"><img src="'+esc(bd)+'" alt=""></div>':"")+'<div class="in"><div class="who">'+
+  return globesBanner(st)+'<section class="studio tint" style="'+tintStyle(pr.color)+'">'+(bd?'<div class="bd"><img src="'+esc(bd)+'" alt=""></div>':"")+'<div class="in"><div class="who">'+
     '<p class="lbl">Studio HQ · Level '+campLevel(st)+' · Film #'+(st.filmsMade+1)+' next</p>'+
     '<div class="id">'+logoHtml(uid,st.studioName,pr)+'<div><h2>'+esc(st.studioName)+'</h2>'+(pr.tagline?'<p class="tagline">'+esc(pr.tagline)+'</p>':"")+(pr.city?'<p class="city">Based in '+esc(pr.city)+'</p>':"")+(st.identity?typeBadge(st.identity.type):"")+'</div></div>'+
     badgeStrip(st)+
@@ -1951,9 +2016,21 @@ function onboardHtml(st){
 // ---- awards (data/awards.json). Golden Reels: every season of films, judged on the server at release. Greenlight
 // Globes: this week's entry and standings, loaded only when the player opens them (GLB).
 var GLB=null;
-function weekOfPage(t){var d=new Date(t),day=(d.getUTCDay()+6)%7,start=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-day);
-  var thu=new Date(start+3*86400000),y=thu.getUTCFullYear(),jan4=Date.UTC(y,0,4),w1=jan4-((new Date(jan4).getUTCDay()+6)%7)*86400000,n=Math.round((start-w1)/(7*86400000))+1;
-  return {id:y+"-W"+String(n).padStart(2,"0"),start:start,end:start+7*86400000}}
+// Same rounds as functions/awards.js weekOf: daily, closing 19:30 Chicago time.
+function chicagoParts(t){var o={};new Intl.DateTimeFormat("en-US",{timeZone:"America/Chicago",hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"}).formatToParts(new Date(t)).forEach(function(p){o[p.type]=p.value});
+  return {y:+o.year,mo:+o.month,d:+o.day,h:+o.hour,mi:+o.minute,s:+o.second}}
+function chicagoClose(y,mo,d){var guess=Date.UTC(y,mo-1,d,19,30),p=chicagoParts(guess);return guess-(Date.UTC(p.y,p.mo-1,p.d,p.h,p.mi,p.s)-guess)}
+function weekOfPage(t){var p=chicagoParts(t),end=chicagoClose(p.y,p.mo,p.d);
+  if(t>=end){var n=new Date(Date.UTC(p.y,p.mo-1,p.d+1));end=chicagoClose(n.getUTCFullYear(),n.getUTCMonth()+1,n.getUTCDate())}
+  var e=chicagoParts(end-3600000),pv=new Date(Date.UTC(e.y,e.mo-1,e.d-1));
+  return {id:e.y+"-"+String(e.mo).padStart(2,"0")+"-"+String(e.d).padStart(2,"0"),start:chicagoClose(pv.getUTCFullYear(),pv.getUTCMonth()+1,pv.getUTCDate()),end:end}}
+function untilText(ms){var m=Math.max(0,Math.round(ms/60000)),h=Math.floor(m/60);return h?h+"h "+(m%60)+"m":m+"m"}
+// HQ reminder: today's Globes round, its close and how many of today's films the studio could enter.
+function globesBanner(st){
+  if(!AWD||!NET)return "";
+  var wk=weekOfPage(Date.now()),films=(st.recent||[]).filter(function(f){return f.at>=wk.start&&(f.no||0)>0}).length;
+  return '<div class="gbanner">'+icon("star")+'<span><b>Greenlight Globes close today at 7:30 PM Central</b> (in '+untilText(wk.end-Date.now())+'). '+(films?"You've made "+films+" film"+(films===1?"":"s")+" since the last close. Enter up to "+AWD.weekly.maxFilms+" to compete for today's awards.":"Make films today and enter up to "+AWD.weekly.maxFilms+" of them to compete for today's awards.")+'</span><button class="btn sm go" data-act="gotoglobes">Enter films</button></div>';
+}
 function catName(list,id){var c=list.filter(function(x){return x.id===id})[0];return c?c.name:id}
 // Genre Master: earned per genre (hits + acclaimed films), claimed by choice, at most `max`. Shows what it costs.
 function masteryPanel(st){
@@ -1976,7 +2053,7 @@ function awardsPanel(st){
     '<p class="lbl" style="margin-top:6px">'+esc(AWD.season.name)+' · season '+((st.seasonNo||0)+1)+'</p><div class="season-pips" aria-label="'+n+' of '+S+' films this season">'+Array.from({length:S},function(_,i){return '<i class="'+(i<n?"on":"")+'"></i>'}).join("")+'</div>'+
     '<p class="note">'+(S-n)+' more film'+(S-n===1?"":"s")+' until the ceremony. Your season\'s best films take on rival studios in '+AWD.season.categories.length+' categories; every win pays prize money into the bank, and Best Picture (or any Globes win) adds an upgrade point.</p>'+
     '<div class="trophies">'+cab+'</div>'+(recent?'<div class="cer" style="margin-top:12px">'+recent+'</div>':"")+
-    '<div class="row" style="margin-top:14px"><button class="btn" data-act="globes">'+icon("star")+(GLB?"Hide the Greenlight Globes":"Greenlight Globes: this week")+'</button></div>'+(GLB?globesHtml(st):"")+'</section>';
+    '<div class="row" style="margin-top:14px"><button class="btn" data-act="globes">'+icon("star")+(GLB?"Hide the Greenlight Globes":"Greenlight Globes: today")+'</button></div>'+(GLB?globesHtml(st):"")+'</section>';
 }
 function standings(entries){var out={};AWD.weekly.categories.forEach(function(c){
   out[c.id]=entries.map(function(e){var f=e.films.slice().sort(function(a,b){return b.scores[c.score]-a.scores[c.score]||b.scores.gross-a.scores.gross})[0];return f&&{name:e.studioName,uid:e.uid,title:f.title,value:f.scores[c.score],gross:f.scores.gross,at:e.at}})
@@ -1988,18 +2065,18 @@ function podiumHtml(res,me){
 }
 function globesHtml(st){
   var wk=weekOfPage(Date.now()),me=state.me.uid;
-  if(GLB.loading)return '<p class="note" style="margin-top:10px">Loading this week\'s Globes…</p>';
+  if(GLB.loading)return '<p class="note" style="margin-top:10px">Loading today\'s Globes…</p>';
   if(GLB.err)return '<p class="neg" style="margin-top:10px">'+esc(GLB.err)+'</p>';
   var mine=GLB.entries.filter(function(e){return e.uid===me})[0],sel=GLB.sel,max=AWD.weekly.maxFilms,left=Math.ceil((wk.end-Date.now())/3600000);
   var films=GLB.films.length?'<div class="picklist">'+GLB.films.map(function(f){var on=sel.indexOf(f.projectIndex)>-1;
     return '<label><input type="checkbox" data-globe="'+f.projectIndex+'"'+(on?" checked":"")+(!on&&sel.length>=max?" disabled":"")+'><span><b>'+esc(f.title)+'</b> · '+(G[f.genre]?esc(G[f.genre].name):"")+'</span><span class="mono">'+money(f.gross)+'</span></label>'}).join("")+'</div>':
-    '<p class="note">You haven\'t released any films this week yet. Films you release before Sunday midnight (UTC) can be entered.</p>';
+    '<p class="note">You haven\'t released any films since the last Globes. Films you release before 7:30 PM Central can be entered.</p>';
   return '<div style="margin-top:14px"><h3 class="mh" style="margin-top:0">'+esc(AWD.weekly.name)+' · '+esc(wk.id)+'</h3>'+
-    '<p class="note">Enter up to '+max+' of this week\'s films. Every studio\'s best film in each category competes; winners are crowned Monday 00:15 UTC (in about '+(left>48?Math.round(left/24)+" days":left+" hours")+') and win prize money. '+GLB.entries.length+' studio'+(GLB.entries.length===1?"":"s")+' entered so far.</p>'+
+    '<p class="note">Enter up to '+max+' of today\'s films. Every studio\'s best film in each category competes; winners are crowned at 7:30 PM Central (in '+untilText(wk.end-Date.now())+') and win prize money. '+GLB.entries.length+' studio'+(GLB.entries.length===1?"":"s")+' entered so far.</p>'+
     films+(GLB.films.length?'<div class="row"><button class="btn go" data-act="globesubmit"'+(sel.length&&!CAMP.busy?"":" disabled")+'>'+(CAMP.busy==="globes"?"Entering…":mine?"Update my entry ("+sel.length+")":"Enter "+sel.length+" film"+(sel.length===1?"":"s"))+'</button>'+(mine?'<span class="note">Your entry: '+mine.films.map(function(f){return esc(f.title)}).join(", ")+'</span>':"")+'</div>':"")+
     (CAMP.err?'<p class="neg">'+esc(CAMP.err)+'</p>':"")+
     '<p class="lbl" style="margin-top:14px">Standings so far</p>'+podiumHtml(standings(GLB.entries),me)+
-    (GLB.last&&GLB.last.head&&GLB.last.head.results?'<p class="lbl" style="margin-top:14px">Last week\'s winners · '+esc(GLB.last.head.week)+'</p>'+podiumHtml(GLB.last.head.results,me):"")+'</div>';
+    (GLB.last&&GLB.last.head&&GLB.last.head.results?'<p class="lbl" style="margin-top:14px">Last round\'s winners · '+esc(GLB.last.head.week)+'</p>'+podiumHtml(GLB.last.head.results,me):"")+'</div>';
 }
 // Ticking a film updates the list and the button in place (no redraw, so focus stays put).
 function syncGlobePicks(){
@@ -2177,11 +2254,13 @@ document.addEventListener("click",function(e){
   else if(a==="campretry")campLoad();
   else if(a==="campretryrel"){if(state.result&&state.result.camp)campSend(state.result)}
   else if(a==="campedit")openEditor();
+  else if(a==="note"){var nq=notesFor(state.pick.g);nq[+t.dataset.q]=+t.dataset.m;drawStage()}
   else if(a==="restart"){CAMP.restartArm=!CAMP.restartArm;drawHQ()}
   else if(a==="restartgo"){CAMP.restartArm=false;campCall("campaignRestart",{confirm:"RESTART"},"restart",function(o){if(o){CAMP.history=null;GLB=null;CAMP.note="Your studio is starting over. Good luck!";newGame()}})}
   else if(a==="gotoawards"){var ap=$("#awardspanel");if(ap)ap.scrollIntoView({behavior:REDUCED?"auto":"smooth",block:"start"})}
   else if(a==="master"){if(CAMP.masterArm!==id){CAMP.masterArm=id;drawHQ()}else{CAMP.masterArm=null;campCall("campaignMaster",{genre:id},"master",function(o){if(o){newGame();toastBadges(o.badges)}})}}
   else if(a==="globes"){if(GLB){GLB=null;drawHQ()}else loadGlobes()}
+  else if(a==="gotoglobes"){if(!GLB)loadGlobes();setTimeout(function(){var el=$("#awardspanel");if(el)el.scrollIntoView({behavior:REDUCED?"auto":"smooth",block:"start"})},60)}
   else if(a==="globesubmit")campCall("campaignSubmitAwards",{films:GLB.sel},"globes",function(o){if(o)loadGlobes()});
   else if(a==="onbpick"){ONB.ans[ONB.k]=id;drawHQ()}
   else if(a==="onbnext"){if(ONB.ans[ONB.k]){ONB.k++;state.enter=true;drawHQ();window.scrollTo(0,0)}}

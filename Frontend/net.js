@@ -93,8 +93,9 @@ async function start() {
       return s.exists() ? s.data() : null;
     },
     // Every studio by lifetime box office, live (the campaign board's "Biggest studios" view).
-    watchStudios(cb, err) {
-      const q = Fs.query(Fs.collection(db, "studios"), Fs.orderBy("lifetimeGross", "desc"), Fs.limit(25));
+    // Studios by lifetime profit (the campaign board) or lifetime box office.
+    watchStudios(cb, err, field = "lifetimeProfit") {
+      const q = Fs.query(Fs.collection(db, "studios"), Fs.orderBy(field === "lifetimeGross" ? "lifetimeGross" : "lifetimeProfit", "desc"), Fs.limit(50));
       return Fs.onSnapshot(q, { includeMetadataChanges: true }, (s) => cb(s.docs.map((d) => d.data()), s.metadata.fromCache), err);
     },
     // Campaign board: fewest films to reach the A-list, then fewer bailouts, then higher lifetime profit.

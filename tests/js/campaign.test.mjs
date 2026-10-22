@@ -697,7 +697,7 @@ test("Golden Reel Awards: every season of films faces rival bars; wins pay the b
   assert.deepEqual(plain(camp.release(C, ceremony.before, "u1", { index: ceremony.before.currentProject.index, pick: out.film.pick }, DATE, NOW).events.season), plain(sea));
 });
 
-test("Greenlight Globes: submit this week's films, the week closes, winners are paid once", async () => {
+test("Greenlight Globes: submit the day's films, the round closes at 7:30 PM Central, winners are paid once", async () => {
   const db = fakeDb(), store = makeStore(db, C, fakeFiles({}));
   const wk = awardsLib.weekOf(NOW), players = ["g1", "g2", "g3"];
   for (const uid of players) {
@@ -710,7 +710,7 @@ test("Greenlight Globes: submit this week's films, the week closes, winners are 
     await assert.rejects(store.submitAwards(uid, { films: [] }, NOW), /Pick 1 to/);
     await assert.rejects(store.submitAwards(uid, { films: [0, 0] }, NOW), /different films/);
     await assert.rejects(store.submitAwards(uid, { films: [99] }, NOW), /can't be entered/);
-    await assert.rejects(store.submitAwards(uid, { films: idx }, wk.end + 1000), /released this week/);
+    await assert.rejects(store.submitAwards(uid, { films: idx }, wk.end + 1000), /released since the last Globes/);
     const r = await store.submitAwards(uid, { films: idx }, NOW + 5000);
     assert.equal(r.week, wk.id);
     assert.equal(db.docs.get(`awards/${wk.id}/entries/${uid}`).films.length, 2);

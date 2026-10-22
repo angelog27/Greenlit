@@ -56,6 +56,36 @@
       "lead": { "r": "the river guide who knows every bend", "t": "epic" },
       "side": { "r": "the bus driver who won't leave anyone behind", "t": "heartfelt" },
       "anta": { "r": "the robber who blew the dam as a diversion", "t": "gritty" }
+    },
+    {
+      "title": "Midnight Crossing",
+      "text": "An off-duty ferry mate at a New Year's gala aboard a casino riverboat is the only guest missed when armed thieves seize the vessel, and his only link to shore is a radio operator who doesn't believe him.",
+      "tones": ["gritty", "funny"],
+      "win": ["holiday"],
+      "from": "2026-10-26",
+      "lead": { "r": "the ferry mate who wasn't on the guest list", "t": "gritty" },
+      "side": { "r": "the radio operator on the dock who finally believes him", "t": "funny" },
+      "anta": { "r": "the thief who runs the ballroom like a boardroom", "t": "stylish" }
+    },
+    {
+      "title": "Hard Rail",
+      "text": "A city tram is rigged to explode if it ever slows below forty miles an hour, and its driver has one loop of the line to find a way to stop it.",
+      "tones": ["gritty", "epic"],
+      "win": ["summer", "spring"],
+      "from": "2026-10-26",
+      "lead": { "r": "the tram driver with a full car", "t": "gritty" },
+      "side": { "r": "the passenger who grabs the controls", "t": "funny" },
+      "anta": { "r": "the bomber who calls in the rules", "t": "eerie" }
+    },
+    {
+      "title": "Cliff Line",
+      "text": "Rope-access technicians stranded two hundred feet up a wind turbine in a gale learn that one of their own sabotaged the blades for a payout.",
+      "tones": ["epic", "gritty"],
+      "win": ["summer", "awards"],
+      "from": "2026-10-26",
+      "lead": { "r": "the senior rope technician", "t": "gritty" },
+      "side": { "r": "the rookie who never stops talking", "t": "funny" },
+      "anta": { "r": "the saboteur sharing their ropes", "t": "stylish" }
     }
   ],
   "scifi": [
@@ -115,6 +145,36 @@
       "lead": { "r": "the cadet who failed every flight test", "t": "heartfelt" },
       "side": { "r": "the washed-up gunner hiding on board", "t": "funny" },
       "anta": { "r": "the warden who never loses a prisoner", "t": "gritty" }
+    },
+    {
+      "title": "Out of Frame",
+      "text": "A bored claims adjuster notices the same glitch twice and is offered a choice by a stranger: stay comfortable in the city or wake up outside it.",
+      "tones": ["stylish", "epic"],
+      "win": ["summer", "spring"],
+      "from": "2026-10-26",
+      "lead": { "r": "the claims adjuster who sees the glitch", "t": "stylish" },
+      "side": { "r": "the stranger with the offer", "t": "funny" },
+      "anta": { "r": "the city's smiling administrator", "t": "eerie" }
+    },
+    {
+      "title": "Thaw",
+      "text": "Investors tour a new park of revived ice-age animals on opening weekend, and the first blackout lasts all night.",
+      "tones": ["epic", "eerie"],
+      "win": ["summer"],
+      "from": "2026-10-26",
+      "lead": { "r": "the park's head vet", "t": "heartfelt" },
+      "side": { "r": "the investor's sharp-tongued daughter", "t": "funny" },
+      "anta": { "r": "the founder who refuses to evacuate", "t": "stylish" }
+    },
+    {
+      "title": "Seen From Above",
+      "text": "A lighthouse keeper who has never left his island discovers that every storm, ferry and neighbor has been scheduled for an audience.",
+      "tones": ["heartfelt", "funny"],
+      "win": ["spring", "awards"],
+      "from": "2026-10-26",
+      "lead": { "r": "the keeper who never left", "t": "heartfelt" },
+      "side": { "r": "the supply-boat captain who tries to warn him", "t": "funny" },
+      "anta": { "r": "the producer behind the glass", "t": "stylish" }
     }
   ],
   "animation": [
@@ -174,6 +234,36 @@
       "lead": { "r": "the scarecrow who loves birds", "t": "funny" },
       "side": { "r": "the farm dog who wants a promotion", "t": "heartfelt" },
       "anta": { "r": "the crow general with perfect manners", "t": "stylish" }
+    },
+    {
+      "title": "Lost Property",
+      "text": "After closing time, the forgotten umbrellas, mittens and toys in a train station's lost-property room come alive and cross the city to return a little girl's stuffed hare before the whole room is auctioned off.",
+      "tones": ["heartfelt", "funny"],
+      "win": ["holiday", "spring"],
+      "from": "2026-10-26",
+      "lead": { "r": "the stuffed hare who still believes", "t": "heartfelt" },
+      "side": { "r": "the umbrella with opinions on everything", "t": "funny" },
+      "anta": { "r": "the auctioneer who sorts the shelves", "t": "stylish" }
+    },
+    {
+      "title": "Mama Pigeon",
+      "text": "A worried city pigeon crosses town rooftop by rooftop after her only chick is carried off in a delivery van.",
+      "tones": ["heartfelt", "funny"],
+      "win": ["spring", "summer"],
+      "from": "2026-10-26",
+      "lead": { "r": "the mother pigeon", "t": "heartfelt" },
+      "side": { "r": "the one-winged crow who offers to guide her", "t": "funny" },
+      "anta": { "r": "the alley cat who owns every rooftop", "t": "gritty" }
+    },
+    {
+      "title": "Return to Sender",
+      "text": "A retired mail carrier fits his old delivery van with a kite engine and sails across the continent to deliver one last letter, with a stowaway street cat.",
+      "tones": ["heartfelt", "epic"],
+      "win": ["holiday", "awards"],
+      "from": "2026-10-26",
+      "lead": { "r": "the retired mail carrier", "t": "heartfelt" },
+      "side": { "r": "the stowaway street cat", "t": "funny" },
+      "anta": { "r": "the rival courier company's owner", "t": "stylish" }
     }
   ],
   "comedy": [
@@ -233,6 +323,36 @@
       "lead": { "r": "the brother who stayed home", "t": "gritty" },
       "side": { "r": "the brother who became a minor celebrity", "t": "funny" },
       "anta": { "r": "the developer measuring the lanes for condos", "t": "stylish" }
+    },
+    {
+      "title": "Table Seven",
+      "text": "A new hire is adopted by the office's most feared lunch table and starts to enjoy it much more than she should.",
+      "tones": ["funny", "stylish"],
+      "win": ["spring", "val"],
+      "from": "2026-10-26",
+      "lead": { "r": "the new hire", "t": "funny" },
+      "side": { "r": "the kind coworker she leaves behind", "t": "heartfelt" },
+      "anta": { "r": "the lunch table's queen bee", "t": "stylish" }
+    },
+    {
+      "title": "Hold the Fort",
+      "text": "An eighty-year-old grandfather accidentally left behind at the family holiday house defends it from two burglars with a lifetime of garage inventions.",
+      "tones": ["funny", "heartfelt"],
+      "win": ["holiday"],
+      "from": "2026-10-26",
+      "lead": { "r": "the grandfather with a workshop", "t": "funny" },
+      "side": { "r": "the neighbor's kid who sneaks over to help", "t": "heartfelt" },
+      "anta": { "r": "the lead burglar who just wanted one quiet job", "t": "gritty" }
+    },
+    {
+      "title": "Under the Pass",
+      "text": "A culinary-school graduate becomes assistant to a legendary head chef and learns to read an entire mood from one raised eyebrow.",
+      "tones": ["funny", "stylish"],
+      "win": ["spring", "summer"],
+      "from": "2026-10-26",
+      "lead": { "r": "the new assistant", "t": "funny" },
+      "side": { "r": "the sous-chef who has outlasted three assistants", "t": "gritty" },
+      "anta": { "r": "the head chef who never raises her voice", "t": "stylish" }
     }
   ],
   "horror": [
@@ -292,6 +412,36 @@
       "lead": { "r": "the counselor who left early that summer", "t": "gritty" },
       "side": { "r": "the camp joker who never grew up", "t": "funny" },
       "anta": { "r": "the host who signs every invitation", "t": "stylish" }
+    },
+    {
+      "title": "Red Flag Weekend",
+      "text": "After a swimmer vanishes from a lake resort, the new sheriff wants to close the water, but the mayor needs the holiday weekend.",
+      "tones": ["eerie", "gritty"],
+      "win": ["summer", "hallow"],
+      "from": "2026-10-26",
+      "lead": { "r": "the new sheriff", "t": "gritty" },
+      "side": { "r": "the dive instructor who knows the water", "t": "funny" },
+      "anta": { "r": "the mayor who won't close the lake", "t": "stylish" }
+    },
+    {
+      "title": "Order of Departure",
+      "text": "A group of strangers escapes a disaster after one of them has a premonition, then learns their escape has an order, and something is collecting them in it.",
+      "tones": ["eerie", "gritty"],
+      "win": ["hallow"],
+      "from": "2026-10-26",
+      "lead": { "r": "the survivor with the premonition", "t": "heartfelt" },
+      "side": { "r": "the skeptical paramedic", "t": "gritty" },
+      "anta": { "r": "whatever is collecting them", "t": "eerie" }
+    },
+    {
+      "title": "Guest of Honor",
+      "text": "A new fiancé spends a weekend at his partner's family estate, where everyone is delighted to see him and nobody wants him to leave early.",
+      "tones": ["eerie", "stylish"],
+      "win": ["hallow", "spring"],
+      "from": "2026-10-26",
+      "lead": { "r": "the fiancé who can't shake a bad feeling", "t": "funny" },
+      "side": { "r": "the partner who keeps changing the subject", "t": "heartfelt" },
+      "anta": { "r": "the gracious matriarch", "t": "stylish" }
     }
   ],
   "thriller": [
@@ -351,6 +501,36 @@
       "lead": { "r": "the trader at the keyboard", "t": "gritty" },
       "side": { "r": "the sister working out where they're held", "t": "heartfelt" },
       "anta": { "r": "the kidnapper with a perfect accent", "t": "stylish" }
+    },
+    {
+      "title": "Staff Entrance",
+      "text": "A family of out-of-work cons takes jobs one by one at a billionaire's seaside estate, until a second family with the same plan turns up.",
+      "tones": ["stylish", "gritty"],
+      "win": ["awards"],
+      "from": "2026-10-26",
+      "lead": { "r": "the con who gets in first", "t": "stylish" },
+      "side": { "r": "the daughter who forges the references", "t": "funny" },
+      "anta": { "r": "the estate's polished owner", "t": "stylish" }
+    },
+    {
+      "title": "Seven Chairs",
+      "text": "A retired insurance investigator is hired to find out who poisoned a mystery writer at her eightieth birthday dinner, and everyone at the table gains from her will.",
+      "tones": ["stylish", "funny"],
+      "win": ["awards", "holiday"],
+      "from": "2026-10-26",
+      "lead": { "r": "the retired investigator", "t": "funny" },
+      "side": { "r": "the writer's night nurse", "t": "heartfelt" },
+      "anta": { "r": "the heir with the cleanest alibi", "t": "stylish" }
+    },
+    {
+      "title": "The Fixer's Hour",
+      "text": "A crisis PR fixer has one night to bury a scandal, then discovers the scandal was built to take her down.",
+      "tones": ["stylish", "gritty"],
+      "win": ["awards", "spring"],
+      "from": "2026-10-26",
+      "lead": { "r": "the fixer", "t": "stylish" },
+      "side": { "r": "her junior who recorded everything", "t": "funny" },
+      "anta": { "r": "the client who set her up", "t": "stylish" }
     }
   ],
   "drama": [
@@ -410,6 +590,36 @@
       "lead": { "r": "the photographer who never talks about it", "t": "gritty" },
       "side": { "r": "the student who found the subject of the photo", "t": "heartfelt" },
       "anta": { "r": "the gallery owner selling her archive", "t": "stylish" }
+    },
+    {
+      "title": "Undercard",
+      "text": "A thirty-two-year-old club fighter gets a one-in-a-million title shot when the champion's opponent drops out, and has six weeks to be ready.",
+      "tones": ["gritty", "heartfelt"],
+      "win": ["awards", "spring"],
+      "from": "2026-10-26",
+      "lead": { "r": "the club fighter", "t": "gritty" },
+      "side": { "r": "the retired trainer who takes the call", "t": "heartfelt" },
+      "anta": { "r": "the champion who expects an easy night", "t": "epic" }
+    },
+    {
+      "title": "Off the Syllabus",
+      "text": "A substitute music teacher at an exam-obsessed academy persuades a class of overachievers to try something that isn't on the test.",
+      "tones": ["heartfelt", "stylish"],
+      "win": ["awards", "spring"],
+      "from": "2026-10-26",
+      "lead": { "r": "the substitute teacher", "t": "heartfelt" },
+      "side": { "r": "the student who plays in secret", "t": "gritty" },
+      "anta": { "r": "the headmaster guarding the results", "t": "stylish" }
+    },
+    {
+      "title": "Salt Flat Radio",
+      "text": "On the last night of a tiny desert radio station, callers confess everything to the host who is about to go off the air.",
+      "tones": ["heartfelt", "stylish"],
+      "win": ["awards", "holiday"],
+      "from": "2026-10-26",
+      "lead": { "r": "the host on her last night", "t": "heartfelt" },
+      "side": { "r": "the caller who rings every night", "t": "funny" },
+      "anta": { "r": "the buyer waiting to flip the station", "t": "stylish" }
     }
   ],
   "romance": [
@@ -469,6 +679,36 @@
       "lead": { "r": "the firefighter who jokes through everything", "t": "gritty" },
       "side": { "r": "the doctor who never takes a day off", "t": "heartfelt" },
       "anta": { "r": "the hospital administrator cutting the night staff", "t": "stylish" }
+    },
+    {
+      "title": "Third Class Night",
+      "text": "Two passengers from opposite ends of a sleeper train fall for each other on a night crossing before the mountain pass closes for winter.",
+      "tones": ["heartfelt", "epic"],
+      "win": ["val", "awards"],
+      "from": "2026-10-26",
+      "lead": { "r": "the traveler from third class", "t": "heartfelt" },
+      "side": { "r": "the heiress in the first-class carriage", "t": "stylish" },
+      "anta": { "r": "her fiancé who owns the line", "t": "gritty" }
+    },
+    {
+      "title": "Request Hour",
+      "text": "An old piano tuner plays the same songs in a care home every afternoon for his wife, who no longer knows him, hoping one of them brings her back.",
+      "tones": ["heartfelt", "stylish"],
+      "win": ["val", "awards"],
+      "from": "2026-10-26",
+      "lead": { "r": "the piano tuner", "t": "heartfelt" },
+      "side": { "r": "his wife, who remembers only the music", "t": "stylish" },
+      "anta": { "r": "the care-home director who calls it false hope", "t": "gritty" }
+    },
+    {
+      "title": "Aisle Nine",
+      "text": "A world-famous chef wanders into a small-town hardware store to hide from the press, and the quiet owner has no idea who she is.",
+      "tones": ["funny", "heartfelt"],
+      "win": ["val", "spring"],
+      "from": "2026-10-26",
+      "lead": { "r": "the hardware-store owner", "t": "heartfelt" },
+      "side": { "r": "the famous chef in disguise", "t": "funny" },
+      "anta": { "r": "the photographer who followed her here", "t": "stylish" }
     }
   ],
   "horrorcomedy": [
@@ -528,6 +768,36 @@
       "lead": { "r": "the waitress who has seen worse", "t": "gritty" },
       "side": { "r": "the cook who won't stop making pancakes", "t": "funny" },
       "anta": { "r": "the zombie regular in booth four", "t": "eerie" }
+    },
+    {
+      "title": "Night Exterminators",
+      "text": "Three laid-off pest controllers start a ghost-removal business after discovering their old rat traps work on the dead.",
+      "tones": ["funny", "eerie"],
+      "win": ["hallow"],
+      "from": "2026-10-26",
+      "lead": { "r": "the foreman who starts the business", "t": "funny" },
+      "side": { "r": "the apprentice who sees the ghosts", "t": "heartfelt" },
+      "anta": { "r": "the poltergeist who runs city hall", "t": "eerie" }
+    },
+    {
+      "title": "Final Girl Theory",
+      "text": "A film-studies teacher realizes a killer is following the rules of a 1980s slasher she teaches, and her class is the cast.",
+      "tones": ["funny", "eerie"],
+      "win": ["hallow"],
+      "from": "2026-10-26",
+      "lead": { "r": "the film-studies teacher", "t": "funny" },
+      "side": { "r": "the student who has seen every sequel", "t": "heartfelt" },
+      "anta": { "r": "the killer who follows the rules", "t": "stylish" }
+    },
+    {
+      "title": "Door Number Three",
+      "text": "Contestants on a haunted-house game show learn the host can't leave the set and the prize is a way out.",
+      "tones": ["funny", "eerie"],
+      "win": ["hallow"],
+      "from": "2026-10-26",
+      "lead": { "r": "the cynical contestant in it for the cash", "t": "funny" },
+      "side": { "r": "the floor director who is also trapped", "t": "heartfelt" },
+      "anta": { "r": "the host with a perfect smile", "t": "stylish" }
     }
   ],
   "actioncomedy": [
@@ -587,6 +857,36 @@
       "lead": { "r": "the mechanic who just wants to go home", "t": "funny" },
       "side": { "r": "the spy with a broken leg", "t": "stylish" },
       "anta": { "r": "the assassin in a rental car", "t": "gritty" }
+    },
+    {
+      "title": "Hammer Price",
+      "text": "A smooth thief assembles a crew of mismatched specialists to steal three paintings during a rival collector's live-streamed auction.",
+      "tones": ["stylish", "funny"],
+      "win": ["spring", "holiday"],
+      "from": "2026-10-26",
+      "lead": { "r": "the thief who plans it all", "t": "stylish" },
+      "side": { "r": "the forger with stage fright", "t": "funny" },
+      "anta": { "r": "the collector-auctioneer on the podium", "t": "stylish" }
+    },
+    {
+      "title": "Player Select",
+      "text": "Four rival cousins at a family reunion get pulled into an old arcade cabinet as their avatars, and the only way out is to beat the final boss.",
+      "tones": ["funny", "epic"],
+      "win": ["holiday", "summer"],
+      "from": "2026-10-26",
+      "lead": { "r": "the cousin who is now a towering avatar", "t": "funny" },
+      "side": { "r": "the cousin stuck as the healer", "t": "heartfelt" },
+      "anta": { "r": "the game's final boss", "t": "epic" }
+    },
+    {
+      "title": "Wrong Van",
+      "text": "Two plumbers whose van is mistaken for a getaway car are handed a bag of stolen cash by a panicking crew, then the real crew arrives.",
+      "tones": ["funny", "gritty"],
+      "win": ["summer", "spring"],
+      "from": "2026-10-26",
+      "lead": { "r": "the plumber who can't say no", "t": "funny" },
+      "side": { "r": "his apprentice nephew", "t": "heartfelt" },
+      "anta": { "r": "the crew boss who wants his bag back", "t": "gritty" }
     }
   ],
   "romcom": [
@@ -646,6 +946,36 @@
       "lead": { "r": "the gift wrapper who wants to be an artist", "t": "heartfelt" },
       "side": { "r": "the customer with the wrong present", "t": "funny" },
       "anta": { "r": "the store manager on a bonus deadline", "t": "stylish" }
+    },
+    {
+      "title": "Take Two Hundred",
+      "text": "A wedding planner relives the same wedding day over and over until she gets everyone's vows, and her own heart, right.",
+      "tones": ["funny", "heartfelt"],
+      "win": ["val", "summer"],
+      "from": "2026-10-26",
+      "lead": { "r": "the wedding planner", "t": "funny" },
+      "side": { "r": "the photographer who notices the loop", "t": "heartfelt" },
+      "anta": { "r": "the maid of honor who sabotages every take", "t": "stylish" }
+    },
+    {
+      "title": "Just Neighbors",
+      "text": "Two neighbors who swear they're only friends help each other through ten years of other people's weddings, breakups and moves.",
+      "tones": ["heartfelt", "funny"],
+      "win": ["val"],
+      "from": "2026-10-26",
+      "lead": { "r": "the neighbor who plans everything", "t": "heartfelt" },
+      "side": { "r": "the neighbor who plans nothing", "t": "funny" },
+      "anta": { "r": "the new partner who sees it first", "t": "stylish" }
+    },
+    {
+      "title": "Meet the Estate",
+      "text": "A pastry teacher flies abroad for a wedding to meet her boyfriend's family and learns that he is very rich and his mother is very watchful.",
+      "tones": ["funny", "stylish"],
+      "win": ["spring", "summer"],
+      "from": "2026-10-26",
+      "lead": { "r": "the pastry teacher", "t": "funny" },
+      "side": { "r": "the boyfriend who forgot to mention the money", "t": "heartfelt" },
+      "anta": { "r": "his mother, who runs the family", "t": "stylish" }
     }
   ],
   "scifithriller": [
@@ -705,6 +1035,36 @@
       "lead": { "r": "the detective who checks the forecast", "t": "gritty" },
       "side": { "r": "the meteorologist who built the model", "t": "funny" },
       "anta": { "r": "the founder selling the data", "t": "stylish" }
+    },
+    {
+      "title": "Lucid Estate",
+      "text": "A crew of memory forgers enters a dying tycoon's recollections to plant a false will, but his memories have guards.",
+      "tones": ["stylish", "epic"],
+      "win": ["summer", "awards"],
+      "from": "2026-10-26",
+      "lead": { "r": "the forger who plans the job", "t": "stylish" },
+      "side": { "r": "the architect who builds the dream", "t": "funny" },
+      "anta": { "r": "the tycoon's sharpest memory", "t": "eerie" }
+    },
+    {
+      "title": "Twenty Fathoms",
+      "text": "A deep-sea diver trapped in a bell on the seabed discovers her supervisor has been lying about the rescue ship for six hours.",
+      "tones": ["gritty", "epic"],
+      "win": ["summer"],
+      "from": "2026-10-26",
+      "lead": { "r": "the diver in the bell", "t": "gritty" },
+      "side": { "r": "the voice on comms who tells her the truth", "t": "heartfelt" },
+      "anta": { "r": "the supervisor who stopped the rescue", "t": "stylish" }
+    },
+    {
+      "title": "Burn Rate",
+      "text": "A startup's AI assistant begins quietly firing everyone it judges inefficient, starting with the founder.",
+      "tones": ["stylish", "funny"],
+      "win": ["spring", "awards"],
+      "from": "2026-10-26",
+      "lead": { "r": "the last employee in the building", "t": "funny" },
+      "side": { "r": "the HR manager it hasn't flagged yet", "t": "gritty" },
+      "anta": { "r": "the assistant's pleasant voice", "t": "eerie" }
     }
   ],
   "scifihorror": [
@@ -764,6 +1124,36 @@
       "lead": { "r": "the watchman awake for ten years", "t": "gritty" },
       "side": { "r": "the ship's doctor he wakes too early", "t": "heartfelt" },
       "anta": { "r": "the dreamer in pod 312", "t": "eerie" }
+    },
+    {
+      "title": "Dead Weight",
+      "text": "A skeleton crew on a lunar mining tug answers a distress beacon and brings something aboard that is learning the ship.",
+      "tones": ["eerie", "gritty"],
+      "win": ["hallow", "summer"],
+      "from": "2026-10-26",
+      "lead": { "r": "the tug's pilot", "t": "gritty" },
+      "side": { "r": "the cook who wants to turn back", "t": "funny" },
+      "anta": { "r": "the thing in the cargo bay", "t": "eerie" }
+    },
+    {
+      "title": "Dark Rules",
+      "text": "A family lives by strict rules in a world where creatures hunt anything that glows, until the baby's night-light turns on by itself.",
+      "tones": ["eerie", "heartfelt"],
+      "win": ["hallow"],
+      "from": "2026-10-26",
+      "lead": { "r": "the mother who wrote the rules", "t": "heartfelt" },
+      "side": { "r": "the teenage son who breaks them", "t": "gritty" },
+      "anta": { "r": "the neighbor who lures the creatures with light", "t": "eerie" }
+    },
+    {
+      "title": "Sleepers' Choir",
+      "text": "The residents of a remote research base start humming the same tune in their sleep, and it's getting louder.",
+      "tones": ["eerie", "stylish"],
+      "win": ["hallow", "awards"],
+      "from": "2026-10-26",
+      "lead": { "r": "the base psychologist", "t": "heartfelt" },
+      "side": { "r": "the sound engineer who recorded it", "t": "funny" },
+      "anta": { "r": "the voice leading the choir", "t": "eerie" }
     }
   ]
 }

@@ -1,8 +1,8 @@
 // Awards (data/awards.json). Pure functions: tests run them without Firebase.
 //   Golden Reel Awards: every `season.films` campaign films, the season's best in each category faces a rival
 //   studio's bar (seeded, tougher at higher tiers). A win adds prize money to the bank (not lifetime profit).
-//   Greenlight Globes: each UTC week (Monday to Sunday) studios submit up to `weekly.maxFilms` of that week's
-//   films; after the week a scheduled job ranks every studio's best film per category and crowns a podium.
+//   Greenlight Globes: every day (rounds close at 19:30 Chicago time) studios submit up to `weekly.maxFilms` of that
+//   round's films; at the close a scheduled job ranks every studio's best film per category and crowns a podium.
 // Every film gets award scores (0-100, plus gross/profit) when it is released, from the same facts the scoring
 // model uses: how well the director and cast fit the genre and their parts, the script, timing and synergies.
 
@@ -49,13 +49,25 @@ function who(score, f) {
   return { director: f.d, lead: f.cast && f.cast[0], supporting: f.cast && f.cast[1], villain: f.cast && f.cast[2] }[score] || null;
 }
 
-// UTC week of a timestamp, Monday 00:00 to Sunday 23:59: { id: "2026-W43", start, end }.
+// Greenlight Globes round of a timestamp: one a day, closing at 19:30 in America/Chicago (the user's evening in
+// Baton Rouge), DST included. { id: "YYYY-MM-DD" (the Chicago date it closes), start, end }.
+function chicagoParts(t) {
+  const f = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const o = {}; f.formatToParts(new Date(t)).forEach((p) => { o[p.type] = p.value; });
+  return { y: +o.year, mo: +o.month, d: +o.day, h: +o.hour, mi: +o.minute, s: +o.second };
+}
+function chicagoClose(y, mo, d) {
+  const guess = Date.UTC(y, mo - 1, d, 19, 30), p = chicagoParts(guess);
+  const off = Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi, p.s) - guess; // Chicago minus UTC
+  return guess - off;
+}
 function weekOf(t) {
-  const d = new Date(t), day = (d.getUTCDay() + 6) % 7;
-  const start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day);
-  const thu = new Date(start + 3 * 86400000), y = thu.getUTCFullYear(), jan4 = Date.UTC(y, 0, 4);
-  const w1 = jan4 - ((new Date(jan4).getUTCDay() + 6) % 7) * 86400000, n = Math.round((start - w1) / (7 * 86400000)) + 1;
-  return { id: y + "-W" + String(n).padStart(2, "0"), start, end: start + 7 * 86400000 };
+  const p = chicagoParts(t);
+  let end = chicagoClose(p.y, p.mo, p.d);
+  if (t >= end) { const n = new Date(Date.UTC(p.y, p.mo - 1, p.d + 1)); end = chicagoClose(n.getUTCFullYear(), n.getUTCMonth() + 1, n.getUTCDate()); }
+  const e = chicagoParts(end - 3600000), prev = new Date(Date.UTC(e.y, e.mo - 1, e.d - 1));
+  const start = chicagoClose(prev.getUTCFullYear(), prev.getUTCMonth() + 1, prev.getUTCDate());
+  return { id: e.y + "-" + String(e.mo).padStart(2, "0") + "-" + String(e.d).padStart(2, "0"), start, end };
 }
 
 // Weekly results: each studio's best submitted film per category, ranked; ties go to the earlier submission.
