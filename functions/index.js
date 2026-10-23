@@ -15,8 +15,9 @@ const { makeLimiter } = require("./limits");
 
 // Capacity (Oct 22 2026): the default (256MiB, a sixth of a CPU, one request per instance, 10 instances) ran out
 // with ~8 players at once; Cloud Run's "no instance" replies carry no CORS headers, so the page saw "internal".
-// A full CPU serving many requests per instance makes campaign calls ~6x faster and absorbs bursts.
-setGlobalOptions({ maxInstances: 20, memory: "512MiB", cpu: 1, concurrency: 40, timeoutSeconds: 60 });
+// A full CPU serving many requests per instance makes campaign calls ~6x faster; up to 50 instances x 20 requests
+// (a release is ~0.15-0.35 s of CPU) is sized for a few hundred players at once. Idle instances cost nothing.
+setGlobalOptions({ maxInstances: 50, memory: "512MiB", cpu: 1, concurrency: 20, timeoutSeconds: 60 });
 initializeApp();
 const db = getFirestore();
 const game = loadGame();

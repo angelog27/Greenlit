@@ -1,5 +1,5 @@
 // Per-player rate limits for the callables, kept in each function instance's memory (no database reads).
-// With maxInstances 20 a player gets at most twenty times these across instances, which still bounds what a
+// With maxInstances 50 a player gets at most fifty times these across instances, which still bounds what a
 // runaway or hostile client can cost. Legitimate play stays far below them.
 const RULES = {
   default: { max: 40, windowMs: 60_000 }, // any campaign call
